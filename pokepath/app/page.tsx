@@ -1,5 +1,4 @@
 import Image from "next/image";
-import SupabaseTest from "@/src/components/SupabaseTest";
 
 export default function Home() {
   return (
@@ -18,7 +17,6 @@ export default function Home() {
             To get started, edit the page.tsx file.
           </h1>
           <h1 className="text-red-500">Hello</h1>
-          <SupabaseTest />
           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
             Looking for a starting point or more instructions? Head over to{" "}
             <a
