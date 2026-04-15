@@ -37,3 +37,9 @@ coverage/
 
 # Claude
 .claude/
+
+# Cursor MCP (may contain API tokens; keep local only)
+.cursor/mcp.json
+
+# Local Jira/ticket exports (not versioned)
+tickets/
