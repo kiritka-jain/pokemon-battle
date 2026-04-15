@@ -40,4 +40,6 @@ export interface GameState {
   fences: Fence[];
   pendingAction: PendingAction;
   winner: PlayerKey | null;
+  /** Last validation error from commitAction (cleared on success / new match) */
+  error: string | null;
 }
