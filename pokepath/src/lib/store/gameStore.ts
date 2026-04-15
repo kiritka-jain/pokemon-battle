@@ -43,12 +43,16 @@ export const useGameStore = create<GameStore>()(
           pos: { x: 4, y: 8 },
           fencesLeft: 10,
           type: 'Normal',
+          username: 'Player 1',
+          elo: 1000,
         }
         draft.players.player2 = {
           id: player2Id,
           pos: { x: 4, y: 0 },
           fencesLeft: 10,
           type: 'Normal',
+          username: 'Player 2',
+          elo: 1000,
         }
         draft.fences = []
         draft.pendingAction = { type: null }

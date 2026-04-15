@@ -1,6 +1,9 @@
 // Game types for PokéPath - Route Rush
 // This file will contain all TypeScript interfaces and types for the game
 
+/** Standard Quoridor fence budget per player */
+export const STARTING_FENCES = 10
+
 export type PlayerKey = 'player1' | 'player2';
 export type FenceOrientation = 'H' | 'V';
 export type GameStatus = 'waiting' | 'active' | 'finished';
@@ -16,6 +19,10 @@ export interface PlayerState {
   pos: Position;
   fencesLeft: number; // starts at 10 (standard Quoridor), decrements on placement
   type: string;       // 'Normal' for V1, extensible for V2 (Ghost, etc.)
+  /** Shown in scoreboard; optional until profile is loaded in multiplayer */
+  username?: string;
+  /** Shown in scoreboard; optional until profile is loaded */
+  elo?: number;
 }
 
 export interface Fence {
