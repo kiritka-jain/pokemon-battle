@@ -1,12 +1,22 @@
-# CI: runs on every pull request and every push (all branches).
+# CI: runs on pull requests and pushes (all branches).
 #
-# CD (Vercel): use Vercel → Project → Git with:
-#   - Production branch: main  (only main deploys to your production domain)
-#   - staging and other branches: Preview deployments (unique URLs per branch)
-# Set env vars in Vercel for Production vs Preview as needed.
+# Order: Lint and Test run in parallel → Build (needs both) → on push to main only:
+# Migrate (needs Build) → optional Vercel deploy hook (needs Migrate).
 #
-# Optional: deploy via Vercel CLI from a separate workflow using VERCEL_TOKEN (avoid duplicate
-# builds if Vercel Git integration already deploys the same commits).
+# Vercel Git integration often deploys on every push in parallel with this workflow.
+# To enforce "deploy only after CI + migrations", either:
+# - Rely on branch protection: require Lint, Test, and Build before merging to main, and
+#   accept that Vercel builds right after merge; run migrations in this workflow so they
+#   apply on the same commit; or
+# - Disable automatic Production Deployments for `main` in Vercel and set
+#   VERCEL_DEPLOY_HOOK_URL so only the final job triggers production.
+#
+# Required repo secrets for migrations on main (Settings → Secrets and variables → Actions):
+#   SUPABASE_ACCESS_TOKEN   — Account → Access Tokens (supabase.com/dashboard/account/tokens)
+#   SUPABASE_DB_PASSWORD    — Project Settings → Database → Database password
+#   SUPABASE_PROJECT_REF    — Project Settings → General → Reference ID
+# Optional:
+#   VERCEL_DEPLOY_HOOK_URL  — Vercel Project → Settings → Git → Deploy Hooks (Production)
 
 name: CI / CD
 
@@ -98,3 +108,59 @@ jobs:
         run: |
           echo "Pushed to ${{ github.ref_name }}."
           echo "In Vercel Git settings: Production Branch = main only; staging uses a Preview deployment URL."
+
+  migrate:
+    name: Supabase migrations (production)
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Supabase secrets
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          missing=0
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then echo "::error::Secret SUPABASE_ACCESS_TOKEN is not set."; missing=1; fi
+          if [ -z "$SUPABASE_DB_PASSWORD" ]; then echo "::error::Secret SUPABASE_DB_PASSWORD is not set."; missing=1; fi
+          if [ -z "$SUPABASE_PROJECT_REF" ]; then echo "::error::Secret SUPABASE_PROJECT_REF is not set."; missing=1; fi
+          exit "$missing"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project and push migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
+          supabase db push --linked
+
+  deploy-production:
+    name: Trigger Vercel production deploy (optional)
+    runs-on: ubuntu-latest
+    needs: [migrate]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 5
+    steps:
+      - name: POST deploy hook
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "VERCEL_DEPLOY_HOOK_URL not set — skipping hook. Production may still deploy via Vercel Git integration."
+            exit 0
+          fi
+          curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
