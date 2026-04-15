@@ -1,0 +1,63 @@
+# CI: runs on every pull request and every push (all branches).
+#
+# CD (Vercel): use Vercel → Project → Git with:
+#   - Production branch: main  (only main deploys to your production domain)
+#   - staging and other branches: Preview deployments (unique URLs per branch)
+# Set env vars in Vercel for Production vs Preview as needed.
+#
+# Optional: deploy via Vercel CLI from a separate workflow using VERCEL_TOKEN (avoid duplicate
+# builds if Vercel Git integration already deploys the same commits).
+
+name: CI / CD
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-cd-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: pokepath
+
+env:
+  NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+  SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
+
+jobs:
+  ci:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: pokepath/.nvmrc
+          cache: npm
+          cache-dependency-path: pokepath/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Note Vercel branch mapping (main = prod, staging = preview)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+        run: |
+          echo "Pushed to ${{ github.ref_name }}."
+          echo "In Vercel Git settings: Production Branch = main only; staging uses a Preview deployment URL."
