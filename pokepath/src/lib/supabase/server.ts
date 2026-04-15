@@ -20,7 +20,7 @@ export const supabaseServer = createClient(supabaseUrl, supabaseServiceKey, {
 })
 
 // Helper function for server-side operations that require admin privileges
-export const createServerSupabaseClient = (context?: any) => {
+export const createServerSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,

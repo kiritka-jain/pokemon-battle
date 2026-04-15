@@ -19,8 +19,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Helper function to check if Supabase is properly configured
 export const checkSupabaseConnection = async () => {
   try {
-    const { data, error } = await supabase.from('_supabase_health').select('*').limit(1)
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "relation does not exist" which is expected
+    const { error } = await supabase.from('_supabase_health').select('*').limit(1)
+    // Missing table/relation is expected; PostgREST codes vary by version (e.g. PGRST116, PGRST205).
+    const missingRelation =
+      error?.code === 'PGRST116' ||
+      error?.code === 'PGRST205' ||
+      (error?.message?.includes('schema cache') ?? false)
+    if (error && !missingRelation) {
       throw error
     }
     return { success: true, message: 'Supabase connection successful' }
