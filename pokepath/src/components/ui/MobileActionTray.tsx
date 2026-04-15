@@ -3,11 +3,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useGameStore } from '@/src/lib/store/gameStore'
+import type { GameState, PendingAction } from '@/src/types/game'
 import { getConfirmActionLabel } from '@/src/lib/ui/pendingActionLabels'
 
 const TRAY_ERROR_MS = 3000
 
-export function MobileActionTray() {
+export type MobileActionTrayProps = {
+  afterSuccessfulCommit?: (ctx: {
+    committedAction: PendingAction
+    snapshot: Pick<
+      GameState,
+      'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
+    >
+  }) => void
+}
+
+export function MobileActionTray(props: MobileActionTrayProps = {}) {
+  const { afterSuccessfulCommit } = props
   const pendingAction = useGameStore((s) => s.pendingAction)
   const clearPendingAction = useGameStore((s) => s.clearPendingAction)
   const [trayError, setTrayError] = useState<string | null>(null)
@@ -25,6 +37,7 @@ export function MobileActionTray() {
   }, [clearHideTimer])
 
   const commitAction = useCallback(() => {
+    const pendingBefore = useGameStore.getState().pendingAction
     useGameStore.getState().commitAction()
     const err = useGameStore.getState().error
     if (err) {
@@ -37,8 +50,22 @@ export function MobileActionTray() {
     } else {
       clearHideTimer()
       setTrayError(null)
+      if (pendingBefore.type !== null) {
+        const s = useGameStore.getState()
+        afterSuccessfulCommit?.({
+          committedAction: pendingBefore,
+          snapshot: {
+            turn: s.turn,
+            players: s.players,
+            fences: s.fences,
+            winner: s.winner,
+            status: s.status,
+            pendingAction: s.pendingAction,
+          },
+        })
+      }
     }
-  }, [clearHideTimer])
+  }, [afterSuccessfulCommit, clearHideTimer])
 
   const onCancel = useCallback(() => {
     clearHideTimer()

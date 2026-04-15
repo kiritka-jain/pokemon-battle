@@ -20,8 +20,20 @@ export const initialGameState: GameState = {
   error: null,
 }
 
+export type InitMatchDisplay = {
+  player1Username?: string
+  player2Username?: string
+  player1Elo?: number
+  player2Elo?: number
+}
+
 type GameStore = GameState & {
-  initMatch: (matchId: string, player1Id: string, player2Id: string) => void
+  initMatch: (
+    matchId: string,
+    player1Id: string,
+    player2Id: string,
+    display?: InitMatchDisplay,
+  ) => void
   setPendingAction: (action: PendingAction) => void
   clearPendingAction: () => void
   commitAction: () => void
@@ -33,7 +45,7 @@ export const useGameStore = create<GameStore>()(
   immer((set) => ({
     ...initialGameState,
 
-    initMatch: (matchId, player1Id, player2Id) =>
+    initMatch: (matchId, player1Id, player2Id, display) =>
       set((draft) => {
         draft.matchId = matchId
         draft.status = 'active'
@@ -43,16 +55,16 @@ export const useGameStore = create<GameStore>()(
           pos: { x: 4, y: 8 },
           fencesLeft: 10,
           type: 'Normal',
-          username: 'Player 1',
-          elo: 1000,
+          username: display?.player1Username ?? 'Player 1',
+          elo: display?.player1Elo ?? 1000,
         }
         draft.players.player2 = {
           id: player2Id,
           pos: { x: 4, y: 0 },
           fencesLeft: 10,
           type: 'Normal',
-          username: 'Player 2',
-          elo: 1000,
+          username: display?.player2Username ?? 'Player 2',
+          elo: display?.player2Elo ?? 1000,
         }
         draft.fences = []
         draft.pendingAction = { type: null }
