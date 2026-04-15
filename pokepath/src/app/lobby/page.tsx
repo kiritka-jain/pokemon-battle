@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import type { Session } from '@supabase/supabase-js'
 
@@ -13,11 +13,6 @@ import {
 } from '@/src/lib/supabase/auth'
 import { supabase } from '@/src/lib/supabase/client'
 
-type ProfileRow = {
-  username: string
-  elo_rating: number
-}
-
 function displayName(session: Session): string {
   const meta = session.user.user_metadata as Record<string, unknown> | undefined
   const fullName =
@@ -27,33 +22,11 @@ function displayName(session: Session): string {
   return session.user.email ?? 'Signed-in user'
 }
 
-type SignalPayload =
-  | { type: 'QUEUE'; userId: string; elo: number }
-  | { type: 'DEQUEUE'; userId: string }
-  | { type: 'MATCH_FOUND'; matchId: string; player1Id: string; player2Id: string }
-
 export default function LobbyPage() {
   const router = useRouter()
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(false)
-  const [profile, setProfile] = useState<ProfileRow | null>(null)
-  const [searching, setSearching] = useState(false)
-  const [queueError, setQueueError] = useState<string | null>(null)
-
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
-  const queueMapRef = useRef<Map<string, number>>(new Map())
-  const pairIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const pairingRef = useRef(false)
-  const sessionRef = useRef<Session | null>(null)
-  const profileRef = useRef<ProfileRow | null>(null)
-
-  useEffect(() => {
-    sessionRef.current = session
-  }, [session])
-
-  useEffect(() => {
-    profileRef.current = profile
-  }, [profile])
+  const [profile, setProfile] = useState<{ username: string; elo_rating: number } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -92,171 +65,17 @@ export default function LobbyPage() {
       .maybeSingle()
       .then(({ data }) => {
         if (cancelled || !data) return
-        setProfile({
-          username: data.username,
-          elo_rating: data.elo_rating,
-        })
+        setProfile({ username: data.username, elo_rating: data.elo_rating })
       })
     return () => {
       cancelled = true
     }
   }, [session?.user.id])
 
-  const cleanupChannel = useCallback(() => {
-    if (pairIntervalRef.current) {
-      clearInterval(pairIntervalRef.current)
-      pairIntervalRef.current = null
-    }
-    const ch = channelRef.current
-    channelRef.current = null
-    if (ch) {
-      void supabase.removeChannel(ch)
-    }
-    pairingRef.current = false
-  }, [])
-
-  useEffect(() => {
-    if (!searching || !session?.user.id) return
-
-    const uid = session.user.id
-    const elo = profileRef.current?.elo_rating ?? 1200
-    queueMapRef.current.set(uid, elo)
-
-    const ch = supabase.channel('matchmaking', {
-      config: { broadcast: { self: true } },
-    })
-    channelRef.current = ch
-
-    ch.on(
-      'broadcast',
-      { event: 'signal' },
-      ({ payload }: { payload: SignalPayload | Record<string, unknown> }) => {
-        const p = payload as SignalPayload
-        if (p.type === 'QUEUE') {
-          queueMapRef.current.set(p.userId, p.elo)
-        }
-        if (p.type === 'DEQUEUE') {
-          queueMapRef.current.delete(p.userId)
-        }
-        if (p.type === 'MATCH_FOUND') {
-          if (p.player1Id === uid || p.player2Id === uid) {
-            cleanupChannel()
-            setSearching(false)
-            queueMapRef.current.clear()
-            router.push(`/match/${p.matchId}`)
-          }
-        }
-      },
-    )
-
-    void ch.subscribe(async (status) => {
-      if (status !== 'SUBSCRIBED') return
-      await ch.send({
-        type: 'broadcast',
-        event: 'signal',
-        payload: {
-          type: 'QUEUE',
-          userId: uid,
-          elo,
-        } satisfies SignalPayload as unknown as Record<string, unknown>,
-      })
-    })
-
-    const tryPair = async () => {
-      const s = sessionRef.current
-      if (!s?.user?.id || pairingRef.current) return
-      const ids = [...queueMapRef.current.keys()].sort((a, b) => a.localeCompare(b))
-      if (ids.length < 2) return
-
-      const player1Id = ids[0]
-      const player2Id = ids[1]
-      if (s.user.id !== player1Id) return
-
-      pairingRef.current = true
-
-      const {
-        data: { session: fresh },
-      } = await getSession()
-      const token = fresh?.access_token
-      if (!token) {
-        pairingRef.current = false
-        return
-      }
-
-      const res = await fetch(`${window.location.origin}/api/match/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ player1Id, player2Id }),
-      })
-
-      const json = (await res.json()) as { matchId?: string; error?: string }
-      if (!res.ok || !json.matchId) {
-        setQueueError(json.error ?? 'Could not create match')
-        pairingRef.current = false
-        return
-      }
-
-      const found: SignalPayload = {
-        type: 'MATCH_FOUND',
-        matchId: json.matchId,
-        player1Id,
-        player2Id,
-      }
-
-      await ch.send({
-        type: 'broadcast',
-        event: 'signal',
-        payload: found as unknown as Record<string, unknown>,
-      })
-
-      cleanupChannel()
-      setSearching(false)
-      queueMapRef.current.clear()
-      router.push(`/match/${json.matchId}`)
-    }
-
-    pairIntervalRef.current = setInterval(() => {
-      void tryPair()
-    }, 600)
-
-    return () => {
-      cleanupChannel()
-    }
-  }, [cleanupChannel, router, searching, session?.user.id])
-
-  const handleFindMatch = useCallback(() => {
-    setQueueError(null)
-    setSearching(true)
-  }, [])
-
-  const handleCancelSearch = useCallback(() => {
-    const uid = sessionRef.current?.user.id
-    if (uid) {
-      queueMapRef.current.delete(uid)
-      const ch = channelRef.current
-      if (ch) {
-        void ch.send({
-          type: 'broadcast',
-          event: 'signal',
-          payload: { type: 'DEQUEUE', userId: uid } satisfies SignalPayload as unknown as Record<
-            string,
-            unknown
-          >,
-        })
-      }
-    }
-    cleanupChannel()
-    setSearching(false)
-  }, [cleanupChannel])
-
   const handleSignOut = useCallback(async () => {
-    handleCancelSearch()
     await signOut()
     router.push('/login')
-  }, [handleCancelSearch, router])
+  }, [router])
 
   if (!ready) {
     return (
@@ -309,39 +128,13 @@ export default function LobbyPage() {
         </dl>
 
         <div className="mt-8 flex flex-col gap-3">
-          {!searching ? (
-            <button
-              type="button"
-              onClick={handleFindMatch}
-              className="flex h-12 w-full items-center justify-center rounded-full bg-emerald-700 px-5 text-sm font-medium text-white transition-colors hover:bg-emerald-800 dark:bg-emerald-600"
-            >
-              Find match
-            </button>
-          ) : (
-            <div className="flex flex-col items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-6 dark:border-emerald-900/50 dark:bg-emerald-950/30">
-              <div
-                className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent dark:border-emerald-400"
-                aria-hidden
-              />
-              <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
-                Searching…
-              </p>
-              <button
-                type="button"
-                onClick={handleCancelSearch}
-                className="mt-1 rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-800 dark:border-zinc-600 dark:text-zinc-200"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
+          <Link
+            href="/lobby/find-match"
+            className="flex h-12 w-full items-center justify-center rounded-full bg-emerald-700 px-5 text-sm font-medium text-white transition-colors hover:bg-emerald-800 dark:bg-emerald-600"
+          >
+            Find a match
+          </Link>
         </div>
-
-        {queueError ? (
-          <p className="mt-4 text-center text-sm text-red-600 dark:text-red-400" role="alert">
-            {queueError}
-          </p>
-        ) : null}
 
         <div className="mt-6 flex flex-col gap-2 border-t border-zinc-200 pt-6 dark:border-zinc-800">
           <Link
