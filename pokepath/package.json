@@ -11,7 +11,11 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "supabase:start": "npx supabase start --workdir ..",
+    "supabase:stop": "npx supabase stop --workdir ..",
+    "supabase:status": "npx supabase status --workdir ..",
+    "supabase:reset": "npx supabase db reset --workdir .."
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
