@@ -1,0 +1,217 @@
+'use client'
+
+import type { MouseEvent, ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+
+import { validateMove } from '@/src/lib/engine/moveValidator'
+import { useGameStore } from '@/src/lib/store/gameStore'
+import type { GameState, PlayerKey } from '@/src/types/game'
+
+import { FenceOverlay } from './FenceOverlay'
+import { FenceSlotGrid } from './FenceSlotGrid'
+import { PlayerSprites } from './PlayerSprite'
+import { Tile } from './Tile'
+
+type GameBoardProps = {
+  localPlayerKey?: PlayerKey
+}
+
+export function GameBoard({ localPlayerKey = 'player1' }: GameBoardProps) {
+  const [showLabels, setShowLabels] = useState(false)
+  const [interactionMode, setInteractionMode] = useState<'move' | 'fence'>('move')
+  const [fenceOrientation, setFenceOrientation] = useState<'H' | 'V'>('H')
+  const [hoverFenceSlot, setHoverFenceSlot] = useState<{
+    x: number
+    y: number
+    orientation: 'H' | 'V'
+  } | null>(null)
+
+  const matchId = useGameStore((s) => s.matchId)
+  const turn = useGameStore((s) => s.turn)
+  const status = useGameStore((s) => s.status)
+  const fences = useGameStore((s) => s.fences)
+  const pendingAction = useGameStore((s) => s.pendingAction)
+  const player1 = useGameStore((s) => s.players.player1)
+  const player2 = useGameStore((s) => s.players.player2)
+  const winner = useGameStore((s) => s.winner)
+  const error = useGameStore((s) => s.error)
+  const setPendingAction = useGameStore((s) => s.setPendingAction)
+
+  const canInteract =
+    status === 'active' && winner === null && turn === localPlayerKey
+
+  const validDestinations = useMemo(() => {
+    const set = new Set<string>()
+    if (!canInteract) return set
+    const gs: GameState = {
+      matchId,
+      status,
+      turn,
+      players: { player1, player2 },
+      fences,
+      pendingAction,
+      winner,
+      error,
+    }
+    for (let x = 0; x < 9; x++) {
+      for (let y = 0; y < 9; y++) {
+        if (validateMove(gs.turn, { x, y }, gs).valid) {
+          set.add(`${x},${y}`)
+        }
+      }
+    }
+    return set
+  }, [
+    canInteract,
+    matchId,
+    status,
+    turn,
+    player1,
+    player2,
+    fences,
+    pendingAction,
+    winner,
+    error,
+  ])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'r' || e.key === 'R') {
+        if (interactionMode === 'fence') {
+          e.preventDefault()
+          setFenceOrientation((o) => (o === 'H' ? 'V' : 'H'))
+        }
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [interactionMode])
+
+  const onSelectMove = useCallback(
+    (x: number, y: number) => {
+      setPendingAction({ type: 'move', targetPos: { x, y } })
+    },
+    [setPendingAction]
+  )
+
+  const onPickFence = useCallback(
+    (x: number, y: number, orientation: 'H' | 'V') => {
+      setPendingAction({ type: 'fence', targetFence: { x, y, orientation } })
+    },
+    [setPendingAction]
+  )
+
+  const pendingFenceVisual =
+    pendingAction.type === 'fence' && pendingAction.targetFence
+      ? pendingAction.targetFence
+      : null
+
+  const handleContextMenu = useCallback(
+    (e: MouseEvent) => {
+      if (interactionMode !== 'fence') return
+      e.preventDefault()
+      setFenceOrientation((o) => (o === 'H' ? 'V' : 'H'))
+    },
+    [interactionMode]
+  )
+
+  const tiles: ReactNode[] = []
+  for (let y = 0; y < 9; y++) {
+    for (let x = 0; x < 9; x++) {
+      const key = `${x},${y}`
+      const isPending =
+        pendingAction.type === 'move' &&
+        pendingAction.targetPos?.x === x &&
+        pendingAction.targetPos?.y === y
+      tiles.push(
+        <Tile
+          key={key}
+          x={x}
+          y={y}
+          isLight={(x + y) % 2 === 0}
+          showLabels={showLabels}
+          interactionMode={interactionMode}
+          isPendingMoveTarget={Boolean(isPending)}
+          isValidMoveDestination={validDestinations.has(key)}
+          canInteract={canInteract}
+          onSelectMove={onSelectMove}
+        />
+      )
+    }
+  }
+
+  return (
+    <div
+      className="w-full max-w-[520px]"
+      onContextMenu={handleContextMenu}
+    >
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="flex rounded-lg border border-emerald-800/30 bg-emerald-50/80 p-0.5 dark:border-emerald-700/40 dark:bg-emerald-950/40">
+          <button
+            type="button"
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              interactionMode === 'move'
+                ? 'bg-white text-emerald-950 shadow dark:bg-emerald-900 dark:text-emerald-50'
+                : 'text-emerald-800/80 dark:text-emerald-200/70'
+            }`}
+            onClick={() => setInteractionMode('move')}
+          >
+            Move
+          </button>
+          <button
+            type="button"
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              interactionMode === 'fence'
+                ? 'bg-white text-emerald-950 shadow dark:bg-emerald-900 dark:text-emerald-50'
+                : 'text-emerald-800/80 dark:text-emerald-200/70'
+            }`}
+            onClick={() => setInteractionMode('fence')}
+          >
+            Fence
+          </button>
+        </div>
+        {interactionMode === 'fence' && (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <kbd className="rounded border border-zinc-400 px-1 font-mono text-xs">R</kbd> or
+            right-click: rotate ({fenceOrientation}). Hover a gap to preview.
+          </p>
+        )}
+        <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <input
+            type="checkbox"
+            checked={showLabels}
+            onChange={(e) => setShowLabels(e.target.checked)}
+            className="rounded border-zinc-400"
+          />
+          Coords
+        </label>
+      </div>
+
+      <div className="relative w-[100vw] max-w-[500px] aspect-square mx-auto select-none">
+        <div className="absolute inset-0 z-0 grid grid-cols-9 grid-rows-9 gap-0 overflow-hidden rounded-sm ring-1 ring-emerald-900/20">
+          {tiles}
+        </div>
+
+        <FenceOverlay
+          fences={fences}
+          pendingFence={pendingFenceVisual}
+          pendingPlacedBy={turn}
+          hoverFence={
+            interactionMode === 'fence' && canInteract
+              ? hoverFenceSlot
+              : null
+          }
+        />
+
+        <FenceSlotGrid
+          orientation={fenceOrientation}
+          visible={interactionMode === 'fence' && canInteract}
+          onHover={setHoverFenceSlot}
+          onPick={onPickFence}
+        />
+
+        <PlayerSprites />
+      </div>
+    </div>
+  )
+}
