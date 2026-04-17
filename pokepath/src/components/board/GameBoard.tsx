@@ -17,7 +17,6 @@ type GameBoardProps = {
 }
 
 export function GameBoard({ localPlayerKey = 'player1' }: GameBoardProps) {
-  const [showLabels, setShowLabels] = useState(false)
   const [interactionMode, setInteractionMode] = useState<'move' | 'fence'>('move')
   const [fenceOrientation, setFenceOrientation] = useState<'H' | 'V'>('H')
   const [hoverFenceSlot, setHoverFenceSlot] = useState<{
@@ -129,7 +128,6 @@ export function GameBoard({ localPlayerKey = 'player1' }: GameBoardProps) {
           x={x}
           y={y}
           isLight={(x + y) % 2 === 0}
-          showLabels={showLabels}
           interactionMode={interactionMode}
           isPendingMoveTarget={Boolean(isPending)}
           isValidMoveDestination={validDestinations.has(key)}
@@ -176,15 +174,6 @@ export function GameBoard({ localPlayerKey = 'player1' }: GameBoardProps) {
             right-click: rotate ({fenceOrientation}). Hover a gap to preview.
           </p>
         )}
-        <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-          <input
-            type="checkbox"
-            checked={showLabels}
-            onChange={(e) => setShowLabels(e.target.checked)}
-            className="rounded border-zinc-400"
-          />
-          Coords
-        </label>
       </div>
 
       <div className="relative w-[100vw] max-w-[500px] aspect-square mx-auto select-none">

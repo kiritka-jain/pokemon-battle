@@ -6,7 +6,6 @@ type TileProps = {
   x: number
   y: number
   isLight: boolean
-  showLabels: boolean
   interactionMode: BoardInteractionMode
   /** Highlight when this square is the pending move target */
   isPendingMoveTarget: boolean
@@ -20,7 +19,6 @@ export function Tile({
   x,
   y,
   isLight,
-  showLabels,
   interactionMode,
   isPendingMoveTarget,
   isValidMoveDestination,
@@ -47,13 +45,21 @@ export function Tile({
     onSelectMove(x, y)
   }
 
+  const col = x + 1
+  const row = y + 1
+  const ariaLabel =
+    canInteract && interactionMode === 'move'
+      ? `Move to column ${col}, row ${row}`
+      : `Board square column ${col}, row ${row}`
+
   return (
     <button
       type="button"
+      aria-label={ariaLabel}
       onClick={handleClick}
       disabled={!canInteract || interactionMode !== 'move'}
       className={[
-        'relative flex items-center justify-center text-[10px] font-mono text-emerald-950/40 dark:text-emerald-100/30',
+        'relative flex items-center justify-center',
         base,
         validHint,
         pending,
@@ -67,11 +73,6 @@ export function Tile({
           className="pointer-events-none absolute inset-0 m-auto h-2 w-2 rounded-full bg-emerald-600/50 dark:bg-emerald-300/40"
           aria-hidden
         />
-      )}
-      {showLabels && (
-        <span className="z-[1]">
-          {x},{y}
-        </span>
       )}
     </button>
   )
