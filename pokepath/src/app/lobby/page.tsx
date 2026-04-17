@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import type { Session } from '@supabase/supabase-js'
 
+import { EditUsernameModal } from '@/src/components/account/EditUsernameModal'
 import {
   getSession,
   onAuthStateChange,
@@ -27,6 +28,7 @@ export default function LobbyPage() {
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(false)
   const [profile, setProfile] = useState<{ username: string; elo_rating: number } | null>(null)
+  const [editUsernameOpen, setEditUsernameOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -112,7 +114,18 @@ export default function LobbyPage() {
             <dd className="text-zinc-900 dark:text-zinc-100">{displayName(session)}</dd>
           </div>
           <div>
-            <dt className="font-medium text-zinc-500 dark:text-zinc-400">Username</dt>
+            <dt className="flex items-center justify-between gap-2 font-medium text-zinc-500 dark:text-zinc-400">
+              <span>Username</span>
+              {/* Epic 2 / ticket 2.3: single entry point for editing `profiles.username`. */}
+              <button
+                type="button"
+                onClick={() => setEditUsernameOpen(true)}
+                disabled={!profile}
+                className="font-normal text-emerald-700 underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-50 dark:text-emerald-400"
+              >
+                Edit
+              </button>
+            </dt>
             <dd className="text-zinc-900 dark:text-zinc-100">{profile?.username ?? '—'}</dd>
           </div>
           <div>
@@ -151,6 +164,17 @@ export default function LobbyPage() {
             Sign out
           </button>
         </div>
+
+        <EditUsernameModal
+          open={editUsernameOpen}
+          initialUsername={profile?.username ?? ''}
+          onClose={() => setEditUsernameOpen(false)}
+          onSaved={(username) => {
+            setProfile((p) =>
+              p ? { ...p, username } : { username, elo_rating: 1200 },
+            )
+          }}
+        />
       </main>
     </div>
   )

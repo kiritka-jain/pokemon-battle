@@ -61,6 +61,8 @@ describe('useGameStore', () => {
     expect(s.turn).toBe('player1')
     expect(s.players.player1.id).toBe('uuid-a')
     expect(s.players.player2.id).toBe('uuid-b')
+    expect(s.players.player1.username).toBe('Trainer_uuida')
+    expect(s.players.player2.username).toBe('Trainer_uuidb')
 
     useGameStore.getState().setPendingAction({
       type: 'move',
@@ -76,6 +78,16 @@ describe('useGameStore', () => {
     expect(s.error).toBeNull()
     expect(s.errorCode).toBeNull()
     expect(s.players.player1.pos).toEqual({ x: 4, y: 7 })
+  })
+
+  it('initMatch uses provided display usernames when set', () => {
+    useGameStore.getState().initMatch('m1', 'uuid-a', 'uuid-b', {
+      player1Username: 'RedRival',
+      player2Username: 'BlueRival',
+    })
+    const s = useGameStore.getState()
+    expect(s.players.player1.username).toBe('RedRival')
+    expect(s.players.player2.username).toBe('BlueRival')
   })
 
   it('commitAction on invalid move sets error and keeps state', () => {

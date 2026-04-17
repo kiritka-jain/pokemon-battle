@@ -1,5 +1,6 @@
 'use client'
 
+import { displayNameForSeat } from '@/src/lib/playerDisplayName'
 import { useGameStore } from '@/src/lib/store/gameStore'
 import { STARTING_FENCES, type PlayerKey } from '@/src/types/game'
 
@@ -16,8 +17,8 @@ export function Scoreboard({ localPlayerKey }: ScoreboardProps) {
   const p1 = useGameStore((s) => s.players.player1)
   const p2 = useGameStore((s) => s.players.player2)
 
-  const name1 = p1.username ?? 'Player 1'
-  const name2 = p2.username ?? 'Player 2'
+  const name1 = displayNameForSeat({ username: p1.username, userId: p1.id })
+  const name2 = displayNameForSeat({ username: p2.username, userId: p2.id })
   const elo1 = p1.elo ?? 1000
   const elo2 = p2.elo ?? 1000
 

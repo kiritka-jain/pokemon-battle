@@ -4,6 +4,7 @@ import { immer } from 'zustand/middleware/immer'
 import { getFenceId } from '@/src/lib/engine/boardUtils'
 import { validateFencePlacement } from '@/src/lib/engine/fenceValidator'
 import { validateMove } from '@/src/lib/engine/moveValidator'
+import { displayNameForSeat } from '@/src/lib/playerDisplayName'
 import type { GameState, PendingAction, PlayerKey } from '@/src/types/game'
 
 export const initialGameState: GameState = {
@@ -57,7 +58,10 @@ export const useGameStore = create<GameStore>()(
           pos: { x: 4, y: 8 },
           fencesLeft: 10,
           type: 'Normal',
-          username: display?.player1Username ?? 'Player 1',
+          username: displayNameForSeat({
+            username: display?.player1Username,
+            userId: player1Id,
+          }),
           elo: display?.player1Elo ?? 1000,
         }
         draft.players.player2 = {
@@ -65,7 +69,10 @@ export const useGameStore = create<GameStore>()(
           pos: { x: 4, y: 0 },
           fencesLeft: 10,
           type: 'Normal',
-          username: display?.player2Username ?? 'Player 2',
+          username: displayNameForSeat({
+            username: display?.player2Username,
+            userId: player2Id,
+          }),
           elo: display?.player2Elo ?? 1000,
         }
         draft.fences = []
