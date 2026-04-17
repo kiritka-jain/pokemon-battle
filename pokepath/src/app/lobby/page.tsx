@@ -29,6 +29,7 @@ export default function LobbyPage() {
   const [ready, setReady] = useState(false)
   const [profile, setProfile] = useState<{ username: string; elo_rating: number } | null>(null)
   const [editUsernameOpen, setEditUsernameOpen] = useState(false)
+  const [editUsernameModalKey, setEditUsernameModalKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -119,7 +120,10 @@ export default function LobbyPage() {
               {/* Epic 2 / ticket 2.3: single entry point for editing `profiles.username`. */}
               <button
                 type="button"
-                onClick={() => setEditUsernameOpen(true)}
+                onClick={() => {
+                  setEditUsernameModalKey((n) => n + 1)
+                  setEditUsernameOpen(true)
+                }}
                 disabled={!profile}
                 className="font-normal text-emerald-700 underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-50 dark:text-emerald-400"
               >
@@ -165,16 +169,18 @@ export default function LobbyPage() {
           </button>
         </div>
 
-        <EditUsernameModal
-          open={editUsernameOpen}
-          initialUsername={profile?.username ?? ''}
-          onClose={() => setEditUsernameOpen(false)}
-          onSaved={(username) => {
-            setProfile((p) =>
-              p ? { ...p, username } : { username, elo_rating: 1200 },
-            )
-          }}
-        />
+        {editUsernameOpen ? (
+          <EditUsernameModal
+            key={editUsernameModalKey}
+            initialUsername={profile?.username ?? ''}
+            onClose={() => setEditUsernameOpen(false)}
+            onSaved={(username) => {
+              setProfile((p) =>
+                p ? { ...p, username } : { username, elo_rating: 1200 },
+              )
+            }}
+          />
+        ) : null}
       </main>
     </div>
   )

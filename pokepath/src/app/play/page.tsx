@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+
+import type { Session } from '@supabase/supabase-js'
 
 import { GameBoard } from '@/src/components/board/GameBoard'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
@@ -19,6 +21,7 @@ export default function PlayPage() {
   const [localPlayerKey, setLocalPlayerKey] = useState<PlayerKey>('player1')
   const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [profileUsername, setProfileUsername] = useState<string | null | undefined>(undefined)
+  const profileFetchSeq = useRef(0)
 
   const turn = useGameStore((s) => s.turn)
   const status = useGameStore((s) => s.status)
@@ -26,44 +29,47 @@ export default function PlayPage() {
 
   useEffect(() => {
     let cancelled = false
-    void getSession().then(({ data: { session } }) => {
+
+    const applySession = (session: Session | null) => {
       if (cancelled) return
-      setSessionUserId(session?.user.id ?? null)
+      const id = session?.user.id ?? null
+      setSessionUserId(id)
+      if (!id) {
+        setProfileUsername(undefined)
+        return
+      }
+      setProfileUsername(undefined)
+      const seq = ++profileFetchSeq.current
+      void supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (cancelled || seq !== profileFetchSeq.current) return
+          setProfileUsername(data?.username ?? null)
+        })
+    }
+
+    const scheduleApplySession = (session: Session | null) => {
+      queueMicrotask(() => applySession(session))
+    }
+
+    void getSession().then(({ data: { session } }) => {
+      scheduleApplySession(session)
     })
+
     const {
       data: { subscription },
     } = onAuthStateChange((_e, session) => {
-      setSessionUserId(session?.user.id ?? null)
-      if (!session) {
-        setProfileUsername(undefined)
-      }
+      scheduleApplySession(session)
     })
+
     return () => {
       cancelled = true
       subscription.unsubscribe()
     }
   }, [])
-
-  useEffect(() => {
-    if (!sessionUserId) {
-      setProfileUsername(undefined)
-      return
-    }
-    setProfileUsername(undefined)
-    let cancelled = false
-    void supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', sessionUserId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return
-        setProfileUsername(data?.username ?? null)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [sessionUserId])
 
   useEffect(() => {
     const display = buildLocalMatchDisplay(sessionUserId, profileUsername)

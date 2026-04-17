@@ -1,12 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { validateUsernameForSave } from '@/src/lib/profile/usernameValidation'
 import { supabase } from '@/src/lib/supabase/client'
 
 type EditUsernameModalProps = {
-  open: boolean
   initialUsername: string
   onClose: () => void
   onSaved: (username: string) => void
@@ -20,7 +19,6 @@ function isUniqueViolation(error: { code?: string; message?: string } | null): b
 }
 
 export function EditUsernameModal({
-  open,
   initialUsername,
   onClose,
   onSaved,
@@ -28,14 +26,6 @@ export function EditUsernameModal({
   const [value, setValue] = useState(initialUsername)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    if (open) {
-      setValue(initialUsername)
-      setError(null)
-      setSaving(false)
-    }
-  }, [open, initialUsername])
 
   const handleSave = useCallback(async () => {
     setError(null)
@@ -74,8 +64,6 @@ export function EditUsernameModal({
     onClose()
     setSaving(false)
   }, [value, onSaved, onClose])
-
-  if (!open) return null
 
   return (
     <div
