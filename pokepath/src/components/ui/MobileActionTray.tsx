@@ -11,11 +11,8 @@ import { useToast } from '@/src/components/ui/toast'
 const TRAY_ERROR_MS = 3000
 
 export type MobileActionTrayProps = {
-  actingUserId: string
   afterSuccessfulCommit?: (ctx: {
     committedAction: PendingAction
-    /** `players[turn].id` immediately before commit (defense-in-depth for broadcast). */
-    actorIdBeforeCommit: string
     snapshot: Pick<
       GameState,
       'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
@@ -23,8 +20,8 @@ export type MobileActionTrayProps = {
   }) => void
 }
 
-export function MobileActionTray(props: MobileActionTrayProps) {
-  const { actingUserId, afterSuccessfulCommit } = props
+export function MobileActionTray(props: MobileActionTrayProps = {}) {
+  const { afterSuccessfulCommit } = props
   const { show: showToast } = useToast()
   const pendingAction = useGameStore((s) => s.pendingAction)
   const clearPendingAction = useGameStore((s) => s.clearPendingAction)
@@ -44,11 +41,8 @@ export function MobileActionTray(props: MobileActionTrayProps) {
   }, [clearHideTimer])
 
   const commitAction = useCallback(() => {
-    const store = useGameStore.getState()
-    const pendingBefore = store.pendingAction
-    const turnBefore = store.turn
-    const actorIdBeforeCommit = store.players[turnBefore].id
-    store.commitAction({ actingUserId })
+    const pendingBefore = useGameStore.getState().pendingAction
+    useGameStore.getState().commitAction()
     const errCode = useGameStore.getState().errorCode
     if (errCode === 'TRAP_OPPONENT') {
       showToast({ message: TRAP_OPPONENT_TOAST_MESSAGE, variant: 'error' })
@@ -69,7 +63,6 @@ export function MobileActionTray(props: MobileActionTrayProps) {
         const s = useGameStore.getState()
         afterSuccessfulCommit?.({
           committedAction: pendingBefore,
-          actorIdBeforeCommit,
           snapshot: {
             turn: s.turn,
             players: s.players,
@@ -81,7 +74,7 @@ export function MobileActionTray(props: MobileActionTrayProps) {
         })
       }
     }
-  }, [actingUserId, afterSuccessfulCommit, clearCommitErrorCode, clearHideTimer, showToast])
+  }, [afterSuccessfulCommit, clearCommitErrorCode, clearHideTimer, showToast])
 
   const onCancel = useCallback(() => {
     clearHideTimer()

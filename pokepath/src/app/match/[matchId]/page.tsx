@@ -149,20 +149,12 @@ export default function MatchPage() {
   const afterSuccessfulCommit = useCallback(
     (ctx: {
       committedAction: PendingAction
-      actorIdBeforeCommit: string
       snapshot: Pick<
         GameState,
         'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
       >
     }) => {
       if (!sessionUserId || !localPlayerKey) return
-      if (sessionUserId !== ctx.actorIdBeforeCommit) {
-        console.warn('[match] afterSuccessfulCommit: session user does not match pre-commit turn actor', {
-          sessionUserId,
-          actorIdBeforeCommit: ctx.actorIdBeforeCommit,
-        })
-        return
-      }
       plyCount.current += 1
       broadcastTurn({
         fromUserId: sessionUserId,
@@ -193,15 +185,6 @@ export default function MatchPage() {
         }
 
         const state = useGameStore.getState() as GameState
-        const expectedActorId = state.players[state.turn].id
-        if (p.fromUserId !== expectedActorId) {
-          console.warn('[match] TURN fromUserId does not match current turn player', {
-            fromUserId: p.fromUserId,
-            expectedActorId,
-            turn: state.turn,
-          })
-          return
-        }
         const mover: PlayerKey = state.turn
         if (!validateIncomingTurn(state, p.action, mover)) {
           console.warn('[match] Rejected invalid opponent turn', p)
@@ -323,7 +306,7 @@ export default function MatchPage() {
 
       <GameBoard localPlayerKey={localPlayerKey} />
 
-      <MobileActionTray actingUserId={sessionUserId} afterSuccessfulCommit={afterSuccessfulCommit} />
+      <MobileActionTray afterSuccessfulCommit={afterSuccessfulCommit} />
 
       <VictoryModal
         open={Boolean(winner)}

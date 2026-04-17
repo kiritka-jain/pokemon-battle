@@ -71,7 +71,7 @@ describe('useGameStore', () => {
     s = useGameStore.getState()
     expect(s.pendingAction.type).toBe('move')
 
-    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
+    useGameStore.getState().commitAction()
     s = useGameStore.getState()
     expect(s.turn).toBe('player2')
     expect(s.pendingAction).toEqual({ type: null })
@@ -90,28 +90,13 @@ describe('useGameStore', () => {
     expect(s.players.player2.username).toBe('BlueRival')
   })
 
-  it('commitAction rejects wrong actingUserId with no state mutation', () => {
-    useGameStore.getState().initMatch('m1', 'uuid-a', 'uuid-b')
-    useGameStore.getState().setPendingAction({
-      type: 'move',
-      targetPos: { x: 4, y: 7 },
-    })
-    const before = useGameStore.getState()
-    useGameStore.getState().commitAction({ actingUserId: 'uuid-b' })
-    const s = useGameStore.getState()
-    expect(s.error).toBe('Not your turn')
-    expect(s.turn).toBe(before.turn)
-    expect(s.players.player1.pos).toEqual(before.players.player1.pos)
-    expect(s.pendingAction).toEqual(before.pendingAction)
-  })
-
   it('commitAction on invalid move sets error and keeps state', () => {
     useGameStore.getState().initMatch('m1', 'uuid-a', 'uuid-b')
     useGameStore.getState().setPendingAction({
       type: 'move',
       targetPos: { x: 4, y: 5 },
     })
-    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
+    useGameStore.getState().commitAction()
     const s = useGameStore.getState()
     expect(s.error).toBe('Invalid move distance')
     expect(s.errorCode).toBeNull()
@@ -128,7 +113,7 @@ describe('useGameStore', () => {
       type: 'fence',
       targetFence: { x: 4, y: 6, orientation: 'H' },
     })
-    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
+    useGameStore.getState().commitAction()
     const s = useGameStore.getState()
     expect(s.error).toBeNull()
     expect(s.errorCode).toBe('TRAP_OPPONENT')
@@ -143,14 +128,14 @@ describe('useGameStore', () => {
       type: 'move',
       targetPos: { x: 4, y: 7 },
     })
-    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
+    useGameStore.getState().commitAction()
     expect(useGameStore.getState().turn).toBe('player2')
 
     useGameStore.getState().setPendingAction({
       type: 'fence',
       targetFence: { x: 2, y: 3, orientation: 'H' },
     })
-    useGameStore.getState().commitAction({ actingUserId: 'uuid-b' })
+    useGameStore.getState().commitAction()
 
     const s = useGameStore.getState()
     expect(s.turn).toBe('player1')
@@ -189,7 +174,7 @@ describe('useGameStore', () => {
       type: 'move',
       targetPos: { x: 4, y: 0 },
     })
-    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
+    useGameStore.getState().commitAction()
 
     const s = useGameStore.getState()
     expect(s.winner).toBe('player1')

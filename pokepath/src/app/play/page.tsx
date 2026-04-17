@@ -16,10 +16,9 @@ import type { PlayerKey } from '@/src/types/game'
 const LOCAL_MATCH_ID = 'local-dev'
 const LOCAL_P1 = 'p1'
 const LOCAL_P2 = 'p2'
-/** `/play` is always the player1 seat; use `/match/[id]` or a second browser to test as player2. */
-const LOCAL_PLAYER_KEY: PlayerKey = 'player1'
 
 export default function PlayPage() {
+  const [localPlayerKey, setLocalPlayerKey] = useState<PlayerKey>('player1')
   const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [profileUsername, setProfileUsername] = useState<string | null | undefined>(undefined)
   const profileFetchSeq = useRef(0)
@@ -91,11 +90,29 @@ export default function PlayPage() {
         </p>
       </div>
 
-      <Scoreboard localPlayerKey={LOCAL_PLAYER_KEY} />
+      <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+        <span className="text-zinc-600 dark:text-zinc-400">Local player:</span>
+        <button
+          type="button"
+          onClick={() => setLocalPlayerKey('player1')}
+          className={`rounded-md px-2 py-1 ${localPlayerKey === 'player1' ? 'bg-red-200 dark:bg-red-900/50' : 'bg-zinc-200 dark:bg-zinc-800'}`}
+        >
+          P1
+        </button>
+        <button
+          type="button"
+          onClick={() => setLocalPlayerKey('player2')}
+          className={`rounded-md px-2 py-1 ${localPlayerKey === 'player2' ? 'bg-blue-200 dark:bg-blue-900/50' : 'bg-zinc-200 dark:bg-zinc-800'}`}
+        >
+          P2
+        </button>
+      </div>
 
-      <GameBoard localPlayerKey={LOCAL_PLAYER_KEY} />
+      <Scoreboard localPlayerKey={localPlayerKey} />
 
-      <MobileActionTray actingUserId={LOCAL_P1} />
+      <GameBoard localPlayerKey={localPlayerKey} />
+
+      <MobileActionTray />
     </div>
   )
 }
