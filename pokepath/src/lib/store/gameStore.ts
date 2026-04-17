@@ -38,7 +38,7 @@ type GameStore = GameState & {
   ) => void
   setPendingAction: (action: PendingAction) => void
   clearPendingAction: () => void
-  commitAction: () => void
+  commitAction: (args: { actingUserId: string }) => void
   clearCommitErrorCode: () => void
   applyOpponentAction: (partial: Partial<GameState>) => void
   setWinner: (player: PlayerKey) => void
@@ -101,7 +101,7 @@ export const useGameStore = create<GameStore>()(
         draft.errorCode = null
       }),
 
-    commitAction: () =>
+    commitAction: ({ actingUserId }) =>
       set((draft) => {
         const pending = draft.pendingAction
         if (pending.type === null) {
@@ -115,6 +115,13 @@ export const useGameStore = create<GameStore>()(
         }
 
         const playerKey = draft.turn
+        const turnPlayerId = draft.players[playerKey].id
+        if (turnPlayerId !== actingUserId) {
+          draft.error = 'Not your turn'
+          draft.errorCode = null
+          return
+        }
+
         const stateSnapshot = draft as GameState
 
         if (pending.type === 'move') {
