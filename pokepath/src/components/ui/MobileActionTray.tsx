@@ -75,9 +75,10 @@ export function MobileActionTray(props: MobileActionTrayProps = {}) {
 
   const disabled = pendingAction.type === null
 
+  /* Tray: z-50 above board overlays (FenceSlotGrid z-[25]); keep below modals (e.g. z-[100]). */
   return (
     <div
-      className="fixed bottom-0 left-0 z-50 w-full border-t border-zinc-200 bg-white/95 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] pt-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-sm dark:border-zinc-700 dark:bg-zinc-950/95"
+      className="fixed inset-x-0 bottom-0 z-50 w-full border-t border-zinc-200 bg-white/95 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] pt-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-sm dark:border-zinc-700 dark:bg-zinc-950/95"
       role="region"
       aria-label="Pending action"
     >

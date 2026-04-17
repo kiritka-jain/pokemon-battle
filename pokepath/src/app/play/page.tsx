@@ -19,6 +19,7 @@ export default function PlayPage() {
   }, [])
 
   return (
+    // pb-32: MobileActionTray is fixed bottom-0 and always mounted; padding keeps the board scrollable above it.
     <div className="flex min-h-full flex-col items-center gap-4 px-4 pb-32 pt-8">
       <div className="text-center">
         <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
@@ -49,7 +50,7 @@ export default function PlayPage() {
         </button>
       </div>
 
-      <Scoreboard />
+      <Scoreboard localPlayerKey={localPlayerKey} />
 
       <GameBoard localPlayerKey={localPlayerKey} />
 

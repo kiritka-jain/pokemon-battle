@@ -291,6 +291,7 @@ export default function MatchPage() {
         : ''
 
   return (
+    // pb-32: MobileActionTray is fixed bottom-0 and always mounted; padding keeps the board scrollable above it.
     <div className="flex min-h-full flex-col items-center gap-4 px-4 pb-32 pt-8">
       <div className="flex w-full max-w-[520px] items-center justify-between gap-2 text-sm">
         <Link href="/lobby" className="font-medium text-emerald-800 underline dark:text-emerald-400">
@@ -301,7 +302,7 @@ export default function MatchPage() {
         </Link>
       </div>
 
-      <Scoreboard />
+      <Scoreboard localPlayerKey={localPlayerKey} />
 
       <GameBoard localPlayerKey={localPlayerKey} />
 
