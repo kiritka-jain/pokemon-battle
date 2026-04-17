@@ -34,6 +34,7 @@ export function GameBoard({ localPlayerKey = 'player1' }: GameBoardProps) {
   const player2 = useGameStore((s) => s.players.player2)
   const winner = useGameStore((s) => s.winner)
   const error = useGameStore((s) => s.error)
+  const errorCode = useGameStore((s) => s.errorCode)
   const setPendingAction = useGameStore((s) => s.setPendingAction)
 
   const canInteract =
@@ -51,6 +52,7 @@ export function GameBoard({ localPlayerKey = 'player1' }: GameBoardProps) {
       pendingAction,
       winner,
       error,
+      errorCode,
     }
     for (let x = 0; x < 9; x++) {
       for (let y = 0; y < 9; y++) {
@@ -71,6 +73,7 @@ export function GameBoard({ localPlayerKey = 'player1' }: GameBoardProps) {
     pendingAction,
     winner,
     error,
+    errorCode,
   ])
 
   useEffect(() => {

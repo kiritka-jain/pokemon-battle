@@ -23,6 +23,7 @@ function baseState(overrides: Partial<GameState> = {}): GameState {
     pendingAction: { type: null },
     winner: null,
     error: null,
+    errorCode: null,
     ...overrides,
   }
 }

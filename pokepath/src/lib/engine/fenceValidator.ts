@@ -1,11 +1,14 @@
-import type { FenceOrientation, GameState, PlayerKey } from '@/src/types/game'
+import type { FenceOrientation, GameCommitErrorCode, GameState, PlayerKey } from '@/src/types/game'
 
 import { getFenceId } from './boardUtils'
 import { hasPathToGoal } from './pathfinding'
 
+export const FENCE_TRAP_OPPONENT_CODE: GameCommitErrorCode = 'TRAP_OPPONENT'
+
 export interface FenceValidationResult {
   valid: boolean
   reason?: string
+  code?: GameCommitErrorCode
 }
 
 function fenceExists(
@@ -64,10 +67,18 @@ export function validateFencePlacement(
   const tempFences = [...gameState.fences, newFence]
 
   if (!hasPathToGoal(gameState.players.player1.pos, 0, tempFences)) {
-    return { valid: false, reason: "Would block Player 1's path" }
+    return {
+      valid: false,
+      code: FENCE_TRAP_OPPONENT_CODE,
+      reason: "Would block Player 1's path",
+    }
   }
   if (!hasPathToGoal(gameState.players.player2.pos, 8, tempFences)) {
-    return { valid: false, reason: "Would block Player 2's path" }
+    return {
+      valid: false,
+      code: FENCE_TRAP_OPPONENT_CODE,
+      reason: "Would block Player 2's path",
+    }
   }
 
   return { valid: true }

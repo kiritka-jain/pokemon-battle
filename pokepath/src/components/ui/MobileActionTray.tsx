@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGameStore } from '@/src/lib/store/gameStore'
 import type { GameState, PendingAction } from '@/src/types/game'
 import { getConfirmActionLabel } from '@/src/lib/ui/pendingActionLabels'
+import { TRAP_OPPONENT_TOAST_MESSAGE } from '@/src/lib/ui/trapFenceToast'
+import { useToast } from '@/src/components/ui/toast'
 
 const TRAY_ERROR_MS = 3000
 
@@ -20,8 +22,10 @@ export type MobileActionTrayProps = {
 
 export function MobileActionTray(props: MobileActionTrayProps = {}) {
   const { afterSuccessfulCommit } = props
+  const { show: showToast } = useToast()
   const pendingAction = useGameStore((s) => s.pendingAction)
   const clearPendingAction = useGameStore((s) => s.clearPendingAction)
+  const clearCommitErrorCode = useGameStore((s) => s.clearCommitErrorCode)
   const [trayError, setTrayError] = useState<string | null>(null)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -39,6 +43,11 @@ export function MobileActionTray(props: MobileActionTrayProps = {}) {
   const commitAction = useCallback(() => {
     const pendingBefore = useGameStore.getState().pendingAction
     useGameStore.getState().commitAction()
+    const errCode = useGameStore.getState().errorCode
+    if (errCode === 'TRAP_OPPONENT') {
+      showToast({ message: TRAP_OPPONENT_TOAST_MESSAGE, variant: 'error' })
+      clearCommitErrorCode()
+    }
     const err = useGameStore.getState().error
     if (err) {
       setTrayError(err)
@@ -65,7 +74,7 @@ export function MobileActionTray(props: MobileActionTrayProps = {}) {
         })
       }
     }
-  }, [afterSuccessfulCommit, clearHideTimer])
+  }, [afterSuccessfulCommit, clearCommitErrorCode, clearHideTimer, showToast])
 
   const onCancel = useCallback(() => {
     clearHideTimer()

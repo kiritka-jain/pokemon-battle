@@ -7,6 +7,9 @@ export const STARTING_FENCES = 10
 export type PlayerKey = 'player1' | 'player2';
 export type FenceOrientation = 'H' | 'V';
 export type GameStatus = 'waiting' | 'active' | 'finished';
+
+/** Set on failed commitAction when validation supplies a stable code (e.g. fence trap). */
+export type GameCommitErrorCode = 'TRAP_OPPONENT';
 export type ActionType = 'move' | 'fence';
 
 export interface Position {
@@ -49,4 +52,6 @@ export interface GameState {
   winner: PlayerKey | null;
   /** Last validation error from commitAction (cleared on success / new match) */
   error: string | null;
+  /** Machine-readable code for selective UI (e.g. toast); cleared with `error` */
+  errorCode: GameCommitErrorCode | null;
 }

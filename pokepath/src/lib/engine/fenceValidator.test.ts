@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Fence, GameState } from '@/src/types/game'
 
 import { getFenceId } from './boardUtils'
-import { validateFencePlacement } from './fenceValidator'
+import { FENCE_TRAP_OPPONENT_CODE, validateFencePlacement } from './fenceValidator'
 
 const fence = (partial: Omit<Fence, 'placedBy'> & { placedBy?: Fence['placedBy'] }): Fence => ({
   placedBy: 'player1',
@@ -23,6 +23,7 @@ function baseState(overrides: Partial<GameState> = {}): GameState {
     pendingAction: { type: null },
     winner: null,
     error: null,
+    errorCode: null,
     ...overrides,
   }
 }
@@ -124,6 +125,7 @@ describe('validateFencePlacement', () => {
     })
     expect(validateFencePlacement('player1', 4, 6, 'H', s)).toEqual({
       valid: false,
+      code: FENCE_TRAP_OPPONENT_CODE,
       reason: "Would block Player 1's path",
     })
   })

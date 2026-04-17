@@ -1,6 +1,27 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getFenceId } from '@/src/lib/engine/boardUtils'
+import type { Fence } from '@/src/types/game'
+
 import { initialGameState, useGameStore } from './gameStore'
+
+const fence = (partial: Omit<Fence, 'placedBy'> & { placedBy?: Fence['placedBy'] }): Fence => ({
+  placedBy: 'player1',
+  ...partial,
+})
+
+/** Nearly full horizontal barrier at row `fy` with gap at column 4 (same shape as fenceValidator tests). */
+function wallWithGapAt4(fy: number): Fence[] {
+  const anchors = [0, 2, 6, 7] as const
+  return anchors.map((x) =>
+    fence({
+      id: getFenceId(x, fy, 'H'),
+      x,
+      y: fy,
+      orientation: 'H',
+    }),
+  )
+}
 
 describe('useGameStore', () => {
   beforeEach(() => {
@@ -28,6 +49,7 @@ describe('useGameStore', () => {
     expect(s.pendingAction).toEqual({ type: null })
     expect(s.winner).toBeNull()
     expect(s.error).toBeNull()
+    expect(s.errorCode).toBeNull()
   })
 
   it('initMatch → setPendingAction(move) → commitAction toggles turn and clears pending', () => {
@@ -52,6 +74,7 @@ describe('useGameStore', () => {
     expect(s.turn).toBe('player2')
     expect(s.pendingAction).toEqual({ type: null })
     expect(s.error).toBeNull()
+    expect(s.errorCode).toBeNull()
     expect(s.players.player1.pos).toEqual({ x: 4, y: 7 })
   })
 
@@ -64,8 +87,26 @@ describe('useGameStore', () => {
     useGameStore.getState().commitAction()
     const s = useGameStore.getState()
     expect(s.error).toBe('Invalid move distance')
+    expect(s.errorCode).toBeNull()
     expect(s.turn).toBe('player1')
     expect(s.players.player1.pos).toEqual({ x: 4, y: 8 })
+  })
+
+  it('commitAction on path-blocking fence sets TRAP_OPPONENT without inline error string', () => {
+    useGameStore.getState().initMatch('m1', 'uuid-a', 'uuid-b')
+    useGameStore.setState({
+      fences: wallWithGapAt4(6),
+    })
+    useGameStore.getState().setPendingAction({
+      type: 'fence',
+      targetFence: { x: 4, y: 6, orientation: 'H' },
+    })
+    useGameStore.getState().commitAction()
+    const s = useGameStore.getState()
+    expect(s.error).toBeNull()
+    expect(s.errorCode).toBe('TRAP_OPPONENT')
+    expect(s.fences).toHaveLength(4)
+    expect(s.players.player1.fencesLeft).toBe(10)
   })
 
   it('commitAction: move then fence updates positions, fences, and turns', () => {
@@ -95,6 +136,7 @@ describe('useGameStore', () => {
       placedBy: 'player2',
     })
     expect(s.error).toBeNull()
+    expect(s.errorCode).toBeNull()
   })
 
   it('commitAction: winning move sets winner and status finished', () => {

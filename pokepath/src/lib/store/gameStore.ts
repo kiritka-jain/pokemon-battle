@@ -18,6 +18,7 @@ export const initialGameState: GameState = {
   pendingAction: { type: null },
   winner: null,
   error: null,
+  errorCode: null,
 }
 
 export type InitMatchDisplay = {
@@ -37,6 +38,7 @@ type GameStore = GameState & {
   setPendingAction: (action: PendingAction) => void
   clearPendingAction: () => void
   commitAction: () => void
+  clearCommitErrorCode: () => void
   applyOpponentAction: (partial: Partial<GameState>) => void
   setWinner: (player: PlayerKey) => void
 }
@@ -70,18 +72,26 @@ export const useGameStore = create<GameStore>()(
         draft.pendingAction = { type: null }
         draft.winner = null
         draft.error = null
+        draft.errorCode = null
       }),
 
     setPendingAction: (action) =>
       set((draft) => {
         draft.pendingAction = action
         draft.error = null
+        draft.errorCode = null
       }),
 
     clearPendingAction: () =>
       set((draft) => {
         draft.pendingAction = { type: null }
         draft.error = null
+        draft.errorCode = null
+      }),
+
+    clearCommitErrorCode: () =>
+      set((draft) => {
+        draft.errorCode = null
       }),
 
     commitAction: () =>
@@ -93,6 +103,7 @@ export const useGameStore = create<GameStore>()(
 
         if (draft.status !== 'active' || draft.winner !== null) {
           draft.error = 'Game is not active'
+          draft.errorCode = null
           return
         }
 
@@ -102,17 +113,20 @@ export const useGameStore = create<GameStore>()(
         if (pending.type === 'move') {
           if (pending.targetPos === undefined) {
             draft.error = 'No move target'
+            draft.errorCode = null
             return
           }
           const result = validateMove(playerKey, pending.targetPos, stateSnapshot)
           if (!result.valid) {
             draft.error = result.reason ?? 'Invalid move'
+            draft.errorCode = null
             return
           }
 
           draft.players[playerKey].pos = pending.targetPos
           draft.pendingAction = { type: null }
           draft.error = null
+          draft.errorCode = null
 
           if (draft.players.player1.pos.y === 0) {
             draft.winner = 'player1'
@@ -132,12 +146,19 @@ export const useGameStore = create<GameStore>()(
         if (pending.type === 'fence') {
           if (pending.targetFence === undefined) {
             draft.error = 'No fence target'
+            draft.errorCode = null
             return
           }
           const { x, y, orientation } = pending.targetFence
           const result = validateFencePlacement(playerKey, x, y, orientation, stateSnapshot)
           if (!result.valid) {
-            draft.error = result.reason ?? 'Invalid fence placement'
+            if (result.code) {
+              draft.error = null
+              draft.errorCode = result.code
+            } else {
+              draft.error = result.reason ?? 'Invalid fence placement'
+              draft.errorCode = null
+            }
             return
           }
 
@@ -151,6 +172,7 @@ export const useGameStore = create<GameStore>()(
           draft.players[playerKey].fencesLeft -= 1
           draft.pendingAction = { type: null }
           draft.error = null
+          draft.errorCode = null
           draft.turn = draft.turn === 'player1' ? 'player2' : 'player1'
         }
       }),
@@ -174,6 +196,7 @@ export const useGameStore = create<GameStore>()(
         }
         if (partial.winner !== undefined) draft.winner = partial.winner
         if (partial.error !== undefined) draft.error = partial.error
+        if (partial.errorCode !== undefined) draft.errorCode = partial.errorCode
       }),
 
     setWinner: (player) =>
