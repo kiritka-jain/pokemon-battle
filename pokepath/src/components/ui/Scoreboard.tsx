@@ -6,11 +6,18 @@ import { STARTING_FENCES, type PlayerKey } from '@/src/types/game'
 
 import { FenceInventory } from './FenceInventory'
 
+export type ScoreboardTurnStripMode = 'viewer' | 'activePlayer'
+
 type ScoreboardProps = {
   localPlayerKey: PlayerKey
+  /** Local hot-seat: name whose turn it is. Online match: viewer seat vs opponent (default). */
+  turnStripMode?: ScoreboardTurnStripMode
 }
 
-export function Scoreboard({ localPlayerKey }: ScoreboardProps) {
+export function Scoreboard({
+  localPlayerKey,
+  turnStripMode = 'viewer',
+}: ScoreboardProps) {
   const turn = useGameStore((s) => s.turn)
   const status = useGameStore((s) => s.status)
   const winner = useGameStore((s) => s.winner)
@@ -28,7 +35,12 @@ export function Scoreboard({ localPlayerKey }: ScoreboardProps) {
   let turnStripLabel: string
   let turnStripClass: string
   if (status === 'active' && winner === null) {
-    if (turn === localPlayerKey) {
+    if (turnStripMode === 'activePlayer') {
+      const activeName = turn === 'player1' ? name1 : name2
+      turnStripLabel = `${activeName}'s turn`
+      turnStripClass =
+        'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-emerald-950'
+    } else if (turn === localPlayerKey) {
       turnStripLabel = 'Your turn'
       turnStripClass =
         'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-emerald-950'

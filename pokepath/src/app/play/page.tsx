@@ -6,19 +6,19 @@ import type { Session } from '@supabase/supabase-js'
 
 import { GameBoard } from '@/src/components/board/GameBoard'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
-import { Scoreboard } from '@/src/components/ui/Scoreboard'
+import { Scoreboard, type ScoreboardTurnStripMode } from '@/src/components/ui/Scoreboard'
 import { buildLocalMatchDisplay } from '@/src/lib/play/localMatchDisplay'
 import { useGameStore } from '@/src/lib/store/gameStore'
 import { getSession, onAuthStateChange } from '@/src/lib/supabase/auth'
 import { supabase } from '@/src/lib/supabase/client'
-import type { PlayerKey } from '@/src/types/game'
 
 const LOCAL_MATCH_ID = 'local-dev'
 const LOCAL_P1 = 'p1'
 const LOCAL_P2 = 'p2'
 
+const PLAY_TURN_STRIP: ScoreboardTurnStripMode = 'activePlayer'
+
 export default function PlayPage() {
-  const [localPlayerKey, setLocalPlayerKey] = useState<PlayerKey>('player1')
   const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [profileUsername, setProfileUsername] = useState<string | null | undefined>(undefined)
   const profileFetchSeq = useRef(0)
@@ -90,27 +90,9 @@ export default function PlayPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-        <span className="text-zinc-600 dark:text-zinc-400">Local player:</span>
-        <button
-          type="button"
-          onClick={() => setLocalPlayerKey('player1')}
-          className={`rounded-md px-2 py-1 ${localPlayerKey === 'player1' ? 'bg-red-200 dark:bg-red-900/50' : 'bg-zinc-200 dark:bg-zinc-800'}`}
-        >
-          P1
-        </button>
-        <button
-          type="button"
-          onClick={() => setLocalPlayerKey('player2')}
-          className={`rounded-md px-2 py-1 ${localPlayerKey === 'player2' ? 'bg-blue-200 dark:bg-blue-900/50' : 'bg-zinc-200 dark:bg-zinc-800'}`}
-        >
-          P2
-        </button>
-      </div>
+      <Scoreboard localPlayerKey={turn} turnStripMode={PLAY_TURN_STRIP} />
 
-      <Scoreboard localPlayerKey={localPlayerKey} />
-
-      <GameBoard localPlayerKey={localPlayerKey} />
+      <GameBoard localPlayerKey={turn} />
 
       <MobileActionTray />
     </div>
