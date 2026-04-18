@@ -6,6 +6,7 @@ import type { Session } from '@supabase/supabase-js'
 
 import { GameBoard } from '@/src/components/board/GameBoard'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
+import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
 import { Scoreboard, type ScoreboardTurnStripMode } from '@/src/components/ui/Scoreboard'
 import { buildLocalMatchDisplay } from '@/src/lib/play/localMatchDisplay'
 import { LOCAL_DEV_MATCH_ID, useGameStore } from '@/src/lib/store/gameStore'
@@ -90,11 +91,13 @@ export default function PlayPage() {
         </p>
       </div>
 
-      <Scoreboard localPlayerKey={turn} turnStripMode={PLAY_TURN_STRIP} />
+      <PortraitOnlyGameShell>
+        <Scoreboard localPlayerKey={turn} turnStripMode={PLAY_TURN_STRIP} />
 
-      <GameBoard localPlayerKey={turn} />
+        <GameBoard localPlayerKey={turn} />
 
-      <MobileActionTray actingUserId={actingUserId} />
+        <MobileActionTray actingUserId={actingUserId} />
+      </PortraitOnlyGameShell>
     </div>
   )
 }

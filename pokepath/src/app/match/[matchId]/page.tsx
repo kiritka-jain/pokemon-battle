@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { GameBoard } from '@/src/components/board/GameBoard'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
+import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
 import { Scoreboard } from '@/src/components/ui/Scoreboard'
 import { VictoryModal } from '@/src/components/ui/VictoryModal'
 import {
@@ -301,32 +302,34 @@ export default function MatchPage() {
         : ''
 
   return (
-    // pb-32: MobileActionTray is fixed bottom-0 and always mounted; padding keeps the board scrollable above it.
-    <div className="flex min-h-full flex-col items-center gap-4 px-4 pb-32 pt-8">
-      <div className="flex w-full max-w-[520px] items-center justify-between gap-2 text-sm">
-        <Link href="/lobby" className="font-medium text-emerald-800 underline dark:text-emerald-400">
-          ← Lobby
-        </Link>
-        <Link href="/leaderboard" className="text-zinc-600 underline dark:text-zinc-400">
-          Leaderboard
-        </Link>
+    <PortraitOnlyGameShell>
+      {/* pb-32: MobileActionTray is fixed bottom-0 and always mounted; padding keeps the board scrollable above it. */}
+      <div className="flex min-h-full flex-col items-center gap-4 px-4 pb-32 pt-8">
+        <div className="flex w-full max-w-[520px] items-center justify-between gap-2 text-sm">
+          <Link href="/lobby" className="font-medium text-emerald-800 underline dark:text-emerald-400">
+            ← Lobby
+          </Link>
+          <Link href="/leaderboard" className="text-zinc-600 underline dark:text-zinc-400">
+            Leaderboard
+          </Link>
+        </div>
+
+        <Scoreboard localPlayerKey={localPlayerKey} />
+
+        <GameBoard localPlayerKey={localPlayerKey} />
+
+        <MobileActionTray
+          actingUserId={sessionUserId}
+          afterSuccessfulCommit={afterSuccessfulCommit}
+        />
+
+        <VictoryModal
+          open={Boolean(winner)}
+          title={winTitle}
+          subtitle={winner ? `Match ${matchId.slice(0, 8)}…` : undefined}
+          onPrimary={() => router.push('/lobby')}
+        />
       </div>
-
-      <Scoreboard localPlayerKey={localPlayerKey} />
-
-      <GameBoard localPlayerKey={localPlayerKey} />
-
-      <MobileActionTray
-        actingUserId={sessionUserId}
-        afterSuccessfulCommit={afterSuccessfulCommit}
-      />
-
-      <VictoryModal
-        open={Boolean(winner)}
-        title={winTitle}
-        subtitle={winner ? `Match ${matchId.slice(0, 8)}…` : undefined}
-        onPrimary={() => router.push('/lobby')}
-      />
-    </div>
+    </PortraitOnlyGameShell>
   )
 }
