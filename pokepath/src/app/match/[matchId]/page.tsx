@@ -8,7 +8,10 @@ import { GameBoard } from '@/src/components/board/GameBoard'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { Scoreboard } from '@/src/components/ui/Scoreboard'
 import { VictoryModal } from '@/src/components/ui/VictoryModal'
-import { validateIncomingTurn } from '@/src/lib/match/validateIncomingTurn'
+import {
+  playerKeyForUserId,
+  validateIncomingTurn,
+} from '@/src/lib/match/validateIncomingTurn'
 import { getSession, onAuthStateChange } from '@/src/lib/supabase/auth'
 import { supabase } from '@/src/lib/supabase/client'
 import {
@@ -149,12 +152,15 @@ export default function MatchPage() {
   const afterSuccessfulCommit = useCallback(
     (ctx: {
       committedAction: PendingAction
+      previousTurn: PlayerKey
       snapshot: Pick<
         GameState,
         'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
       >
     }) => {
       if (!sessionUserId || !localPlayerKey) return
+      const moverId = ctx.snapshot.players[ctx.previousTurn].id
+      if (sessionUserId !== moverId) return
       plyCount.current += 1
       broadcastTurn({
         fromUserId: sessionUserId,
@@ -185,8 +191,12 @@ export default function MatchPage() {
         }
 
         const state = useGameStore.getState() as GameState
-        const mover: PlayerKey = state.turn
-        if (!validateIncomingTurn(state, p.action, mover)) {
+        const senderKey = playerKeyForUserId(state, p.fromUserId)
+        if (senderKey === null || senderKey !== state.turn) {
+          console.warn('[match] TURN sender does not match current turn seat', p.fromUserId)
+          return
+        }
+        if (!validateIncomingTurn(state, p.action, senderKey)) {
           console.warn('[match] Rejected invalid opponent turn', p)
           return
         }
@@ -306,7 +316,10 @@ export default function MatchPage() {
 
       <GameBoard localPlayerKey={localPlayerKey} />
 
-      <MobileActionTray afterSuccessfulCommit={afterSuccessfulCommit} />
+      <MobileActionTray
+        actingUserId={sessionUserId}
+        afterSuccessfulCommit={afterSuccessfulCommit}
+      />
 
       <VictoryModal
         open={Boolean(winner)}

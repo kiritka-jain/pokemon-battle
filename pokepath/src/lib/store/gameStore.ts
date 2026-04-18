@@ -7,6 +7,9 @@ import { validateMove } from '@/src/lib/engine/moveValidator'
 import { displayNameForSeat } from '@/src/lib/playerDisplayName'
 import type { GameState, PendingAction, PlayerKey } from '@/src/types/game'
 
+/** Local hot-seat match id: `commitAction` skips acting-user id check (ticket 3.2). */
+export const LOCAL_DEV_MATCH_ID = 'local-dev'
+
 export const initialGameState: GameState = {
   matchId: null,
   status: 'waiting',
@@ -38,7 +41,7 @@ type GameStore = GameState & {
   ) => void
   setPendingAction: (action: PendingAction) => void
   clearPendingAction: () => void
-  commitAction: () => void
+  commitAction: (args: { actingUserId: string }) => void
   clearCommitErrorCode: () => void
   applyOpponentAction: (partial: Partial<GameState>) => void
   setWinner: (player: PlayerKey) => void
@@ -101,7 +104,7 @@ export const useGameStore = create<GameStore>()(
         draft.errorCode = null
       }),
 
-    commitAction: () =>
+    commitAction: ({ actingUserId }) =>
       set((draft) => {
         const pending = draft.pendingAction
         if (pending.type === null) {
@@ -110,6 +113,13 @@ export const useGameStore = create<GameStore>()(
 
         if (draft.status !== 'active' || draft.winner !== null) {
           draft.error = 'Game is not active'
+          draft.errorCode = null
+          return
+        }
+
+        const skipActorCheck = draft.matchId === LOCAL_DEV_MATCH_ID
+        if (!skipActorCheck && draft.players[draft.turn].id !== actingUserId) {
+          draft.error = 'Not your turn'
           draft.errorCode = null
           return
         }

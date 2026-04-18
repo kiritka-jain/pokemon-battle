@@ -8,11 +8,10 @@ import { GameBoard } from '@/src/components/board/GameBoard'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { Scoreboard, type ScoreboardTurnStripMode } from '@/src/components/ui/Scoreboard'
 import { buildLocalMatchDisplay } from '@/src/lib/play/localMatchDisplay'
-import { useGameStore } from '@/src/lib/store/gameStore'
+import { LOCAL_DEV_MATCH_ID, useGameStore } from '@/src/lib/store/gameStore'
 import { getSession, onAuthStateChange } from '@/src/lib/supabase/auth'
 import { supabase } from '@/src/lib/supabase/client'
 
-const LOCAL_MATCH_ID = 'local-dev'
 const LOCAL_P1 = 'p1'
 const LOCAL_P2 = 'p2'
 
@@ -24,6 +23,7 @@ export default function PlayPage() {
   const profileFetchSeq = useRef(0)
 
   const turn = useGameStore((s) => s.turn)
+  const actingUserId = useGameStore((s) => s.players[s.turn].id)
   const status = useGameStore((s) => s.status)
   const winner = useGameStore((s) => s.winner)
 
@@ -73,7 +73,7 @@ export default function PlayPage() {
 
   useEffect(() => {
     const display = buildLocalMatchDisplay(sessionUserId, profileUsername)
-    useGameStore.getState().initMatch(LOCAL_MATCH_ID, LOCAL_P1, LOCAL_P2, display)
+    useGameStore.getState().initMatch(LOCAL_DEV_MATCH_ID, LOCAL_P1, LOCAL_P2, display)
   }, [sessionUserId, profileUsername])
 
   return (
@@ -94,7 +94,7 @@ export default function PlayPage() {
 
       <GameBoard localPlayerKey={turn} />
 
-      <MobileActionTray />
+      <MobileActionTray actingUserId={actingUserId} />
     </div>
   )
 }

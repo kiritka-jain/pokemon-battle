@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { getFenceId } from '@/src/lib/engine/boardUtils'
 import type { Fence } from '@/src/types/game'
 
-import { initialGameState, useGameStore } from './gameStore'
+import { initialGameState, LOCAL_DEV_MATCH_ID, useGameStore } from './gameStore'
 
 const fence = (partial: Omit<Fence, 'placedBy'> & { placedBy?: Fence['placedBy'] }): Fence => ({
   placedBy: 'player1',
@@ -71,7 +71,7 @@ describe('useGameStore', () => {
     s = useGameStore.getState()
     expect(s.pendingAction.type).toBe('move')
 
-    useGameStore.getState().commitAction()
+    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
     s = useGameStore.getState()
     expect(s.turn).toBe('player2')
     expect(s.pendingAction).toEqual({ type: null })
@@ -96,7 +96,7 @@ describe('useGameStore', () => {
       type: 'move',
       targetPos: { x: 4, y: 5 },
     })
-    useGameStore.getState().commitAction()
+    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
     const s = useGameStore.getState()
     expect(s.error).toBe('Invalid move distance')
     expect(s.errorCode).toBeNull()
@@ -113,7 +113,7 @@ describe('useGameStore', () => {
       type: 'fence',
       targetFence: { x: 4, y: 6, orientation: 'H' },
     })
-    useGameStore.getState().commitAction()
+    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
     const s = useGameStore.getState()
     expect(s.error).toBeNull()
     expect(s.errorCode).toBe('TRAP_OPPONENT')
@@ -128,14 +128,14 @@ describe('useGameStore', () => {
       type: 'move',
       targetPos: { x: 4, y: 7 },
     })
-    useGameStore.getState().commitAction()
+    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
     expect(useGameStore.getState().turn).toBe('player2')
 
     useGameStore.getState().setPendingAction({
       type: 'fence',
       targetFence: { x: 2, y: 3, orientation: 'H' },
     })
-    useGameStore.getState().commitAction()
+    useGameStore.getState().commitAction({ actingUserId: 'uuid-b' })
 
     const s = useGameStore.getState()
     expect(s.turn).toBe('player1')
@@ -174,11 +174,38 @@ describe('useGameStore', () => {
       type: 'move',
       targetPos: { x: 4, y: 0 },
     })
-    useGameStore.getState().commitAction()
+    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
 
     const s = useGameStore.getState()
     expect(s.winner).toBe('player1')
     expect(s.status).toBe('finished')
     expect(s.turn).toBe('player1')
+  })
+
+  it('commitAction rejects wrong actingUserId with no state change', () => {
+    useGameStore.getState().initMatch('m1', 'uuid-a', 'uuid-b')
+    useGameStore.getState().setPendingAction({
+      type: 'move',
+      targetPos: { x: 4, y: 7 },
+    })
+    useGameStore.getState().commitAction({ actingUserId: 'uuid-b' })
+    const s = useGameStore.getState()
+    expect(s.error).toBe('Not your turn')
+    expect(s.turn).toBe('player1')
+    expect(s.players.player1.pos).toEqual({ x: 4, y: 8 })
+    expect(s.pendingAction.type).toBe('move')
+  })
+
+  it('commitAction skips actingUserId check for local-dev match id', () => {
+    useGameStore.getState().initMatch(LOCAL_DEV_MATCH_ID, 'p1', 'p2')
+    useGameStore.getState().setPendingAction({
+      type: 'move',
+      targetPos: { x: 4, y: 7 },
+    })
+    useGameStore.getState().commitAction({ actingUserId: 'someone-else' })
+    const s = useGameStore.getState()
+    expect(s.error).toBeNull()
+    expect(s.turn).toBe('player2')
+    expect(s.players.player1.pos).toEqual({ x: 4, y: 7 })
   })
 })

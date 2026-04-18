@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useGameStore } from '@/src/lib/store/gameStore'
-import type { GameState, PendingAction } from '@/src/types/game'
+import type { GameState, PendingAction, PlayerKey } from '@/src/types/game'
 import { getConfirmActionLabel } from '@/src/lib/ui/pendingActionLabels'
 import { TRAP_OPPONENT_TOAST_MESSAGE } from '@/src/lib/ui/trapFenceToast'
 import { useToast } from '@/src/components/ui/toast'
@@ -11,8 +11,12 @@ import { useToast } from '@/src/components/ui/toast'
 const TRAY_ERROR_MS = 3000
 
 export type MobileActionTrayProps = {
+  /** Authenticated user id (online) or current seat id for local dev; must match `players[turn].id` unless match is local-dev. */
+  actingUserId: string
   afterSuccessfulCommit?: (ctx: {
     committedAction: PendingAction
+    /** Seat that committed before `turn` advanced (ticket 3.3). */
+    previousTurn: PlayerKey
     snapshot: Pick<
       GameState,
       'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
@@ -20,8 +24,8 @@ export type MobileActionTrayProps = {
   }) => void
 }
 
-export function MobileActionTray(props: MobileActionTrayProps = {}) {
-  const { afterSuccessfulCommit } = props
+export function MobileActionTray(props: MobileActionTrayProps) {
+  const { actingUserId, afterSuccessfulCommit } = props
   const { show: showToast } = useToast()
   const pendingAction = useGameStore((s) => s.pendingAction)
   const clearPendingAction = useGameStore((s) => s.clearPendingAction)
@@ -42,7 +46,8 @@ export function MobileActionTray(props: MobileActionTrayProps = {}) {
 
   const commitAction = useCallback(() => {
     const pendingBefore = useGameStore.getState().pendingAction
-    useGameStore.getState().commitAction()
+    const previousTurn = useGameStore.getState().turn
+    useGameStore.getState().commitAction({ actingUserId })
     const errCode = useGameStore.getState().errorCode
     if (errCode === 'TRAP_OPPONENT') {
       showToast({ message: TRAP_OPPONENT_TOAST_MESSAGE, variant: 'error' })
@@ -63,6 +68,7 @@ export function MobileActionTray(props: MobileActionTrayProps = {}) {
         const s = useGameStore.getState()
         afterSuccessfulCommit?.({
           committedAction: pendingBefore,
+          previousTurn,
           snapshot: {
             turn: s.turn,
             players: s.players,
@@ -74,7 +80,7 @@ export function MobileActionTray(props: MobileActionTrayProps = {}) {
         })
       }
     }
-  }, [afterSuccessfulCommit, clearCommitErrorCode, clearHideTimer, showToast])
+  }, [actingUserId, afterSuccessfulCommit, clearCommitErrorCode, clearHideTimer, showToast])
 
   const onCancel = useCallback(() => {
     clearHideTimer()
