@@ -9,6 +9,9 @@
 #   SUPABASE_ACCESS_TOKEN   — Account → Access Tokens (supabase.com/dashboard/account/tokens)
 #   SUPABASE_DB_PASSWORD    — Project Settings → Database → Database password
 #   SUPABASE_PROJECT_REF    — Project Settings → General → Reference ID
+#
+# If migrate fails: logs include "migration list" before push. Reproduce locally from repo root:
+#   cd pokepath && npm run supabase:link && npm run supabase:migration:list && npm run supabase:db:push:dry-run
 
 name: CI / CD
 
@@ -129,13 +132,15 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.93.0
 
-      - name: Link project and push migrations
+      - name: Link project, list migrations, push migrations
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: |
-          supabase link --project-ref "$SUPABASE_PROJECT_REF"
-          supabase db push --linked
+          supabase link --project-ref "$SUPABASE_PROJECT_REF" -p "$SUPABASE_DB_PASSWORD" --yes
+          echo "=== Local vs remote migration list (before push) ==="
+          supabase migration list --linked
+          supabase db push --linked --yes
