@@ -9,6 +9,12 @@ import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
 import { Scoreboard, type ScoreboardTurnStripMode } from '@/src/components/ui/Scoreboard'
 import { buildLocalMatchDisplay } from '@/src/lib/play/localMatchDisplay'
+import {
+  PARTNER_PICK_STORAGE_KEY,
+  parsePartnerPickJson,
+  partnerPickLabel,
+} from '@/src/lib/pokemon/partnerPickStorage'
+import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
 import { LOCAL_DEV_MATCH_ID, useGameStore } from '@/src/lib/store/gameStore'
 import { getSession, onAuthStateChange } from '@/src/lib/supabase/auth'
 import { supabase } from '@/src/lib/supabase/client'
@@ -21,6 +27,7 @@ const PLAY_TURN_STRIP: ScoreboardTurnStripMode = 'activePlayer'
 export default function PlayPage() {
   const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [profileUsername, setProfileUsername] = useState<string | null | undefined>(undefined)
+  const [partnerLine, setPartnerLine] = useState<string | null>(null)
   const profileFetchSeq = useRef(0)
 
   const turn = useGameStore((s) => s.turn)
@@ -77,6 +84,17 @@ export default function PlayPage() {
     useGameStore.getState().initMatch(LOCAL_DEV_MATCH_ID, LOCAL_P1, LOCAL_P2, display)
   }, [sessionUserId, profileUsername])
 
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(PARTNER_PICK_STORAGE_KEY)
+      const parsed = parsePartnerPickJson(raw)
+      if (!parsed) return
+      setPartnerLine(partnerPickLabel(parsed, starterSpeciesById))
+    } catch {
+      setPartnerLine(null)
+    }
+  }, [])
+
   return (
     // pb-32: MobileActionTray is fixed bottom-0 and always mounted; padding keeps the board scrollable above it.
     <div className="flex min-h-full flex-col items-center gap-4 px-4 pb-32 pt-8">
@@ -89,6 +107,9 @@ export default function PlayPage() {
           {winner && ` · Winner: ${winner}`}
           {status === 'finished' && ' · Game over'}
         </p>
+        {partnerLine && (
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Partners: {partnerLine}</p>
+        )}
       </div>
 
       <PortraitOnlyGameShell>

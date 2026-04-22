@@ -45,6 +45,19 @@ export default function Home() {
           </Link>
 
           <Link
+            href="/pick"
+            className="rounded-xl border border-red-200 bg-red-50/70 p-5 transition-colors hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/25 dark:hover:bg-red-900/30"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
+              Type: Normal
+            </p>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Choose your partners</h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Open two of three Pokéballs and build your two-partner team before heading to the route.
+            </p>
+          </Link>
+
+          <Link
             href="/lobby"
             className="rounded-xl border border-indigo-200 bg-indigo-50/70 p-5 transition-colors hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/20 dark:hover:bg-indigo-900/30"
           >
