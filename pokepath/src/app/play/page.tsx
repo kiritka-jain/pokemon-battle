@@ -85,14 +85,17 @@ export default function PlayPage() {
   }, [sessionUserId, profileUsername])
 
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(PARTNER_PICK_STORAGE_KEY)
-      const parsed = parsePartnerPickJson(raw)
-      if (!parsed) return
-      setPartnerLine(partnerPickLabel(parsed, starterSpeciesById))
-    } catch {
-      setPartnerLine(null)
-    }
+    queueMicrotask(() => {
+      try {
+        const raw = sessionStorage.getItem(PARTNER_PICK_STORAGE_KEY)
+        const parsed = parsePartnerPickJson(raw)
+        setPartnerLine(
+          parsed ? partnerPickLabel(parsed, starterSpeciesById) : null,
+        )
+      } catch {
+        setPartnerLine(null)
+      }
+    })
   }, [])
 
   return (
