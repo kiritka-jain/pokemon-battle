@@ -44,6 +44,10 @@ type GameStore = GameState & {
   commitAction: (args: { actingUserId: string }) => void
   clearCommitErrorCode: () => void
   applyOpponentAction: (partial: Partial<GameState>) => void
+  /** Undo a local commit when persistence fails (multiplayer). */
+  restoreTurnSnapshot: (
+    snapshot: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'>,
+  ) => void
   setWinner: (player: PlayerKey) => void
 }
 
@@ -214,6 +218,27 @@ export const useGameStore = create<GameStore>()(
         if (partial.winner !== undefined) draft.winner = partial.winner
         if (partial.error !== undefined) draft.error = partial.error
         if (partial.errorCode !== undefined) draft.errorCode = partial.errorCode
+      }),
+
+    restoreTurnSnapshot: (snapshot) =>
+      set((draft) => {
+        draft.turn = snapshot.turn
+        draft.status = snapshot.status
+        draft.winner = snapshot.winner
+        draft.pendingAction = snapshot.pendingAction
+        draft.fences = snapshot.fences.map((f) => ({ ...f }))
+        draft.players.player1 = {
+          ...draft.players.player1,
+          ...snapshot.players.player1,
+          pos: { ...snapshot.players.player1.pos },
+        }
+        draft.players.player2 = {
+          ...draft.players.player2,
+          ...snapshot.players.player2,
+          pos: { ...snapshot.players.player2.pos },
+        }
+        draft.error = null
+        draft.errorCode = null
       }),
 
     setWinner: (player) =>

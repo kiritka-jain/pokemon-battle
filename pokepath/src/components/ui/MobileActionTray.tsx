@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { pickTurnSnapshot } from '@/src/lib/match/snapshotUtils'
 import { useGameStore } from '@/src/lib/store/gameStore'
 import type { GameState, PendingAction, PlayerKey } from '@/src/types/game'
 import { getConfirmActionLabel } from '@/src/lib/ui/pendingActionLabels'
@@ -14,6 +15,11 @@ export type MobileActionTrayProps = {
   /** Authenticated user id (online) or current seat id for local dev; must match `players[turn].id` unless match is local-dev. */
   actingUserId: string
   afterSuccessfulCommit?: (ctx: {
+    /** Board before `commitAction` (rollback target if persistence fails). */
+    preCommitSnapshot: Pick<
+      GameState,
+      'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
+    >
     committedAction: PendingAction
     /** Seat that committed before `turn` advanced (ticket 3.3). */
     previousTurn: PlayerKey
@@ -21,7 +27,7 @@ export type MobileActionTrayProps = {
       GameState,
       'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
     >
-  }) => void
+  }) => void | Promise<void>
 }
 
 export function MobileActionTray(props: MobileActionTrayProps) {
@@ -47,6 +53,7 @@ export function MobileActionTray(props: MobileActionTrayProps) {
   const commitAction = useCallback(() => {
     const pendingBefore = useGameStore.getState().pendingAction
     const previousTurn = useGameStore.getState().turn
+    const preCommitSnapshot = pickTurnSnapshot(useGameStore.getState())
     useGameStore.getState().commitAction({ actingUserId })
     const errCode = useGameStore.getState().errorCode
     if (errCode === 'TRAP_OPPONENT') {
@@ -66,18 +73,30 @@ export function MobileActionTray(props: MobileActionTrayProps) {
       setTrayError(null)
       if (pendingBefore.type !== null) {
         const s = useGameStore.getState()
-        afterSuccessfulCommit?.({
-          committedAction: pendingBefore,
-          previousTurn,
-          snapshot: {
-            turn: s.turn,
-            players: s.players,
-            fences: s.fences,
-            winner: s.winner,
-            status: s.status,
-            pendingAction: s.pendingAction,
-          },
-        })
+        const snapshot = {
+          turn: s.turn,
+          players: s.players,
+          fences: s.fences,
+          winner: s.winner,
+          status: s.status,
+          pendingAction: s.pendingAction,
+        }
+        void (async () => {
+          if (!afterSuccessfulCommit) return
+          try {
+            await Promise.resolve(
+              afterSuccessfulCommit({
+                preCommitSnapshot,
+                committedAction: pendingBefore,
+                previousTurn,
+                snapshot,
+              }),
+            )
+          } catch {
+            useGameStore.getState().restoreTurnSnapshot(preCommitSnapshot)
+            showToast({ message: 'Move not saved — try again.', variant: 'error' })
+          }
+        })()
       }
     }
   }, [actingUserId, afterSuccessfulCommit, clearCommitErrorCode, clearHideTimer, showToast])

@@ -208,4 +208,33 @@ describe('useGameStore', () => {
     expect(s.turn).toBe('player2')
     expect(s.players.player1.pos).toEqual({ x: 4, y: 7 })
   })
+
+  it('restoreTurnSnapshot rolls state back to a prior board snapshot', () => {
+    useGameStore.getState().initMatch('m1', 'uuid-a', 'uuid-b')
+    const snapshot = {
+      turn: 'player1' as const,
+      status: 'active' as const,
+      winner: null,
+      pendingAction: { type: null as const },
+      players: {
+        player1: { id: 'uuid-a', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
+        player2: { id: 'uuid-b', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+      },
+      fences: [],
+    }
+
+    useGameStore.getState().setPendingAction({
+      type: 'move',
+      targetPos: { x: 4, y: 7 },
+    })
+    useGameStore.getState().commitAction({ actingUserId: 'uuid-a' })
+    expect(useGameStore.getState().turn).toBe('player2')
+
+    useGameStore.getState().restoreTurnSnapshot(snapshot)
+    const s = useGameStore.getState()
+    expect(s.turn).toBe('player1')
+    expect(s.players.player1.pos).toEqual({ x: 4, y: 8 })
+    expect(s.fences).toEqual([])
+    expect(s.pendingAction).toEqual({ type: null })
+  })
 })

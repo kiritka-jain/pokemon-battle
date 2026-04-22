@@ -2,28 +2,28 @@
 
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 
 import { GameBoard } from '@/src/components/board/GameBoard'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
 import { Scoreboard } from '@/src/components/ui/Scoreboard'
 import { VictoryModal } from '@/src/components/ui/VictoryModal'
+import { useToast } from '@/src/components/ui/toast'
+import { hydrateOnlineMatchFromRow } from '@/src/lib/match/hydrateOnlineMatch'
 import {
   playerKeyForUserId,
   validateIncomingTurn,
 } from '@/src/lib/match/validateIncomingTurn'
 import { getSession, onAuthStateChange } from '@/src/lib/supabase/auth'
 import { supabase } from '@/src/lib/supabase/client'
-import {
-  initialGameState,
-  useGameStore,
-  type InitMatchDisplay,
-} from '@/src/lib/store/gameStore'
+import { useGameStore, type InitMatchDisplay } from '@/src/lib/store/gameStore'
 import type { GameState, PendingAction, PlayerKey } from '@/src/types/game'
 
 /** Avoid duplicate POST /api/match/end in React Strict Mode (dev). */
 const reportedMatchEnd = new Set<string>()
+
+const OPPONENT_OFFLINE_MS = 2800
 
 type TurnPayload = {
   fromUserId: string
@@ -31,9 +31,14 @@ type TurnPayload = {
   newState: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'>
 }
 
+function leaveMatchMessage() {
+  return 'Leave this match? You can rejoin with the same link while it is in progress.'
+}
+
 export default function MatchPage() {
   const params = useParams()
   const router = useRouter()
+  const { show: showToast } = useToast()
   const matchId = typeof params.matchId === 'string' ? params.matchId : ''
 
   const [sessionUserId, setSessionUserId] = useState<string | null>(null)
@@ -41,11 +46,18 @@ export default function MatchPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [localPlayerKey, setLocalPlayerKey] = useState<PlayerKey | null>(null)
   const [opponentId, setOpponentId] = useState<string | null>(null)
+  const [opponentDisconnected, setOpponentDisconnected] = useState(false)
+
   const matchStartedAt = useRef<number | null>(null)
   const plyCount = useRef(0)
+  const stateVersionRef = useRef(0)
+  const displayRef = useRef<InitMatchDisplay>({})
+  const playersRef = useRef<{ p1: string; p2: string } | null>(null)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const opponentOfflineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const winner = useGameStore((s) => s.winner)
+  const gameStatus = useGameStore((s) => s.status)
 
   useEffect(() => {
     let cancelled = false
@@ -80,7 +92,7 @@ export default function MatchPage() {
     void (async () => {
       const { data: row, error } = await supabase
         .from('matches')
-        .select('player1_id, player2_id, status')
+        .select('player1_id, player2_id, status, game_state, state_version, created_at')
         .eq('id', matchId)
         .maybeSingle()
 
@@ -109,13 +121,16 @@ export default function MatchPage() {
       const meKey: PlayerKey = sessionUserId === p1 ? 'player1' : 'player2'
       setLocalPlayerKey(meKey)
       setOpponentId(meKey === 'player1' ? p2 : p1)
+      playersRef.current = { p1, p2 }
 
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, username, elo_rating')
         .in('id', [p1, p2])
 
-      const byId = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]))
+      if (cancelled) return
+
+      const byId = Object.fromEntries((profiles ?? []).map((pr) => [pr.id, pr]))
       const d1 = byId[p1]
       const d2 = byId[p2]
       const display: InitMatchDisplay = {
@@ -124,11 +139,23 @@ export default function MatchPage() {
         player1Elo: d1?.elo_rating,
         player2Elo: d2?.elo_rating,
       }
+      displayRef.current = display
 
-      useGameStore.setState(initialGameState)
-      useGameStore.getState().initMatch(matchId, p1, p2, display)
-      matchStartedAt.current = Date.now()
-      plyCount.current = 0
+      const sv = Number(row.state_version ?? 0)
+      stateVersionRef.current = sv
+      plyCount.current = sv
+
+      const created = row.created_at ? Date.parse(String(row.created_at)) : NaN
+      matchStartedAt.current = Number.isFinite(created) ? created : Date.now()
+
+      hydrateOnlineMatchFromRow({
+        matchId,
+        player1Id: p1,
+        player2Id: p2,
+        gameState: row.game_state ?? null,
+        display,
+      })
+
       setLoading(false)
     })()
 
@@ -137,90 +164,204 @@ export default function MatchPage() {
     }
   }, [matchId, sessionUserId])
 
-  const broadcastTurn = useCallback(
-    (payload: TurnPayload) => {
-      const ch = channelRef.current
-      if (!ch) return
-      void ch.send({
-        type: 'broadcast',
-        event: 'turn',
-        payload: payload as unknown as Record<string, unknown>,
-      })
-    },
-    [],
-  )
+  const broadcastTurn = useCallback((payload: TurnPayload) => {
+    const ch = channelRef.current
+    if (!ch) return
+    void ch.send({
+      type: 'broadcast',
+      event: 'turn',
+      payload: payload as unknown as Record<string, unknown>,
+    })
+  }, [])
 
   const afterSuccessfulCommit = useCallback(
-    (ctx: {
-      committedAction: PendingAction
-      previousTurn: PlayerKey
-      snapshot: Pick<
+    async (ctx: {
+      preCommitSnapshot: Pick<
         GameState,
         'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
       >
+      committedAction: PendingAction
+      previousTurn: PlayerKey
+      snapshot: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'>
     }) => {
-      if (!sessionUserId || !localPlayerKey) return
+      if (!sessionUserId || !localPlayerKey || !matchId) return
       const moverId = ctx.snapshot.players[ctx.previousTurn].id
       if (sessionUserId !== moverId) return
-      plyCount.current += 1
+
+      const {
+        data: { session },
+      } = await getSession()
+      const token = session?.access_token
+      if (!token) {
+        throw new Error('Not authenticated')
+      }
+
+      const baseVersion = stateVersionRef.current
+      const res = await fetch('/api/match/state', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          matchId,
+          baseVersion,
+          committedAction: ctx.committedAction,
+          newState: ctx.snapshot,
+        }),
+      })
+
+      if (res.status === 409) {
+        const j = (await res.json()) as {
+          stateVersion?: number
+          gameState?: unknown
+        }
+        const pr = playersRef.current
+        if (pr && typeof j.stateVersion === 'number') {
+          stateVersionRef.current = j.stateVersion
+          plyCount.current = j.stateVersion
+          hydrateOnlineMatchFromRow({
+            matchId,
+            player1Id: pr.p1,
+            player2Id: pr.p2,
+            gameState: j.gameState ?? null,
+            display: displayRef.current,
+          })
+        }
+        showToast({ message: 'Synced with the latest match state.', variant: 'default' })
+        return
+      }
+
+      if (!res.ok) {
+        const t = await res.text()
+        throw new Error(t || 'Save failed')
+      }
+
+      const json = (await res.json()) as { stateVersion?: number }
+      if (typeof json.stateVersion === 'number') {
+        stateVersionRef.current = json.stateVersion
+        plyCount.current = json.stateVersion
+      }
+
       broadcastTurn({
         fromUserId: sessionUserId,
         action: ctx.committedAction,
         newState: ctx.snapshot,
       })
     },
-    [broadcastTurn, localPlayerKey, sessionUserId],
+    [broadcastTurn, localPlayerKey, matchId, sessionUserId, showToast],
+  )
+
+  const refreshOpponentPresence = useCallback(
+    (room: ReturnType<typeof supabase.channel>, oid: string) => {
+      const st = room.presenceState() as Record<string, unknown[] | undefined>
+      const online = Boolean(st[oid]?.length)
+      if (opponentOfflineTimerRef.current) {
+        clearTimeout(opponentOfflineTimerRef.current)
+        opponentOfflineTimerRef.current = null
+      }
+      if (online) {
+        setOpponentDisconnected(false)
+        return
+      }
+      opponentOfflineTimerRef.current = setTimeout(() => {
+        setOpponentDisconnected(true)
+        opponentOfflineTimerRef.current = null
+      }, OPPONENT_OFFLINE_MS)
+    },
+    [],
   )
 
   useEffect(() => {
     if (!matchId || !sessionUserId || !opponentId || loading) return
 
+    const pr = playersRef.current
+    if (!pr) return
+
     const room = supabase.channel(`room_${matchId}`, {
-      config: { broadcast: { self: true } },
+      config: {
+        broadcast: { self: true },
+        presence: { key: sessionUserId },
+      },
     })
     channelRef.current = room
 
-    room.on(
-      'broadcast',
-      { event: 'turn' },
-      ({ payload }: { payload: Record<string, unknown> }) => {
-        const p = payload as unknown as TurnPayload
-        if (!p?.fromUserId || p.fromUserId === sessionUserId) return
-        if (p.fromUserId !== opponentId) {
-          console.warn('[match] TURN from unexpected user', p.fromUserId)
-          return
-        }
+    const onBroadcastTurn = ({ payload }: { payload: Record<string, unknown> }) => {
+      const p = payload as unknown as TurnPayload
+      if (!p?.fromUserId || p.fromUserId === sessionUserId) return
+      if (p.fromUserId !== opponentId) {
+        console.warn('[match] TURN from unexpected user', p.fromUserId)
+        return
+      }
 
-        const state = useGameStore.getState() as GameState
-        const senderKey = playerKeyForUserId(state, p.fromUserId)
-        if (senderKey === null || senderKey !== state.turn) {
-          console.warn('[match] TURN sender does not match current turn seat', p.fromUserId)
-          return
-        }
-        if (!validateIncomingTurn(state, p.action, senderKey)) {
-          console.warn('[match] Rejected invalid opponent turn', p)
-          return
-        }
+      const state = useGameStore.getState() as GameState
+      const senderKey = playerKeyForUserId(state, p.fromUserId)
+      if (senderKey === null || senderKey !== state.turn) {
+        console.warn('[match] TURN sender does not match current turn seat', p.fromUserId)
+        return
+      }
+      if (!validateIncomingTurn(state, p.action, senderKey)) {
+        console.warn('[match] Rejected invalid opponent turn', p)
+        return
+      }
 
-        plyCount.current += 1
-        useGameStore.getState().applyOpponentAction({
-          turn: p.newState.turn,
-          players: p.newState.players,
-          fences: p.newState.fences,
-          winner: p.newState.winner,
-          status: p.newState.status,
-          pendingAction: p.newState.pendingAction,
-        })
-      },
-    )
+      stateVersionRef.current += 1
+      plyCount.current = stateVersionRef.current
 
-    void room.subscribe()
+      useGameStore.getState().applyOpponentAction({
+        turn: p.newState.turn,
+        players: p.newState.players,
+        fences: p.newState.fences,
+        winner: p.newState.winner,
+        status: p.newState.status,
+        pendingAction: p.newState.pendingAction,
+      })
+    }
+
+    room.on('broadcast', { event: 'turn' }, onBroadcastTurn)
+
+    room.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` }, (payload) => {
+      const row = payload.new as Record<string, unknown>
+      const v = Number(row.state_version ?? 0)
+      if (!Number.isFinite(v) || v <= stateVersionRef.current) return
+
+      stateVersionRef.current = v
+      plyCount.current = v
+      hydrateOnlineMatchFromRow({
+        matchId,
+        player1Id: pr.p1,
+        player2Id: pr.p2,
+        gameState: row.game_state ?? null,
+        display: displayRef.current,
+      })
+    })
+
+    room.on('presence', { event: 'sync' }, () => {
+      refreshOpponentPresence(room, opponentId)
+    })
+    room.on('presence', { event: 'join' }, () => {
+      refreshOpponentPresence(room, opponentId)
+    })
+    room.on('presence', { event: 'leave' }, () => {
+      refreshOpponentPresence(room, opponentId)
+    })
+
+    void room.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await room.track({ online_at: Date.now() })
+        refreshOpponentPresence(room, opponentId)
+      }
+    })
 
     return () => {
+      if (opponentOfflineTimerRef.current) {
+        clearTimeout(opponentOfflineTimerRef.current)
+        opponentOfflineTimerRef.current = null
+      }
       channelRef.current = null
       void supabase.removeChannel(room)
     }
-  }, [matchId, sessionUserId, opponentId, loading])
+  }, [loading, matchId, opponentId, refreshOpponentPresence, sessionUserId])
 
   const postMatchEnd = useCallback(async () => {
     if (!sessionUserId || !matchId || !localPlayerKey) return
@@ -271,6 +412,32 @@ export default function MatchPage() {
     void postMatchEnd()
   }, [matchId, postMatchEnd, winner])
 
+  useEffect(() => {
+    if (!matchId || loading) return
+    const warn = (e: BeforeUnloadEvent) => {
+      const { status, winner: w } = useGameStore.getState()
+      if (status === 'active' && !w) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [loading, matchId])
+
+  const confirmLeave = useCallback(
+    (e: MouseEvent<HTMLAnchorElement>, href: string) => {
+      const { status, winner: w } = useGameStore.getState()
+      if (status === 'active' && !w) {
+        e.preventDefault()
+        if (window.confirm(leaveMatchMessage())) {
+          router.push(href)
+        }
+      }
+    },
+    [router],
+  )
+
   if (loading || !sessionUserId) {
     return (
       <div className="flex min-h-full flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
@@ -295,33 +462,42 @@ export default function MatchPage() {
   }
 
   const winTitle =
-    winner === localPlayerKey
-      ? 'You win!'
-      : winner
-        ? 'You lost'
-        : ''
+    winner === localPlayerKey ? 'You win!' : winner ? 'You lost' : ''
 
   return (
     <PortraitOnlyGameShell>
-      {/* pb-32: MobileActionTray is fixed bottom-0 and always mounted; padding keeps the board scrollable above it. */}
       <div className="flex min-h-full flex-col items-center gap-4 px-4 pb-32 pt-8">
         <div className="flex w-full max-w-[520px] items-center justify-between gap-2 text-sm">
-          <Link href="/lobby" className="font-medium text-emerald-800 underline dark:text-emerald-400">
+          <Link
+            href="/lobby"
+            onClick={(e) => confirmLeave(e, '/lobby')}
+            className="font-medium text-emerald-800 underline dark:text-emerald-400"
+          >
             ← Lobby
           </Link>
-          <Link href="/leaderboard" className="text-zinc-600 underline dark:text-zinc-400">
+          <Link
+            href="/leaderboard"
+            onClick={(e) => confirmLeave(e, '/leaderboard')}
+            className="text-zinc-600 underline dark:text-zinc-400"
+          >
             Leaderboard
           </Link>
         </div>
+
+        {opponentDisconnected && gameStatus === 'active' && !winner ? (
+          <p
+            className="max-w-[520px] rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+            role="status"
+          >
+            Opponent appears offline. They can rejoin from the same match link; you can keep playing if they return.
+          </p>
+        ) : null}
 
         <Scoreboard localPlayerKey={localPlayerKey} />
 
         <GameBoard localPlayerKey={localPlayerKey} viewAsPlayer={localPlayerKey} />
 
-        <MobileActionTray
-          actingUserId={sessionUserId}
-          afterSuccessfulCommit={afterSuccessfulCommit}
-        />
+        <MobileActionTray actingUserId={sessionUserId} afterSuccessfulCommit={afterSuccessfulCommit} />
 
         <VictoryModal
           open={Boolean(winner)}
