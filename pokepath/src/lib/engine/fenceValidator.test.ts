@@ -15,6 +15,7 @@ function baseState(overrides: Partial<GameState> = {}): GameState {
     matchId: 'm1',
     status: 'active',
     turn: 'player1',
+    arena: 'grass',
     players: {
       player1: { id: 'a', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
       player2: { id: 'b', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },

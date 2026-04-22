@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { resolveArenaForMatch } from '@/src/lib/board/arenaForMatch'
+
 const getUserFromBearerMock = vi.fn()
 const fromMock = vi.fn()
 
@@ -78,6 +80,7 @@ describe('POST /api/match/state', () => {
         committedAction: { type: 'move', targetPos: { x: 4, y: 7 } },
         newState: {
           turn: 'player2',
+          arena: resolveArenaForMatch('m1'),
           players: {
             player1: { id: 'p1', pos: { x: 4, y: 7 }, fencesLeft: 10, type: 'Normal' },
             player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
@@ -134,6 +137,7 @@ describe('POST /api/match/state', () => {
         committedAction: { type: 'move', targetPos: { x: 4, y: 7 } },
         newState: {
           turn: 'player2',
+          arena: resolveArenaForMatch('m1'),
           players: {
             player1: { id: 'p1', pos: { x: 4, y: 7 }, fencesLeft: 10, type: 'Normal' },
             player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
@@ -191,6 +195,7 @@ describe('POST /api/match/state', () => {
         newState: {
           // Intentionally wrong (actor move not applied), should trigger state_mismatch conflict.
           turn: 'player1',
+          arena: resolveArenaForMatch('m1'),
           players: {
             player1: { id: 'p1', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
             player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },

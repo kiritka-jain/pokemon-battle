@@ -1,8 +1,17 @@
 'use client'
 
+import {
+  getArenaPendingMoveRingClasses,
+  getArenaTileClasses,
+  getArenaValidMoveDotClass,
+  getArenaValidRingClass,
+} from '@/src/lib/board/arenaTheme'
+import type { BoardArenaId } from '@/src/types/game'
+
 export type BoardInteractionMode = 'move' | 'fence'
 
 type TileProps = {
+  arena: BoardArenaId
   x: number
   y: number
   isLight: boolean
@@ -16,6 +25,7 @@ type TileProps = {
 }
 
 export function Tile({
+  arena,
   x,
   y,
   isLight,
@@ -25,19 +35,16 @@ export function Tile({
   canInteract,
   onSelectMove,
 }: TileProps) {
-  const base =
-    isLight
-      ? 'bg-emerald-200/90 dark:bg-emerald-900/50'
-      : 'bg-emerald-300/90 dark:bg-emerald-950/50'
+  const base = getArenaTileClasses(arena, isLight)
 
   const validHint =
     interactionMode === 'move' && canInteract && isValidMoveDestination
-      ? 'ring-1 ring-emerald-500/60'
+      ? `ring-1 ${getArenaValidRingClass(arena)}`
       : ''
 
   const pending =
     isPendingMoveTarget && interactionMode === 'move'
-      ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-emerald-100 dark:ring-offset-emerald-950'
+      ? getArenaPendingMoveRingClasses(arena)
       : ''
 
   const handleClick = () => {
@@ -70,7 +77,7 @@ export function Tile({
     >
       {isValidMoveDestination && interactionMode === 'move' && canInteract && (
         <span
-          className="pointer-events-none absolute inset-0 m-auto h-2 w-2 rounded-full bg-emerald-600/50 dark:bg-emerald-300/40"
+          className={`pointer-events-none absolute inset-0 m-auto h-2 w-2 rounded-full ${getArenaValidMoveDotClass(arena)}`}
           aria-hidden
         />
       )}

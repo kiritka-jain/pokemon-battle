@@ -4,6 +4,7 @@ import type { MouseEvent, ReactNode, TouchEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { validateMove } from '@/src/lib/engine/moveValidator'
+import { getArenaBoardOuterRingClass, getArenaChromeClasses } from '@/src/lib/board/arenaTheme'
 import { useGameStore } from '@/src/lib/store/gameStore'
 import type { GameState, PlayerKey } from '@/src/types/game'
 
@@ -35,6 +36,7 @@ export function GameBoard({
   const lastFenceTapAtRef = useRef(0)
 
   const matchId = useGameStore((s) => s.matchId)
+  const arena = useGameStore((s) => s.arena)
   const turn = useGameStore((s) => s.turn)
   const status = useGameStore((s) => s.status)
   const fences = useGameStore((s) => s.fences)
@@ -56,6 +58,7 @@ export function GameBoard({
       matchId,
       status,
       turn,
+      arena,
       players: { player1, player2 },
       fences,
       pendingAction,
@@ -74,6 +77,7 @@ export function GameBoard({
   }, [
     canInteract,
     matchId,
+    arena,
     status,
     turn,
     player1,
@@ -117,6 +121,8 @@ export function GameBoard({
       ? pendingAction.targetFence
       : null
 
+  const chrome = getArenaChromeClasses(arena)
+
   const handleContextMenu = useCallback(
     (e: MouseEvent) => {
       if (interactionMode !== 'fence') return
@@ -151,6 +157,7 @@ export function GameBoard({
       tiles.push(
         <Tile
           key={key}
+          arena={arena}
           x={x}
           y={y}
           isLight={(x + y) % 2 === 0}
@@ -170,13 +177,11 @@ export function GameBoard({
       onContextMenu={handleContextMenu}
     >
       <div className={`${compact ? 'mb-2 gap-1.5' : 'mb-3 gap-2'} flex flex-wrap items-center`}>
-        <div className="flex rounded-lg border border-emerald-800/30 bg-emerald-50/80 p-0.5 dark:border-emerald-700/40 dark:bg-emerald-950/40">
+        <div className={`flex rounded-lg border p-0.5 ${chrome.shell}`}>
           <button
             type="button"
             className={`rounded-md font-medium transition-colors ${compact ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm'} ${
-              interactionMode === 'move'
-                ? 'bg-white text-emerald-950 shadow dark:bg-emerald-900 dark:text-emerald-50'
-                : 'text-emerald-800/80 dark:text-emerald-200/70'
+              interactionMode === 'move' ? chrome.active : chrome.inactive
             }`}
             onClick={() => setInteractionMode('move')}
           >
@@ -185,9 +190,7 @@ export function GameBoard({
           <button
             type="button"
             className={`rounded-md font-medium transition-colors ${compact ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm'} ${
-              interactionMode === 'fence'
-                ? 'bg-white text-emerald-950 shadow dark:bg-emerald-900 dark:text-emerald-50'
-                : 'text-emerald-800/80 dark:text-emerald-200/70'
+              interactionMode === 'fence' ? chrome.active : chrome.inactive
             }`}
             onClick={() => setInteractionMode('fence')}
           >
@@ -210,11 +213,14 @@ export function GameBoard({
         }`}
         onTouchEnd={handleBoardTouchEnd}
       >
-        <div className="absolute inset-0 z-0 grid grid-cols-9 grid-rows-9 gap-0 overflow-hidden rounded-sm ring-1 ring-emerald-900/20">
+        <div
+          className={`absolute inset-0 z-0 grid grid-cols-9 grid-rows-9 gap-0 overflow-hidden rounded-sm ${getArenaBoardOuterRingClass(arena)}`}
+        >
           {tiles}
         </div>
 
         <FenceOverlay
+          arena={arena}
           fences={fences}
           pendingFence={pendingFenceVisual}
           pendingPlacedBy={turn}
@@ -226,6 +232,7 @@ export function GameBoard({
         />
 
         <FenceSlotGrid
+          arena={arena}
           orientation={fenceOrientation}
           visible={interactionMode === 'fence' && canInteract}
           onHover={setHoverFenceSlot}

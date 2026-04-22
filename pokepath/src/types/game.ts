@@ -8,6 +8,17 @@ export type PlayerKey = 'player1' | 'player2';
 export type FenceOrientation = 'H' | 'V';
 export type GameStatus = 'waiting' | 'active' | 'finished';
 
+export const BOARD_ARENA_IDS = [
+  'water',
+  'grass',
+  'fire',
+  'air',
+  'electric',
+  'ground',
+] as const
+
+export type BoardArenaId = (typeof BOARD_ARENA_IDS)[number]
+
 /** Set on failed commitAction when validation supplies a stable code (e.g. fence trap). */
 export type GameCommitErrorCode = 'TRAP_OPPONENT';
 export type ActionType = 'move' | 'fence';
@@ -46,6 +57,8 @@ export interface GameState {
   matchId: string | null;
   status: GameStatus;
   turn: PlayerKey;
+  /** Visual arena theme for the board; chosen at match start and persisted. */
+  arena: BoardArenaId;
   players: Record<PlayerKey, PlayerState>;
   fences: Fence[];
   pendingAction: PendingAction;

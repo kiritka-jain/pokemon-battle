@@ -28,7 +28,7 @@ const OPPONENT_OFFLINE_MS = 2800
 type TurnPayload = {
   fromUserId: string
   action: PendingAction
-  newState: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'>
+  newState: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'>
 }
 
 function leaveMatchMessage() {
@@ -179,11 +179,11 @@ export default function MatchPage() {
     async (ctx: {
       preCommitSnapshot: Pick<
         GameState,
-        'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
+        'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'
       >
       committedAction: PendingAction
       previousTurn: PlayerKey
-      snapshot: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'>
+      snapshot: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'>
     }) => {
       if (!sessionUserId || !localPlayerKey || !matchId) return
       const moverId = ctx.snapshot.players[ctx.previousTurn].id
@@ -316,6 +316,7 @@ export default function MatchPage() {
         winner: p.newState.winner,
         status: p.newState.status,
         pendingAction: p.newState.pendingAction,
+        arena: p.newState.arena,
       })
     }
 

@@ -18,14 +18,14 @@ export type MobileActionTrayProps = {
     /** Board before `commitAction` (rollback target if persistence fails). */
     preCommitSnapshot: Pick<
       GameState,
-      'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
+      'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'
     >
     committedAction: PendingAction
     /** Seat that committed before `turn` advanced (ticket 3.3). */
     previousTurn: PlayerKey
     snapshot: Pick<
       GameState,
-      'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
+      'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'
     >
   }) => void | Promise<void>
 }

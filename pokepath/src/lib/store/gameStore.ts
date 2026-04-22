@@ -4,16 +4,18 @@ import { immer } from 'zustand/middleware/immer'
 import { getFenceId } from '@/src/lib/engine/boardUtils'
 import { validateFencePlacement } from '@/src/lib/engine/fenceValidator'
 import { validateMove } from '@/src/lib/engine/moveValidator'
+import { resolveArenaForMatch } from '@/src/lib/board/arenaForMatch'
+import { LOCAL_DEV_MATCH_ID } from '@/src/lib/match/localDevMatchId'
 import { displayNameForSeat } from '@/src/lib/playerDisplayName'
 import type { GameState, PendingAction, PlayerKey } from '@/src/types/game'
 
-/** Local hot-seat match id: `commitAction` skips acting-user id check (ticket 3.2). */
-export const LOCAL_DEV_MATCH_ID = 'local-dev'
+export { LOCAL_DEV_MATCH_ID } from '@/src/lib/match/localDevMatchId'
 
 export const initialGameState: GameState = {
   matchId: null,
   status: 'waiting',
   turn: 'player1',
+  arena: 'grass',
   players: {
     player1: { id: '', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
     player2: { id: '', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
@@ -46,7 +48,10 @@ type GameStore = GameState & {
   applyOpponentAction: (partial: Partial<GameState>) => void
   /** Undo a local commit when persistence fails (multiplayer). */
   restoreTurnSnapshot: (
-    snapshot: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'>,
+    snapshot: Pick<
+      GameState,
+      'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'
+    >,
   ) => void
   setWinner: (player: PlayerKey) => void
 }
@@ -87,6 +92,7 @@ export const useGameStore = create<GameStore>()(
         draft.winner = null
         draft.error = null
         draft.errorCode = null
+        draft.arena = resolveArenaForMatch(matchId)
       }),
 
     setPendingAction: (action) =>
@@ -218,6 +224,7 @@ export const useGameStore = create<GameStore>()(
         if (partial.winner !== undefined) draft.winner = partial.winner
         if (partial.error !== undefined) draft.error = partial.error
         if (partial.errorCode !== undefined) draft.errorCode = partial.errorCode
+        if (partial.arena !== undefined) draft.arena = partial.arena
       }),
 
     restoreTurnSnapshot: (snapshot) =>
@@ -226,6 +233,7 @@ export const useGameStore = create<GameStore>()(
         draft.status = snapshot.status
         draft.winner = snapshot.winner
         draft.pendingAction = snapshot.pendingAction
+        draft.arena = snapshot.arena
         draft.fences = snapshot.fences.map((f) => ({ ...f }))
         draft.players.player1 = {
           ...draft.players.player1,

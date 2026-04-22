@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { resolveArenaForMatch } from '@/src/lib/board/arenaForMatch'
 import { getFenceId } from '@/src/lib/engine/boardUtils'
 import type { Fence } from '@/src/types/game'
 
@@ -50,6 +51,7 @@ describe('useGameStore', () => {
     expect(s.winner).toBeNull()
     expect(s.error).toBeNull()
     expect(s.errorCode).toBeNull()
+    expect(s.arena).toBe('grass')
   })
 
   it('initMatch → setPendingAction(move) → commitAction toggles turn and clears pending', () => {
@@ -63,6 +65,7 @@ describe('useGameStore', () => {
     expect(s.players.player2.id).toBe('uuid-b')
     expect(s.players.player1.username).toBe('Trainer_uuida')
     expect(s.players.player2.username).toBe('Trainer_uuidb')
+    expect(s.arena).toBe(resolveArenaForMatch('m1'))
 
     useGameStore.getState().setPendingAction({
       type: 'move',
@@ -215,6 +218,7 @@ describe('useGameStore', () => {
       turn: 'player1' as const,
       status: 'active' as const,
       winner: null,
+      arena: resolveArenaForMatch('m1'),
       pendingAction: { type: null as const },
       players: {
         player1: { id: 'uuid-a', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },

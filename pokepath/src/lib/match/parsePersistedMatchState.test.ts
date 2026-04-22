@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { resolveArenaForMatch } from '@/src/lib/board/arenaForMatch'
+
 import { parsePersistedMatchState } from './parsePersistedMatchState'
 
 const match = {
@@ -26,8 +28,33 @@ describe('parsePersistedMatchState', () => {
     expect(parsed).not.toBeNull()
     expect(parsed?.matchId).toBe('m1')
     expect(parsed?.turn).toBe('player2')
+    expect(parsed?.arena).toBe(resolveArenaForMatch('m1'))
     expect(parsed?.players.player2.fencesLeft).toBe(9)
     expect(parsed?.fences).toHaveLength(1)
+  })
+
+  it('reads persisted arena when valid', () => {
+    const raw = {
+      turn: 'player1',
+      arena: 'water',
+      players: {
+        player1: { id: 'p1', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
+        player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+      },
+    }
+    expect(parsePersistedMatchState(raw, match)?.arena).toBe('water')
+  })
+
+  it('falls back to resolveArenaForMatch when arena is invalid', () => {
+    const raw = {
+      turn: 'player1',
+      arena: 'not-an-arena',
+      players: {
+        player1: { id: 'p1', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
+        player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+      },
+    }
+    expect(parsePersistedMatchState(raw, match)?.arena).toBe(resolveArenaForMatch('m1'))
   })
 
   it('returns null when persisted player ids do not match match row', () => {

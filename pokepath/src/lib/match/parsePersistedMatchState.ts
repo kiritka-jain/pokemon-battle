@@ -1,3 +1,4 @@
+import { isBoardArenaId, resolveArenaForMatch } from '@/src/lib/board/arenaForMatch'
 import type { GameState, GameStatus } from '@/src/types/game'
 
 export function parsePersistedMatchState(
@@ -50,10 +51,13 @@ export function parsePersistedMatchState(
     winner = o.winner
   }
 
+  const arena = isBoardArenaId(o.arena) ? o.arena : resolveArenaForMatch(match.id)
+
   return {
     matchId: match.id,
     status,
     turn: o.turn,
+    arena,
     players: {
       player1: {
         id: String(p1.id),

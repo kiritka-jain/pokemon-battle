@@ -9,6 +9,7 @@ function stateWithDisplay(): GameState {
     matchId: 'm1',
     status: 'active',
     turn: 'player1',
+    arena: 'grass',
     players: {
       player1: {
         id: 'p1',
@@ -58,5 +59,13 @@ describe('snapshotUtils', () => {
     const normA = normalizedTurnSnapshotJson(pickTurnSnapshot(a))
     const normB = normalizedTurnSnapshotJson(pickTurnSnapshot(b))
     expect(normA).toBe(normB)
+  })
+
+  it('normalizedTurnSnapshotJson includes arena', () => {
+    const a = stateWithDisplay()
+    const b = { ...stateWithDisplay(), arena: 'water' as const }
+    expect(normalizedTurnSnapshotJson(pickTurnSnapshot(a))).not.toBe(
+      normalizedTurnSnapshotJson(pickTurnSnapshot(b)),
+    )
   })
 })

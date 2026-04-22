@@ -2,7 +2,7 @@ import type { GameState, PendingAction, PlayerKey } from '@/src/types/game'
 
 export type TurnSnapshot = Pick<
   GameState,
-  'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'
+  'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'
 >
 
 export function pickTurnSnapshot(s: GameState): TurnSnapshot {
@@ -17,6 +17,7 @@ export function pickTurnSnapshot(s: GameState): TurnSnapshot {
             : undefined,
         }
   return {
+    arena: s.arena,
     turn: s.turn,
     players: {
       player1: {
@@ -37,7 +38,7 @@ export function pickTurnSnapshot(s: GameState): TurnSnapshot {
 
 /** Compare board snapshots ignoring display-only fields (username, elo). */
 export function normalizedTurnSnapshotJson(
-  s: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'>,
+  s: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'>,
 ): string {
   const normPlayer = (pk: PlayerKey) => ({
     id: s.players[pk].id,
@@ -46,6 +47,7 @@ export function normalizedTurnSnapshotJson(
     type: s.players[pk].type,
   })
   return JSON.stringify({
+    arena: s.arena,
     turn: s.turn,
     players: {
       player1: normPlayer('player1'),

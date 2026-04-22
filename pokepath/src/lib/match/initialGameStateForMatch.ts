@@ -1,3 +1,4 @@
+import { resolveArenaForMatch } from '@/src/lib/board/arenaForMatch'
 import type { GameState } from '@/src/types/game'
 
 export function initialGameStateForMatch(match: {
@@ -9,6 +10,7 @@ export function initialGameStateForMatch(match: {
     matchId: match.id,
     status: 'active',
     turn: 'player1',
+    arena: resolveArenaForMatch(match.id),
     players: {
       player1: {
         id: match.player1_id,

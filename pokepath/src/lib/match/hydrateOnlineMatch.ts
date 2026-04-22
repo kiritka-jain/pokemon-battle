@@ -31,6 +31,7 @@ export function hydrateOnlineMatchFromRow(args: {
     turn: parsed.turn,
     status: parsed.status,
     winner: parsed.winner,
+    arena: parsed.arena,
     fences: parsed.fences,
     pendingAction: parsed.pendingAction,
     players: {

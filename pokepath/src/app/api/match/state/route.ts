@@ -13,7 +13,7 @@ type StateBody = {
   matchId?: string
   baseVersion?: number
   committedAction?: PendingAction
-  newState?: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction'>
+  newState?: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'>
 }
 
 function serializePersistedState(state: GameState): object {
