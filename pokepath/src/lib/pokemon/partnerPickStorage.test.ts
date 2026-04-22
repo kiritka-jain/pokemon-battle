@@ -10,7 +10,7 @@ import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
 describe('partnerPickStorage', () => {
   it('round-trips a valid payload', () => {
     const payload = {
-      speciesIds: ['charmander', 'tidekit'] as [string, string],
+      speciesIds: ['charmander', 'Horsea'] as [string, string],
       pickedAt: 1_700_000_000_000,
       openedBallIndices: [0, 2] as [number, number],
     }
@@ -18,7 +18,7 @@ describe('partnerPickStorage', () => {
   })
 
   it('round-trips minimal payload', () => {
-    const payload = { speciesIds: ['charmander', 'tidekit'] as [string, string] }
+    const payload = { speciesIds: ['charmander', 'Horsea'] as [string, string] }
     expect(parsePartnerPickJson(serializePartnerPick(payload))).toEqual(payload)
   })
 
@@ -42,7 +42,7 @@ describe('partnerPickStorage', () => {
 
   it('partnerPickLabel uses roster names', () => {
     const label = partnerPickLabel(
-      { speciesIds: ['charmander', 'tidekit'] },
+      { speciesIds: ['charmander', 'Horsea'] },
       starterSpeciesById,
     )
     expect(label).toBe('Charmander · Horsea')
