@@ -1,6 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
+import Image from 'next/image'
 import { useCallback, useMemo, useState } from 'react'
 
 import type { PartnerPickPayload } from '@/src/lib/pokemon/partnerPickStorage'
@@ -198,15 +199,15 @@ function PokeBallButton({
             transition={{ type: 'spring', stiffness: 420, damping: 22 }}
             className="flex h-28 w-28 flex-col items-center justify-center rounded-2xl border border-red-500/40 bg-zinc-950/90 p-3 shadow-xl shadow-black/50 ring-2 ring-red-500/25 sm:h-32 sm:w-32"
           >
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.08, type: 'spring', stiffness: 400, damping: 18 }}
-              className="text-5xl"
-              aria-hidden
-            >
-              {species.emoji}
-            </motion.span>
+            <SpeciesVisual
+              species={species}
+              size="ball"
+              motionProps={{
+                initial: { scale: 0 },
+                animate: { scale: 1 },
+                transition: { delay: 0.08, type: 'spring' as const, stiffness: 400, damping: 18 },
+              }}
+            />
             <span className="mt-2 text-center text-[11px] font-semibold leading-tight text-white">
               {species.displayName}
             </span>
@@ -248,9 +249,7 @@ function TeamSlot({ label, species }: { label: string; species: StarterSpecies |
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
               className="flex flex-col items-center"
             >
-              <span className="text-4xl" aria-hidden>
-                {species.emoji}
-              </span>
+              <SpeciesVisual species={species} size="roster" />
             </motion.div>
           ) : (
             <motion.span
@@ -266,6 +265,70 @@ function TeamSlot({ label, species }: { label: string; species: StarterSpecies |
       </motion.div>
       <span className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">{label}</span>
     </div>
+  )
+}
+
+function SpeciesVisual({
+  species,
+  size,
+  motionProps,
+}: {
+  species: StarterSpecies
+  size: 'ball' | 'roster'
+  motionProps?: {
+    initial: { scale: number }
+    animate: { scale: number }
+    transition: { delay?: number; type: 'spring'; stiffness: number; damping: number }
+  }
+}) {
+  const dim = size === 'ball' ? 64 : 48
+  const className =
+    size === 'ball' ? 'h-16 w-16 object-contain' : 'h-12 w-12 object-contain'
+
+  if (species.imageSrc) {
+    const img = (
+      <Image
+        src={species.imageSrc}
+        alt={species.displayName}
+        width={dim}
+        height={dim}
+        className={className}
+        sizes={`${dim}px`}
+        priority={size === 'ball'}
+      />
+    )
+    if (motionProps) {
+      return (
+        <motion.div
+          initial={motionProps.initial}
+          animate={motionProps.animate}
+          transition={motionProps.transition}
+          className="flex items-center justify-center"
+        >
+          {img}
+        </motion.div>
+      )
+    }
+    return <div className="flex items-center justify-center">{img}</div>
+  }
+
+  if (motionProps) {
+    return (
+      <motion.span
+        initial={motionProps.initial}
+        animate={motionProps.animate}
+        transition={motionProps.transition}
+        className={size === 'ball' ? 'text-5xl' : 'text-4xl'}
+        aria-hidden
+      >
+        {species.emoji}
+      </motion.span>
+    )
+  }
+  return (
+    <span className={size === 'ball' ? 'text-5xl' : 'text-4xl'} aria-hidden>
+      {species.emoji}
+    </span>
   )
 }
 
