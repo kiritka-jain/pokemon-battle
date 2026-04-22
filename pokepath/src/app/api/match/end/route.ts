@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server'
 
 import { calculateElo } from '@/src/lib/elo/calculateElo'
+import { parsePersistedMatchState } from '@/src/lib/match/parsePersistedMatchState'
+import { normalizedTurnSnapshotJson } from '@/src/lib/match/snapshotUtils'
 import { getUserFromBearer } from '@/src/lib/supabase/routeAuth'
 import { supabaseServer } from '@/src/lib/supabase/server'
+import type { GameState } from '@/src/types/game'
+
+function serializePersistedState(state: GameState): object {
+  return JSON.parse(normalizedTurnSnapshotJson(state)) as object
+}
 
 type EndBody = {
   matchId: string
@@ -38,7 +45,7 @@ export async function POST(request: Request) {
   const { data: match, error: matchError } = await supabaseServer
     .from('matches')
     .select(
-      'id, status, player1_id, player2_id, winner_id, loser_id, total_turns, duration_seconds',
+      'id, status, player1_id, player2_id, winner_id, loser_id, total_turns, duration_seconds, state_version',
     )
     .eq('id', matchId)
     .maybeSingle()
@@ -63,6 +70,34 @@ export async function POST(request: Request) {
       loserElo: null,
     })
   }
+
+  const p1Id = match.player1_id as string
+  const p2Id = match.player2_id as string
+  const parsedFinal = parsePersistedMatchState(finalBoardState, {
+    id: matchId,
+    player1_id: p1Id,
+    player2_id: p2Id,
+  })
+  if (!parsedFinal || parsedFinal.status !== 'finished' || parsedFinal.winner === null) {
+    return NextResponse.json({ error: 'Invalid final board state' }, { status: 400 })
+  }
+  const resolvedWinnerId =
+    parsedFinal.winner === 'player1'
+      ? parsedFinal.players.player1.id
+      : parsedFinal.players.player2.id
+  if (resolvedWinnerId !== winnerId) {
+    return NextResponse.json({ error: 'Winner does not match final state' }, { status: 400 })
+  }
+  const resolvedLoserId =
+    parsedFinal.winner === 'player1'
+      ? parsedFinal.players.player2.id
+      : parsedFinal.players.player1.id
+  if (resolvedLoserId !== loserId) {
+    return NextResponse.json({ error: 'Loser does not match final state' }, { status: 400 })
+  }
+
+  const currentStateVersion = Number(match.state_version ?? 0)
+  const persistedGameState = serializePersistedState(parsedFinal)
 
   const { data: winnerProfile, error: wErr } = await supabaseServer
     .from('profiles')
@@ -115,6 +150,8 @@ export async function POST(request: Request) {
       total_turns: totalTurns,
       duration_seconds: durationSeconds,
       final_board_state: finalBoardState as object,
+      game_state: persistedGameState,
+      state_version: currentStateVersion + 1,
     })
     .eq('id', matchId)
 
