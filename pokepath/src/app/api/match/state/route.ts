@@ -103,7 +103,20 @@ export async function POST(request: Request) {
   const serverNorm = normalizedTurnSnapshotJson(applied.next)
   const clientNorm = normalizedTurnSnapshotJson(newState)
   if (serverNorm !== clientNorm) {
-    return NextResponse.json({ error: 'State mismatch' }, { status: 400 })
+    const { data: fresh } = await supabaseServer
+      .from('matches')
+      .select('state_version, game_state')
+      .eq('id', matchId)
+      .maybeSingle()
+    return NextResponse.json(
+      {
+        error: 'conflict',
+        reason: 'state_mismatch',
+        stateVersion: fresh?.state_version ?? currentVersion,
+        gameState: fresh?.game_state ?? match.game_state ?? null,
+      },
+      { status: 409 },
+    )
   }
 
   const persisted = serializePersistedState(applied.next)

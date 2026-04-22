@@ -47,6 +47,7 @@ export default function MatchPage() {
   const [localPlayerKey, setLocalPlayerKey] = useState<PlayerKey | null>(null)
   const [opponentId, setOpponentId] = useState<string | null>(null)
   const [opponentDisconnected, setOpponentDisconnected] = useState(false)
+  const [resigning, setResigning] = useState(false)
 
   const matchStartedAt = useRef<number | null>(null)
   const plyCount = useRef(0)
@@ -405,6 +406,71 @@ export default function MatchPage() {
     })
   }, [localPlayerKey, matchId, sessionUserId])
 
+  const resignMatch = useCallback(async () => {
+    if (!sessionUserId || !matchId || !localPlayerKey) return
+    const s = useGameStore.getState()
+    if (s.status !== 'active' || s.winner) return
+
+    const opponentKey: PlayerKey = localPlayerKey === 'player1' ? 'player2' : 'player1'
+    const winnerId = s.players[opponentKey].id
+    const loserId = s.players[localPlayerKey].id
+    if (!winnerId || !loserId || winnerId === loserId) return
+
+    const confirmed = window.confirm('Resign this match? This will end the game and count as a loss.')
+    if (!confirmed) return
+
+    setResigning(true)
+    try {
+      const {
+        data: { session },
+      } = await getSession()
+      const token = session?.access_token
+      if (!token) {
+        throw new Error('Not authenticated')
+      }
+
+      const started = matchStartedAt.current ?? Date.now()
+      const durationSeconds = Math.max(0, Math.floor((Date.now() - started) / 1000))
+
+      const finalBoardState = {
+        turn: s.turn,
+        players: s.players,
+        fences: s.fences,
+        winner: opponentKey,
+        status: 'finished' as const,
+      }
+
+      const res = await fetch('/api/match/end', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          matchId,
+          winnerId,
+          loserId,
+          totalTurns: plyCount.current,
+          durationSeconds,
+          finalBoardState,
+        }),
+      })
+
+      if (!res.ok) {
+        const t = await res.text()
+        throw new Error(t || 'Could not resign')
+      }
+
+      showToast({ message: 'You resigned the match.', variant: 'default' })
+      router.push('/lobby')
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Could not resign'
+      showToast({ message, variant: 'error' })
+    } finally {
+      setResigning(false)
+    }
+  }, [localPlayerKey, matchId, router, sessionUserId, showToast])
+
   useEffect(() => {
     if (!winner || !matchId) return
     if (reportedMatchEnd.has(matchId)) return
@@ -466,45 +532,61 @@ export default function MatchPage() {
 
   return (
     <PortraitOnlyGameShell>
-      <div className="flex min-h-full flex-col items-center gap-4 px-4 pb-32 pt-8">
-        <div className="flex w-full max-w-[520px] items-center justify-between gap-2 text-sm">
-          <Link
-            href="/lobby"
-            onClick={(e) => confirmLeave(e, '/lobby')}
-            className="font-medium text-emerald-800 underline dark:text-emerald-400"
-          >
-            ← Lobby
-          </Link>
-          <div className="flex items-center gap-3">
+      <div className="flex min-h-full flex-col items-center gap-2 px-4 pb-28 pt-3">
+        <div className="sticky top-0 z-20 w-full max-w-[520px] rounded-lg border border-zinc-200/80 bg-zinc-50/90 px-2.5 py-1.5 text-xs shadow-sm backdrop-blur dark:border-zinc-700/80 dark:bg-zinc-900/90">
+          <div className="flex items-center justify-between gap-2">
             <Link
-              href="/lobby/in-progress"
-              onClick={(e) => confirmLeave(e, '/lobby/in-progress')}
-              className="text-zinc-600 underline dark:text-zinc-400"
+              href="/lobby"
+              onClick={(e) => confirmLeave(e, '/lobby')}
+              className="font-medium text-emerald-800 underline dark:text-emerald-400"
             >
-              In-progress games
+              ← Lobby
             </Link>
-            <Link
-              href="/leaderboard"
-              onClick={(e) => confirmLeave(e, '/leaderboard')}
-              className="text-zinc-600 underline dark:text-zinc-400"
-            >
-              Leaderboard
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/lobby/in-progress"
+                onClick={(e) => confirmLeave(e, '/lobby/in-progress')}
+                className="text-zinc-600 underline dark:text-zinc-400"
+              >
+                In-progress
+              </Link>
+              <Link
+                href="/leaderboard"
+                onClick={(e) => confirmLeave(e, '/leaderboard')}
+                className="text-zinc-600 underline dark:text-zinc-400"
+              >
+                Leaderboard
+              </Link>
+              {gameStatus === 'active' && !winner ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void resignMatch()
+                  }}
+                  disabled={resigning}
+                  className="rounded-full border border-red-300 px-2.5 py-0.5 font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/40"
+                >
+                  {resigning ? 'Resigning...' : 'Resign'}
+                </button>
+              ) : null}
+            </div>
           </div>
         </div>
 
         {opponentDisconnected && gameStatus === 'active' && !winner ? (
           <p
-            className="max-w-[520px] rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+            className="max-w-[520px] rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-center text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
             role="status"
           >
-            Opponent appears offline. They can rejoin from the same match link; you can keep playing if they return.
+            Opponent is offline. You can wait, or continue once they rejoin.
           </p>
         ) : null}
 
-        <Scoreboard localPlayerKey={localPlayerKey} />
+        <Scoreboard localPlayerKey={localPlayerKey} compact />
 
-        <GameBoard localPlayerKey={localPlayerKey} viewAsPlayer={localPlayerKey} />
+        <div className="w-full max-w-[520px] rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-2 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/60">
+          <GameBoard localPlayerKey={localPlayerKey} viewAsPlayer={localPlayerKey} compact />
+        </div>
 
         <MobileActionTray actingUserId={sessionUserId} afterSuccessfulCommit={afterSuccessfulCommit} />
 

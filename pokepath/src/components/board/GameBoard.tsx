@@ -1,7 +1,7 @@
 'use client'
 
-import type { MouseEvent, ReactNode } from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { MouseEvent, ReactNode, TouchEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { validateMove } from '@/src/lib/engine/moveValidator'
 import { useGameStore } from '@/src/lib/store/gameStore'
@@ -16,11 +16,14 @@ type GameBoardProps = {
   localPlayerKey?: PlayerKey
   /** Seat used only for board rotation; engine coords unchanged. Default keeps hot-seat / legacy layout. */
   viewAsPlayer?: PlayerKey
+  /** Compact mode for match screen: tighter controls so board stays in focus. */
+  compact?: boolean
 }
 
 export function GameBoard({
   localPlayerKey = 'player1',
   viewAsPlayer = 'player1',
+  compact = false,
 }: GameBoardProps) {
   const [interactionMode, setInteractionMode] = useState<'move' | 'fence'>('move')
   const [fenceOrientation, setFenceOrientation] = useState<'H' | 'V'>('H')
@@ -29,6 +32,7 @@ export function GameBoard({
     y: number
     orientation: 'H' | 'V'
   } | null>(null)
+  const lastFenceTapAtRef = useRef(0)
 
   const matchId = useGameStore((s) => s.matchId)
   const turn = useGameStore((s) => s.turn)
@@ -122,6 +126,20 @@ export function GameBoard({
     [interactionMode]
   )
 
+  const handleBoardTouchEnd = useCallback(
+    (e: TouchEvent<HTMLDivElement>) => {
+      if (interactionMode !== 'fence') return
+      const now = Date.now()
+      const sinceLastTap = now - lastFenceTapAtRef.current
+      if (sinceLastTap > 0 && sinceLastTap <= 320) {
+        e.preventDefault()
+        setFenceOrientation((o) => (o === 'H' ? 'V' : 'H'))
+      }
+      lastFenceTapAtRef.current = now
+    },
+    [interactionMode]
+  )
+
   const tiles: ReactNode[] = []
   for (let y = 0; y < 9; y++) {
     for (let x = 0; x < 9; x++) {
@@ -151,11 +169,11 @@ export function GameBoard({
       className="w-full max-w-[520px]"
       onContextMenu={handleContextMenu}
     >
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className={`${compact ? 'mb-2 gap-1.5' : 'mb-3 gap-2'} flex flex-wrap items-center`}>
         <div className="flex rounded-lg border border-emerald-800/30 bg-emerald-50/80 p-0.5 dark:border-emerald-700/40 dark:bg-emerald-950/40">
           <button
             type="button"
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-md font-medium transition-colors ${compact ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm'} ${
               interactionMode === 'move'
                 ? 'bg-white text-emerald-950 shadow dark:bg-emerald-900 dark:text-emerald-50'
                 : 'text-emerald-800/80 dark:text-emerald-200/70'
@@ -166,7 +184,7 @@ export function GameBoard({
           </button>
           <button
             type="button"
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-md font-medium transition-colors ${compact ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm'} ${
               interactionMode === 'fence'
                 ? 'bg-white text-emerald-950 shadow dark:bg-emerald-900 dark:text-emerald-50'
                 : 'text-emerald-800/80 dark:text-emerald-200/70'
@@ -177,9 +195,11 @@ export function GameBoard({
           </button>
         </div>
         {interactionMode === 'fence' && (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            <kbd className="rounded border border-zinc-400 px-1 font-mono text-xs">R</kbd> or
-            right-click: rotate ({fenceOrientation}). Hover a gap to preview.
+          <p className={`${compact ? 'text-xs' : 'text-sm'} text-zinc-600 dark:text-zinc-400`}>
+            <kbd className="rounded border border-zinc-400 px-1 font-mono text-xs">R</kbd> rotate ({fenceOrientation})
+            {compact
+              ? ' or double-tap the board.'
+              : '. Right-click or double-tap the board to rotate; hover a gap to preview.'}
           </p>
         )}
       </div>
@@ -188,6 +208,7 @@ export function GameBoard({
         className={`relative mx-auto aspect-square w-[100vw] max-w-[500px] select-none ${
           viewAsPlayer === 'player2' ? 'origin-center rotate-180' : ''
         }`}
+        onTouchEnd={handleBoardTouchEnd}
       >
         <div className="absolute inset-0 z-0 grid grid-cols-9 grid-rows-9 gap-0 overflow-hidden rounded-sm ring-1 ring-emerald-900/20">
           {tiles}

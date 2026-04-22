@@ -72,15 +72,8 @@ export function MobileActionTray(props: MobileActionTrayProps) {
       clearHideTimer()
       setTrayError(null)
       if (pendingBefore.type !== null) {
-        const s = useGameStore.getState()
-        const snapshot = {
-          turn: s.turn,
-          players: s.players,
-          fences: s.fences,
-          winner: s.winner,
-          status: s.status,
-          pendingAction: s.pendingAction,
-        }
+        // Use an immutable board snapshot; live store references can drift before API compare.
+        const snapshot = pickTurnSnapshot(useGameStore.getState())
         void (async () => {
           if (!afterSuccessfulCommit) return
           try {

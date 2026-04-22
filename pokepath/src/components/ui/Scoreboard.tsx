@@ -12,11 +12,14 @@ type ScoreboardProps = {
   localPlayerKey: PlayerKey
   /** Local hot-seat: name whose turn it is. Online match: viewer seat vs opponent (default). */
   turnStripMode?: ScoreboardTurnStripMode
+  /** Compact mode for online match screen; reduces duplicate metadata and vertical height. */
+  compact?: boolean
 }
 
 export function Scoreboard({
   localPlayerKey,
   turnStripMode = 'viewer',
+  compact = false,
 }: ScoreboardProps) {
   const turn = useGameStore((s) => s.turn)
   const status = useGameStore((s) => s.status)
@@ -60,18 +63,26 @@ export function Scoreboard({
   }
 
   return (
-    <header className="flex w-full max-w-[520px] flex-col gap-3 rounded-xl border border-zinc-200 bg-zinc-50/90 px-3 py-3 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/80">
+    <header
+      className={`flex w-full max-w-[520px] flex-col rounded-xl border border-zinc-200 bg-zinc-50/90 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/80 ${
+        compact ? 'gap-2 px-3 py-2.5' : 'gap-3 px-3 py-3'
+      }`}
+    >
       <div
-        className={`rounded-lg px-3 py-2 text-center text-sm font-semibold leading-snug ${turnStripClass}`}
+        className={`rounded-lg px-3 text-center font-semibold leading-snug ${turnStripClass} ${
+          compact ? 'py-1.5 text-xs' : 'py-2 text-sm'
+        }`}
         role="status"
         aria-live="polite"
       >
         {turnStripLabel}
       </div>
 
-      <p className="text-center text-sm font-medium leading-snug text-zinc-800 dark:text-zinc-200">
-        Opponent fences remaining: {opponentFencesLeft}
-      </p>
+      {!compact ? (
+        <p className="text-center text-sm font-medium leading-snug text-zinc-800 dark:text-zinc-200">
+          Opponent fences remaining: {opponentFencesLeft}
+        </p>
+      ) : null}
 
       <div className="flex items-stretch justify-between gap-3">
         <section
@@ -84,7 +95,7 @@ export function Scoreboard({
         >
           <div className="flex items-baseline justify-between gap-2">
             <span
-              className={`truncate text-sm ${turn === 'player1' ? 'font-bold text-zinc-900 dark:text-zinc-50' : 'font-medium text-zinc-700 dark:text-zinc-300'}`}
+              className={`truncate ${compact ? 'text-xs' : 'text-sm'} ${turn === 'player1' ? 'font-bold text-zinc-900 dark:text-zinc-50' : 'font-medium text-zinc-700 dark:text-zinc-300'}`}
             >
               {name1}
             </span>
@@ -94,13 +105,17 @@ export function Scoreboard({
               </span>
             ) : null}
           </div>
-          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Elo {elo1}</p>
-          <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
+          {!compact ? (
+            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Elo {elo1}</p>
+          ) : null}
+          <p className={`${compact ? 'mt-0.5' : 'mt-1'} text-xs text-zinc-600 dark:text-zinc-300`}>
             Fences: {p1.fencesLeft}/{STARTING_FENCES}
           </p>
-          <div className="mt-1.5">
-            <FenceInventory playerKey="player1" />
-          </div>
+          {!compact ? (
+            <div className="mt-1.5">
+              <FenceInventory playerKey="player1" />
+            </div>
+          ) : null}
         </section>
 
         <div
@@ -125,18 +140,22 @@ export function Scoreboard({
               </span>
             ) : null}
             <span
-              className={`truncate text-sm ${turn === 'player2' ? 'font-bold text-zinc-900 dark:text-zinc-50' : 'font-medium text-zinc-700 dark:text-zinc-300'}`}
+              className={`truncate ${compact ? 'text-xs' : 'text-sm'} ${turn === 'player2' ? 'font-bold text-zinc-900 dark:text-zinc-50' : 'font-medium text-zinc-700 dark:text-zinc-300'}`}
             >
               {name2}
             </span>
           </div>
-          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Elo {elo2}</p>
-          <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
+          {!compact ? (
+            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Elo {elo2}</p>
+          ) : null}
+          <p className={`${compact ? 'mt-0.5' : 'mt-1'} text-xs text-zinc-600 dark:text-zinc-300`}>
             Fences: {p2.fencesLeft}/{STARTING_FENCES}
           </p>
-          <div className="mt-1.5 flex justify-end">
-            <FenceInventory playerKey="player2" />
-          </div>
+          {!compact ? (
+            <div className="mt-1.5 flex justify-end">
+              <FenceInventory playerKey="player2" />
+            </div>
+          ) : null}
         </section>
       </div>
     </header>

@@ -1,18 +1,65 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-import { signInWithGoogle } from '@/src/lib/supabase/auth'
+import { getSession, onAuthStateChange, signInWithGoogle } from '@/src/lib/supabase/auth'
 
-export default function LoginPage() {
+function LoginFallback() {
+  return (
+    <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-zinc-50 px-6 py-16 dark:bg-black">
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">Checking session...</p>
+    </div>
+  )
+}
+
+function LoginContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [ready, setReady] = useState(false)
+
+  const redirectPath = useMemo(() => {
+    const raw = searchParams.get('redirect')?.trim()
+    if (!raw || !raw.startsWith('/')) return '/lobby'
+    return raw
+  }, [searchParams])
+
+  useEffect(() => {
+    let cancelled = false
+    void getSession().then(({ data: { session } }) => {
+      if (cancelled) return
+      if (session) {
+        router.replace(redirectPath)
+        return
+      }
+      setReady(true)
+    })
+
+    const {
+      data: { subscription },
+    } = onAuthStateChange((_event, session) => {
+      if (session) {
+        router.replace(redirectPath)
+      }
+    })
+
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
+  }, [redirectPath, router])
 
   async function handleSignIn() {
     setError(null)
     setPending(true)
     try {
-      const { error: oauthError } = await signInWithGoogle()
+      const redirectTo =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}${redirectPath}`
+          : undefined
+      const { error: oauthError } = await signInWithGoogle(redirectTo)
       if (oauthError) {
         setError(oauthError.message)
       }
@@ -21,6 +68,10 @@ export default function LoginPage() {
     } finally {
       setPending(false)
     }
+  }
+
+  if (!ready) {
+    return <LoginFallback />
   }
 
   return (
@@ -47,5 +98,13 @@ export default function LoginPage() {
         ) : null}
       </main>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginContent />
+    </Suspense>
   )
 }
