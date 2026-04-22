@@ -287,15 +287,19 @@ function SpeciesVisual({
 
   if (species.imageSrc) {
     const img = (
-      <Image
-        src={species.imageSrc}
-        alt={species.displayName}
-        width={dim}
-        height={dim}
-        className={className}
-        sizes={`${dim}px`}
-        priority={size === 'ball'}
-      />
+      <div
+        className="rounded-lg bg-zinc-900/35 p-0.5 ring-1 ring-zinc-700/30"
+      >
+        <Image
+          src={species.imageSrc}
+          alt={species.displayName}
+          width={dim}
+          height={dim}
+          className={className}
+          sizes={`${dim}px`}
+          priority={size === 'ball'}
+        />
+      </div>
     )
     if (motionProps) {
       return (

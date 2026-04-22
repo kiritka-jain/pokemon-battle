@@ -12,6 +12,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "pokemon:transparent": "node scripts/makePokemonPngsTransparent.mjs",
     "supabase:start": "npx supabase start --workdir ..",
     "supabase:stop": "npx supabase stop --workdir ..",
     "supabase:status": "npx supabase status --workdir ..",
@@ -41,6 +42,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.2.4"
