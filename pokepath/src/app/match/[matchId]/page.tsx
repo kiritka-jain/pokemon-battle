@@ -316,7 +316,7 @@ export default function MatchPage() {
 
         <Scoreboard localPlayerKey={localPlayerKey} />
 
-        <GameBoard localPlayerKey={localPlayerKey} />
+        <GameBoard localPlayerKey={localPlayerKey} viewAsPlayer={localPlayerKey} />
 
         <MobileActionTray
           actingUserId={sessionUserId}

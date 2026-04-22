@@ -94,7 +94,7 @@ export default function PlayPage() {
       <PortraitOnlyGameShell>
         <Scoreboard localPlayerKey={turn} turnStripMode={PLAY_TURN_STRIP} />
 
-        <GameBoard localPlayerKey={turn} />
+        <GameBoard localPlayerKey={turn} viewAsPlayer="player1" />
 
         <MobileActionTray actingUserId={actingUserId} />
       </PortraitOnlyGameShell>

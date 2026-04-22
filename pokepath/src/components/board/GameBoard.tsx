@@ -14,9 +14,14 @@ import { Tile } from './Tile'
 
 type GameBoardProps = {
   localPlayerKey?: PlayerKey
+  /** Seat used only for board rotation; engine coords unchanged. Default keeps hot-seat / legacy layout. */
+  viewAsPlayer?: PlayerKey
 }
 
-export function GameBoard({ localPlayerKey = 'player1' }: GameBoardProps) {
+export function GameBoard({
+  localPlayerKey = 'player1',
+  viewAsPlayer = 'player1',
+}: GameBoardProps) {
   const [interactionMode, setInteractionMode] = useState<'move' | 'fence'>('move')
   const [fenceOrientation, setFenceOrientation] = useState<'H' | 'V'>('H')
   const [hoverFenceSlot, setHoverFenceSlot] = useState<{
@@ -179,7 +184,11 @@ export function GameBoard({ localPlayerKey = 'player1' }: GameBoardProps) {
         )}
       </div>
 
-      <div className="relative w-[100vw] max-w-[500px] aspect-square mx-auto select-none">
+      <div
+        className={`relative mx-auto aspect-square w-[100vw] max-w-[500px] select-none ${
+          viewAsPlayer === 'player2' ? 'origin-center rotate-180' : ''
+        }`}
+      >
         <div className="absolute inset-0 z-0 grid grid-cols-9 grid-rows-9 gap-0 overflow-hidden rounded-sm ring-1 ring-emerald-900/20">
           {tiles}
         </div>
