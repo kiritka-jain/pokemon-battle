@@ -475,13 +475,22 @@ export default function MatchPage() {
           >
             ← Lobby
           </Link>
-          <Link
-            href="/leaderboard"
-            onClick={(e) => confirmLeave(e, '/leaderboard')}
-            className="text-zinc-600 underline dark:text-zinc-400"
-          >
-            Leaderboard
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/lobby/in-progress"
+              onClick={(e) => confirmLeave(e, '/lobby/in-progress')}
+              className="text-zinc-600 underline dark:text-zinc-400"
+            >
+              In-progress games
+            </Link>
+            <Link
+              href="/leaderboard"
+              onClick={(e) => confirmLeave(e, '/leaderboard')}
+              className="text-zinc-600 underline dark:text-zinc-400"
+            >
+              Leaderboard
+            </Link>
+          </div>
         </div>
 
         {opponentDisconnected && gameStatus === 'active' && !winner ? (

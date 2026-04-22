@@ -151,6 +151,12 @@ export default function LobbyPage() {
           >
             Find a match
           </Link>
+          <Link
+            href="/lobby/in-progress"
+            className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-800"
+          >
+            In-progress games
+          </Link>
         </div>
 
         <div className="mt-6 flex flex-col gap-2 border-t border-zinc-200 pt-6 dark:border-zinc-800">
