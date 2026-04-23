@@ -25,9 +25,9 @@ export default function Home() {
             <p className="text-xs font-semibold uppercase tracking-wide text-yellow-700 dark:text-yellow-300">
               Type: Electric
             </p>
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Tutorial and rules</h2>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Game rules</h2>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Learn objectives, movement, fences, and winning strategy before your first match.
+              Swipe through rule cards in a speech cloud with Professor Oak before your first match.
             </p>
           </Link>
 
