@@ -18,13 +18,13 @@
     "supabase:status": "npx supabase status --workdir ..",
     "supabase:reset": "npx supabase db reset --workdir ..",
     "supabase:link": "npx supabase link --project-ref \"$SUPABASE_PROJECT_REF\" -p \"$SUPABASE_DB_PASSWORD\" --workdir .. --yes",
-    "supabase:migration:list": "npx supabase migration list --linked --workdir ..",
-    "supabase:db:push": "npx supabase db push --linked --workdir .. --yes",
-    "supabase:db:push:dry-run": "npx supabase db push --linked --dry-run --workdir ..",
-    "supabase:migration:repair-reverted": "sh -c 'v=\"${SUPABASE_MIGRATION_VERSION:-20260418150000}\"; npx supabase migration repair --status reverted \"$v\" --linked --workdir .. --yes'",
-    "supabase:migration:repair-applied": "sh -c 'test -n \"$SUPABASE_MIGRATION_VERSION\" || (echo \"Set SUPABASE_MIGRATION_VERSION (e.g. 20260415120000)\" >&2; exit 1); npx supabase migration repair --status applied \"$SUPABASE_MIGRATION_VERSION\" --linked --workdir .. --yes'",
+    "supabase:migration:list": "bash ../scripts/ensure-supabase-linked.sh && npx supabase migration list --linked --workdir ..",
+    "supabase:db:push": "bash ../scripts/ensure-supabase-linked.sh && npx supabase db push --linked --workdir .. --yes",
+    "supabase:db:push:dry-run": "bash ../scripts/ensure-supabase-linked.sh && npx supabase db push --linked --dry-run --workdir ..",
+    "supabase:migration:repair-reverted": "bash ../scripts/ensure-supabase-linked.sh && sh -c 'v=\"${SUPABASE_MIGRATION_VERSION:-20260418150000}\"; npx supabase migration repair --status reverted \"$v\" --linked --workdir .. --yes'",
+    "supabase:migration:repair-applied": "bash ../scripts/ensure-supabase-linked.sh && sh -c 'test -n \"$SUPABASE_MIGRATION_VERSION\" || (echo \"Set SUPABASE_MIGRATION_VERSION (e.g. 20260415120000)\" >&2; exit 1); npx supabase migration repair --status applied \"$SUPABASE_MIGRATION_VERSION\" --linked --workdir .. --yes'",
     "supabase:migration:mark-all-applied": "bash ../scripts/supabase-mark-applied-local-migrations.sh",
-    "supabase:db:pull": "npx supabase db pull --workdir .."
+    "supabase:db:pull": "bash ../scripts/ensure-supabase-linked.sh && npx supabase db pull --workdir .."
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
