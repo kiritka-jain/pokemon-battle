@@ -7,6 +7,10 @@ import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
 import { useGameStore } from '@/src/lib/store/gameStore'
 import type { PlayerKey, PlayerState } from '@/src/types/game'
 
+/** Shared chrome for board pawns (no seat-colored red/blue disks). */
+const PAWN_SHELL_BASE =
+  'absolute h-[11%] max-h-14 w-[11%] max-w-14 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full shadow-md ring-2 transition-all duration-300 ease-in-out ring-zinc-400/55 dark:ring-zinc-500/60'
+
 /**
  * Renders both trainers as absolutely positioned layers over the board grid.
  */
@@ -19,23 +23,21 @@ export function PlayerSprites() {
     top: `${((y + 0.5) / 9) * 100}%`,
   })
 
-  const redName = displayNameForSeat({ username: p1.username, userId: p1.id })
-  const blueName = displayNameForSeat({ username: p2.username, userId: p2.id })
+  const name1 = displayNameForSeat({ username: p1.username, userId: p1.id })
+  const name2 = displayNameForSeat({ username: p2.username, userId: p2.id })
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       <PawnToken
         playerKey="player1"
         player={p1}
-        trainerLabel={redName}
-        seatClass="bg-red-500 ring-red-900/30"
+        trainerLabel={name1}
         style={styleFor(p1.pos.x, p1.pos.y)}
       />
       <PawnToken
         playerKey="player2"
         player={p2}
-        trainerLabel={blueName}
-        seatClass="bg-blue-500 ring-blue-900/30"
+        trainerLabel={name2}
         style={styleFor(p2.pos.x, p2.pos.y)}
       />
     </div>
@@ -46,28 +48,24 @@ function PawnToken({
   playerKey,
   player,
   trainerLabel,
-  seatClass,
   style,
 }: {
   playerKey: PlayerKey
   player: PlayerState
   trainerLabel: string
-  seatClass: string
   style: { left: string; top: string }
 }) {
   const species = player.pawnSpeciesId
     ? starterSpeciesById(player.pawnSpeciesId)
     : undefined
 
-  const seatName = playerKey === 'player1' ? 'Red trainer' : 'Blue trainer'
+  const seatLabel = playerKey === 'player1' ? 'Player 1' : 'Player 2'
   const ariaLabel =
     species != null
-      ? `${species.displayName}, ${seatName}, ${trainerLabel}`
-      : `${seatName}, ${trainerLabel}`
+      ? `${species.displayName}, ${seatLabel}, ${trainerLabel}`
+      : `${seatLabel}, ${trainerLabel}`
 
-  const shellClass =
-    'absolute h-[11%] max-h-14 w-[11%] max-w-14 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full shadow-md ring-2 transition-all duration-300 ease-in-out ' +
-    seatClass
+  const shellClass = `${PAWN_SHELL_BASE} bg-zinc-100/95 dark:bg-zinc-900/95`
 
   if (species?.imageSrc) {
     return (
@@ -97,6 +95,14 @@ function PawnToken({
   }
 
   return (
-    <div className={shellClass} style={style} aria-label={ariaLabel} />
+    <div
+      className={`${shellClass} flex items-center justify-center bg-zinc-200/90 dark:bg-zinc-800/90`}
+      style={style}
+      aria-label={ariaLabel}
+    >
+      <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400" aria-hidden>
+        …
+      </span>
+    </div>
   )
 }
