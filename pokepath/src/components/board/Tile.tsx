@@ -2,7 +2,9 @@
 
 import {
   getArenaPendingMoveRingClasses,
-  getArenaTileClasses,
+  getArenaTileShadeLayerClasses,
+  getArenaTileTextureLayerClasses,
+  getArenaTileTextureUrl,
   getArenaValidMoveDotClass,
   getArenaValidRingClass,
 } from '@/src/lib/board/arenaTheme'
@@ -35,7 +37,7 @@ export function Tile({
   canInteract,
   onSelectMove,
 }: TileProps) {
-  const base = getArenaTileClasses(arena, isLight)
+  const textureUrl = getArenaTileTextureUrl(arena)
 
   const validHint =
     interactionMode === 'move' && canInteract && isValidMoveDestination
@@ -66,8 +68,7 @@ export function Tile({
       onClick={handleClick}
       disabled={!canInteract || interactionMode !== 'move'}
       className={[
-        'relative flex items-center justify-center',
-        base,
+        'relative flex min-h-0 min-w-0 items-center justify-center overflow-hidden',
         validHint,
         pending,
         canInteract && interactionMode === 'move'
@@ -75,9 +76,15 @@ export function Tile({
           : 'cursor-default',
       ].join(' ')}
     >
+      <span
+        className={getArenaTileTextureLayerClasses(isLight)}
+        style={{ backgroundImage: `url(${textureUrl})` }}
+        aria-hidden
+      />
+      <span className={getArenaTileShadeLayerClasses(isLight)} aria-hidden />
       {isValidMoveDestination && interactionMode === 'move' && canInteract && (
         <span
-          className={`pointer-events-none absolute inset-0 m-auto h-2 w-2 rounded-full ${getArenaValidMoveDotClass(arena)}`}
+          className={`pointer-events-none relative z-10 m-auto h-2 w-2 rounded-full ${getArenaValidMoveDotClass(arena)}`}
           aria-hidden
         />
       )}

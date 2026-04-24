@@ -1,31 +1,33 @@
 import type { BoardArenaId, PlayerKey } from '@/src/types/game'
 
-/** Checkerboard light / dark cell backgrounds (light mode + dark mode). */
-const TILES: Record<BoardArenaId, { light: string; dark: string }> = {
-  water: {
-    light: 'bg-sky-200/90 dark:bg-sky-950/55',
-    dark: 'bg-sky-300/90 dark:bg-sky-900/50',
-  },
-  grass: {
-    light: 'bg-emerald-200/90 dark:bg-emerald-900/50',
-    dark: 'bg-emerald-300/90 dark:bg-emerald-950/50',
-  },
-  fire: {
-    light: 'bg-orange-200/90 dark:bg-orange-950/50',
-    dark: 'bg-orange-300/90 dark:bg-orange-900/45',
-  },
-  air: {
-    light: 'bg-violet-200/90 dark:bg-violet-950/50',
-    dark: 'bg-violet-300/90 dark:bg-violet-900/45',
-  },
-  electric: {
-    light: 'bg-yellow-200/90 dark:bg-amber-950/45',
-    dark: 'bg-yellow-300/90 dark:bg-amber-900/40',
-  },
-  ground: {
-    light: 'bg-amber-200/90 dark:bg-stone-900/50',
-    dark: 'bg-amber-300/90 dark:bg-stone-800/45',
-  },
+/** Static PNG per arena under `public/board-tiles/`. */
+const ARENA_TEXTURE_BASENAME: Record<BoardArenaId, string> = {
+  water: 'water',
+  grass: 'grass',
+  fire: 'fire',
+  air: 'air',
+  electric: 'electric',
+  ground: 'ground',
+}
+
+export function getArenaTileTextureUrl(arena: BoardArenaId): string {
+  return `/board-tiles/${ARENA_TEXTURE_BASENAME[arena]}.png`
+}
+
+/** Background image layer (caller sets `style={{ backgroundImage }}`). */
+export function getArenaTileTextureLayerClasses(isLight: boolean): string {
+  return [
+    'pointer-events-none absolute inset-0 z-0 bg-cover bg-center',
+    isLight ? 'brightness-105' : 'brightness-95',
+  ].join(' ')
+}
+
+/** Checkerboard shade on top of the shared arena texture. */
+export function getArenaTileShadeLayerClasses(isLight: boolean): string {
+  const base = 'pointer-events-none absolute inset-0 z-[1]'
+  return isLight
+    ? `${base} bg-transparent dark:bg-black/15`
+    : `${base} bg-black/25 dark:bg-black/40`
 }
 
 /** Move/Fence toolbar chrome. */
@@ -135,11 +137,6 @@ const FENCE_P2: Record<BoardArenaId, string> = {
 
 export function getArenaFenceSolidBarClass(arena: BoardArenaId, placedBy: PlayerKey): string {
   return placedBy === 'player1' ? FENCE_P1[arena] : FENCE_P2[arena]
-}
-
-export function getArenaTileClasses(arena: BoardArenaId, isLight: boolean): string {
-  const pair = TILES[arena]
-  return isLight ? pair.light : pair.dark
 }
 
 export function getArenaChromeClasses(arena: BoardArenaId): {
