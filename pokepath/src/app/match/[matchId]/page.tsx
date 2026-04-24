@@ -5,12 +5,24 @@ import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 
 import { GameBoard } from '@/src/components/board/GameBoard'
+import { PawnSpeciesPickerModal } from '@/src/components/pick/PawnSpeciesPickerModal'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
 import { Scoreboard } from '@/src/components/ui/Scoreboard'
 import { VictoryModal } from '@/src/components/ui/VictoryModal'
 import { useToast } from '@/src/components/ui/toast'
 import { hydrateOnlineMatchFromRow } from '@/src/lib/match/hydrateOnlineMatch'
+import {
+  PAWN_PICK_MATCH_STORAGE_KEY,
+  parsePawnPickJson,
+  serializePawnPick,
+} from '@/src/lib/pokemon/pawnPickStorage'
+import {
+  PARTNER_PICK_STORAGE_KEY,
+  parsePartnerPickJson,
+} from '@/src/lib/pokemon/partnerPickStorage'
+import type { StarterSpecies } from '@/src/lib/pokemon/starterRoster'
+import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
 import {
   playerKeyForUserId,
   validateIncomingTurn,
@@ -48,6 +60,10 @@ export default function MatchPage() {
   const [opponentId, setOpponentId] = useState<string | null>(null)
   const [opponentDisconnected, setOpponentDisconnected] = useState(false)
   const [resigning, setResigning] = useState(false)
+  const [pawnPickerOpen, setPawnPickerOpen] = useState(false)
+  const [pawnPickerOptions, setPawnPickerOptions] = useState<[StarterSpecies, StarterSpecies] | null>(
+    null,
+  )
 
   const matchStartedAt = useRef<number | null>(null)
   const plyCount = useRef(0)
@@ -480,6 +496,49 @@ export default function MatchPage() {
   }, [matchId, postMatchEnd, winner])
 
   useEffect(() => {
+    if (loading || !localPlayerKey || !sessionUserId || !matchId) return
+
+    queueMicrotask(() => {
+      try {
+        const trainerStorageKey = `${sessionUserId}:${matchId}`
+        const rawPawn = sessionStorage.getItem(PAWN_PICK_MATCH_STORAGE_KEY)
+        const pawnStored = parsePawnPickJson(rawPawn)
+
+        const seatPawn = useGameStore.getState().players[localPlayerKey].pawnSpeciesId
+        if (seatPawn) {
+          setPawnPickerOpen(false)
+          setPawnPickerOptions(null)
+          return
+        }
+
+        if (pawnStored?.trainerKey === trainerStorageKey && pawnStored.speciesId) {
+          useGameStore.getState().setPawnSpecies(localPlayerKey, pawnStored.speciesId)
+          setPawnPickerOpen(false)
+          setPawnPickerOptions(null)
+          return
+        }
+
+        const rawPartner = sessionStorage.getItem(PARTNER_PICK_STORAGE_KEY)
+        const parsedPartner = parsePartnerPickJson(rawPartner)
+        const [idA, idB] = parsedPartner?.speciesIds ?? [null, null]
+        const sa = idA ? starterSpeciesById(idA) : undefined
+        const sb = idB ? starterSpeciesById(idB) : undefined
+
+        if (parsedPartner && sa && sb) {
+          setPawnPickerOptions([sa, sb])
+          setPawnPickerOpen(true)
+        } else {
+          setPawnPickerOpen(false)
+          setPawnPickerOptions(null)
+        }
+      } catch {
+        setPawnPickerOpen(false)
+        setPawnPickerOptions(null)
+      }
+    })
+  }, [loading, localPlayerKey, sessionUserId, matchId])
+
+  useEffect(() => {
     if (!matchId || loading) return
     const warn = (e: BeforeUnloadEvent) => {
       const { status, winner: w } = useGameStore.getState()
@@ -597,6 +656,26 @@ export default function MatchPage() {
           subtitle={winner ? `Match ${matchId.slice(0, 8)}…` : undefined}
           onPrimary={() => router.push('/lobby')}
         />
+
+        {pawnPickerOpen && pawnPickerOptions && (
+          <PawnSpeciesPickerModal
+            open
+            options={pawnPickerOptions}
+            onConfirm={(speciesId) => {
+              const trainerStorageKey = `${sessionUserId}:${matchId}`
+              try {
+                sessionStorage.setItem(
+                  PAWN_PICK_MATCH_STORAGE_KEY,
+                  serializePawnPick({ trainerKey: trainerStorageKey, speciesId }),
+                )
+              } catch {
+                // ignore quota / private mode
+              }
+              useGameStore.getState().setPawnSpecies(localPlayerKey, speciesId)
+              setPawnPickerOpen(false)
+            }}
+          />
+        )}
       </div>
     </PortraitOnlyGameShell>
   )

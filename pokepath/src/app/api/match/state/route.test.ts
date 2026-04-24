@@ -216,4 +216,148 @@ describe('POST /api/match/state', () => {
       stateVersion: 0,
     })
   })
+
+  it('persists actor pawnSpeciesId on first commit when client sends valid roster id', async () => {
+    getUserFromBearerMock.mockResolvedValue({ user: { id: 'p1' } })
+
+    const matchLookup = makeBuilder({
+      data: {
+        id: 'm1',
+        status: 'in_progress',
+        player1_id: 'p1',
+        player2_id: 'p2',
+        game_state: null,
+        state_version: 0,
+      },
+      error: null,
+    })
+    const matchUpdate = makeBuilder({
+      data: { state_version: 1 },
+      error: null,
+    })
+    fromMock.mockReturnValueOnce(matchLookup).mockReturnValueOnce(matchUpdate)
+
+    const arenaId = resolveArenaForMatch('m1')
+    const { POST } = await import('./route')
+    const req = new Request('http://localhost/api/match/state', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer token',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        matchId: 'm1',
+        baseVersion: 0,
+        committedAction: { type: 'move', targetPos: { x: 4, y: 7 } },
+        newState: {
+          turn: 'player2',
+          arena: arenaId,
+          players: {
+            player1: {
+              id: 'p1',
+              pos: { x: 4, y: 7 },
+              fencesLeft: 10,
+              type: 'Normal',
+              pawnSpeciesId: 'charmander',
+            },
+            player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+          },
+          fences: [],
+          winner: null,
+          status: 'active',
+          pendingAction: { type: null },
+        },
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    expect(matchUpdate.update).toHaveBeenCalled()
+    const payload = matchUpdate.update.mock.calls[0]?.[0] as {
+      game_state?: { players?: { player1?: { pawnSpeciesId?: string } } }
+    }
+    expect(payload?.game_state?.players?.player1?.pawnSpeciesId).toBe('charmander')
+  })
+
+  it('returns state_mismatch when client forges opponent pawnSpeciesId', async () => {
+    getUserFromBearerMock.mockResolvedValue({ user: { id: 'p1' } })
+
+    const existingState = {
+      turn: 'player1',
+      arena: resolveArenaForMatch('m1'),
+      status: 'active',
+      players: {
+        player1: { id: 'p1', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
+        player2: {
+          id: 'p2',
+          pos: { x: 4, y: 0 },
+          fencesLeft: 10,
+          type: 'Normal',
+          pawnSpeciesId: 'pikachu',
+        },
+      },
+      fences: [],
+      pendingAction: { type: null },
+      winner: null,
+    }
+
+    const matchLookup = makeBuilder({
+      data: {
+        id: 'm1',
+        status: 'in_progress',
+        player1_id: 'p1',
+        player2_id: 'p2',
+        game_state: existingState,
+        state_version: 0,
+      },
+      error: null,
+    })
+    const freshLookup = makeBuilder({
+      data: {
+        state_version: 0,
+        game_state: existingState,
+      },
+      error: null,
+    })
+    fromMock.mockReturnValueOnce(matchLookup).mockReturnValueOnce(freshLookup)
+
+    const { POST } = await import('./route')
+    const req = new Request('http://localhost/api/match/state', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer token',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        matchId: 'm1',
+        baseVersion: 0,
+        committedAction: { type: 'move', targetPos: { x: 4, y: 7 } },
+        newState: {
+          turn: 'player2',
+          arena: resolveArenaForMatch('m1'),
+          players: {
+            player1: { id: 'p1', pos: { x: 4, y: 7 }, fencesLeft: 10, type: 'Normal' },
+            player2: {
+              id: 'p2',
+              pos: { x: 4, y: 0 },
+              fencesLeft: 10,
+              type: 'Normal',
+              pawnSpeciesId: 'charmander',
+            },
+          },
+          fences: [],
+          winner: null,
+          status: 'active',
+          pendingAction: { type: null },
+        },
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(409)
+    await expect(res.json()).resolves.toMatchObject({
+      error: 'conflict',
+      reason: 'state_mismatch',
+    })
+  })
 })

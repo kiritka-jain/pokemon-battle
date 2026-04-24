@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { applyCommittedTurn } from '@/src/lib/engine/applyCommittedTurn'
 import { initialGameStateForMatch } from '@/src/lib/match/initialGameStateForMatch'
+import { mergePawnsAfterCommit } from '@/src/lib/match/mergePawnsAfterCommit'
 import { parsePersistedMatchState } from '@/src/lib/match/parsePersistedMatchState'
 import { normalizedTurnSnapshotJson } from '@/src/lib/match/snapshotUtils'
 import { playerKeyForUserId } from '@/src/lib/match/validateIncomingTurn'
@@ -100,7 +101,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: applied.reason, code: applied.errorCode }, { status: 400 })
   }
 
-  const serverNorm = normalizedTurnSnapshotJson(applied.next)
+  const merged = mergePawnsAfterCommit(applied.next, newState, base, actorKey)
+  const serverNorm = normalizedTurnSnapshotJson(merged)
   const clientNorm = normalizedTurnSnapshotJson(newState)
   if (serverNorm !== clientNorm) {
     const { data: fresh } = await supabaseServer
@@ -119,7 +121,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const persisted = serializePersistedState(applied.next)
+  const persisted = serializePersistedState(merged)
 
   const { data: updated, error: updateError } = await supabaseServer
     .from('matches')

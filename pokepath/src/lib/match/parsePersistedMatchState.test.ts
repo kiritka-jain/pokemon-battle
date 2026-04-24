@@ -68,6 +68,49 @@ describe('parsePersistedMatchState', () => {
     expect(parsePersistedMatchState(raw, match)).toBeNull()
   })
 
+  it('parses valid pawnSpeciesId when present on players', () => {
+    const raw = {
+      turn: 'player1',
+      players: {
+        player1: {
+          id: 'p1',
+          pos: { x: 4, y: 8 },
+          fencesLeft: 10,
+          type: 'Normal',
+          pawnSpeciesId: 'charmander',
+        },
+        player2: {
+          id: 'p2',
+          pos: { x: 4, y: 0 },
+          fencesLeft: 10,
+          type: 'Normal',
+          pawnSpeciesId: 'pikachu',
+        },
+      },
+    }
+    const parsed = parsePersistedMatchState(raw, match)
+    expect(parsed?.players.player1.pawnSpeciesId).toBe('charmander')
+    expect(parsed?.players.player2.pawnSpeciesId).toBe('pikachu')
+  })
+
+  it('omits invalid pawnSpeciesId from persisted payload', () => {
+    const raw = {
+      turn: 'player1',
+      players: {
+        player1: {
+          id: 'p1',
+          pos: { x: 4, y: 8 },
+          fencesLeft: 10,
+          type: 'Normal',
+          pawnSpeciesId: 'fake-mon',
+        },
+        player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+      },
+    }
+    const parsed = parsePersistedMatchState(raw, match)
+    expect(parsed?.players.player1.pawnSpeciesId).toBeUndefined()
+  })
+
   it('defaults status and pending action when optional fields are malformed', () => {
     const raw = {
       turn: 'player1',

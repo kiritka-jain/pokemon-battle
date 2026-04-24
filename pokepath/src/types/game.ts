@@ -37,6 +37,8 @@ export interface PlayerState {
   username?: string;
   /** Shown in scoreboard; optional until profile is loaded */
   elo?: number;
+  /** Starter roster id for board pawn art; unset uses legacy colored token */
+  pawnSpeciesId?: string;
 }
 
 export interface Fence {

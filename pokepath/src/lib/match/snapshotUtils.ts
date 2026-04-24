@@ -40,12 +40,25 @@ export function pickTurnSnapshot(s: GameState): TurnSnapshot {
 export function normalizedTurnSnapshotJson(
   s: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'>,
 ): string {
-  const normPlayer = (pk: PlayerKey) => ({
-    id: s.players[pk].id,
-    pos: s.players[pk].pos,
-    fencesLeft: s.players[pk].fencesLeft,
-    type: s.players[pk].type,
-  })
+  const normPlayer = (pk: PlayerKey) => {
+    const p = s.players[pk]
+    const o: {
+      id: string
+      pos: { x: number; y: number }
+      fencesLeft: number
+      type: string
+      pawnSpeciesId?: string
+    } = {
+      id: p.id,
+      pos: p.pos,
+      fencesLeft: p.fencesLeft,
+      type: p.type,
+    }
+    if (p.pawnSpeciesId !== undefined && p.pawnSpeciesId !== '') {
+      o.pawnSpeciesId = p.pawnSpeciesId
+    }
+    return o
+  }
   return JSON.stringify({
     arena: s.arena,
     turn: s.turn,

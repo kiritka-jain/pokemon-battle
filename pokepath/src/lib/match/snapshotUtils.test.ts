@@ -68,4 +68,18 @@ describe('snapshotUtils', () => {
       normalizedTurnSnapshotJson(pickTurnSnapshot(b)),
     )
   })
+
+  it('normalizedTurnSnapshotJson includes pawnSpeciesId when set', () => {
+    const base = stateWithDisplay()
+    const withPawn: GameState = {
+      ...base,
+      players: {
+        player1: { ...base.players.player1, pawnSpeciesId: 'charmander' },
+        player2: { ...base.players.player2 },
+      },
+    }
+    const norm = normalizedTurnSnapshotJson(pickTurnSnapshot(withPawn))
+    expect(norm).toContain('pawnSpeciesId')
+    expect(norm).toContain('charmander')
+  })
 })

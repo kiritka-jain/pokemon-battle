@@ -1,7 +1,11 @@
 'use client'
 
+import Image from 'next/image'
+
 import { displayNameForSeat } from '@/src/lib/playerDisplayName'
+import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
 import { useGameStore } from '@/src/lib/store/gameStore'
+import type { PlayerKey, PlayerState } from '@/src/types/game'
 
 /**
  * Renders both trainers as absolutely positioned layers over the board grid.
@@ -20,16 +24,79 @@ export function PlayerSprites() {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
-      <div
-        className="absolute h-[11%] max-h-14 w-[11%] max-w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 shadow-md ring-2 ring-red-900/30 transition-all duration-300 ease-in-out"
+      <PawnToken
+        playerKey="player1"
+        player={p1}
+        trainerLabel={redName}
+        seatClass="bg-red-500 ring-red-900/30"
         style={styleFor(p1.pos.x, p1.pos.y)}
-        aria-label={`Red trainer, ${redName}`}
       />
-      <div
-        className="absolute h-[11%] max-h-14 w-[11%] max-w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500 shadow-md ring-2 ring-blue-900/30 transition-all duration-300 ease-in-out"
+      <PawnToken
+        playerKey="player2"
+        player={p2}
+        trainerLabel={blueName}
+        seatClass="bg-blue-500 ring-blue-900/30"
         style={styleFor(p2.pos.x, p2.pos.y)}
-        aria-label={`Blue trainer, ${blueName}`}
       />
     </div>
+  )
+}
+
+function PawnToken({
+  playerKey,
+  player,
+  trainerLabel,
+  seatClass,
+  style,
+}: {
+  playerKey: PlayerKey
+  player: PlayerState
+  trainerLabel: string
+  seatClass: string
+  style: { left: string; top: string }
+}) {
+  const species = player.pawnSpeciesId
+    ? starterSpeciesById(player.pawnSpeciesId)
+    : undefined
+
+  const seatName = playerKey === 'player1' ? 'Red trainer' : 'Blue trainer'
+  const ariaLabel =
+    species != null
+      ? `${species.displayName}, ${seatName}, ${trainerLabel}`
+      : `${seatName}, ${trainerLabel}`
+
+  const shellClass =
+    'absolute h-[11%] max-h-14 w-[11%] max-w-14 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full shadow-md ring-2 transition-all duration-300 ease-in-out ' +
+    seatClass
+
+  if (species?.imageSrc) {
+    return (
+      <div className={shellClass} style={style} aria-label={ariaLabel}>
+        <Image
+          src={species.imageSrc}
+          alt=""
+          fill
+          className="object-cover object-center"
+          sizes="56px"
+          priority
+        />
+      </div>
+    )
+  }
+
+  if (species) {
+    return (
+      <div
+        className={`${shellClass} flex items-center justify-center text-2xl sm:text-3xl`}
+        style={style}
+        aria-label={ariaLabel}
+      >
+        <span aria-hidden>{species.emoji}</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className={shellClass} style={style} aria-label={ariaLabel} />
   )
 }

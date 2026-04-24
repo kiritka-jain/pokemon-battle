@@ -219,7 +219,7 @@ describe('useGameStore', () => {
       status: 'active' as const,
       winner: null,
       arena: resolveArenaForMatch('m1'),
-      pendingAction: { type: null as const },
+      pendingAction: { type: null },
       players: {
         player1: { id: 'uuid-a', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
         player2: { id: 'uuid-b', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },

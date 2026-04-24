@@ -54,6 +54,7 @@ type GameStore = GameState & {
     >,
   ) => void
   setWinner: (player: PlayerKey) => void
+  setPawnSpecies: (playerKey: PlayerKey, speciesId: string | null) => void
 }
 
 export const useGameStore = create<GameStore>()(
@@ -253,6 +254,15 @@ export const useGameStore = create<GameStore>()(
       set((draft) => {
         draft.winner = player
         draft.status = 'finished'
+      }),
+
+    setPawnSpecies: (playerKey, speciesId) =>
+      set((draft) => {
+        if (speciesId === null) {
+          delete draft.players[playerKey].pawnSpeciesId
+        } else {
+          draft.players[playerKey].pawnSpeciesId = speciesId
+        }
       }),
   })),
 )

@@ -1,5 +1,11 @@
 import { isBoardArenaId, resolveArenaForMatch } from '@/src/lib/board/arenaForMatch'
+import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
 import type { GameState, GameStatus } from '@/src/types/game'
+
+function parsePawnSpeciesId(raw: unknown): string | undefined {
+  if (typeof raw !== 'string' || raw === '') return undefined
+  return starterSpeciesById(raw) ? raw : undefined
+}
 
 export function parsePersistedMatchState(
   raw: unknown,
@@ -53,6 +59,9 @@ export function parsePersistedMatchState(
 
   const arena = isBoardArenaId(o.arena) ? o.arena : resolveArenaForMatch(match.id)
 
+  const pawn1 = parsePawnSpeciesId(p1.pawnSpeciesId)
+  const pawn2 = parsePawnSpeciesId(p2.pawnSpeciesId)
+
   return {
     matchId: match.id,
     status,
@@ -64,12 +73,14 @@ export function parsePersistedMatchState(
         pos: pos1,
         fencesLeft: Number(p1.fencesLeft),
         type: String(p1.type ?? 'Normal'),
+        ...(pawn1 !== undefined ? { pawnSpeciesId: pawn1 } : {}),
       },
       player2: {
         id: String(p2.id),
         pos: pos2,
         fencesLeft: Number(p2.fencesLeft),
         type: String(p2.type ?? 'Normal'),
+        ...(pawn2 !== undefined ? { pawnSpeciesId: pawn2 } : {}),
       },
     },
     fences,
