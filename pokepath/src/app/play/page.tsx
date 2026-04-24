@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { Session } from '@supabase/supabase-js'
 
-import { BoardVisualSettings } from '@/src/components/board/BoardVisualSettings'
 import { GameBoard } from '@/src/components/board/GameBoard'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
@@ -118,8 +117,6 @@ export default function PlayPage() {
 
       <PortraitOnlyGameShell>
         <Scoreboard localPlayerKey={turn} turnStripMode={PLAY_TURN_STRIP} />
-
-        <BoardVisualSettings />
 
         <GameBoard localPlayerKey={turn} viewAsPlayer="player1" />
 

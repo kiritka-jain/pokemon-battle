@@ -1,15 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
-
 import {
   getArenaPendingMoveRingClasses,
   getArenaTileClasses,
   getArenaValidMoveDotClass,
   getArenaValidRingClass,
-  type BoardVisualPrefs,
 } from '@/src/lib/board/arenaTheme'
-import { useBoardVisualPrefsStore } from '@/src/lib/store/boardVisualPrefsStore'
 import type { BoardArenaId } from '@/src/types/game'
 
 export type BoardInteractionMode = 'move' | 'fence'
@@ -39,23 +35,16 @@ export function Tile({
   canInteract,
   onSelectMove,
 }: TileProps) {
-  const highContrastBoard = useBoardVisualPrefsStore((s) => s.highContrastBoard)
-  const boardMood = useBoardVisualPrefsStore((s) => s.boardMood)
-  const boardPrefs: BoardVisualPrefs = useMemo(
-    () => ({ highContrast: highContrastBoard, mood: boardMood }),
-    [highContrastBoard, boardMood],
-  )
-
-  const base = getArenaTileClasses(arena, isLight, boardPrefs)
+  const base = getArenaTileClasses(arena, isLight)
 
   const validHint =
     interactionMode === 'move' && canInteract && isValidMoveDestination
-      ? `ring-1 ${getArenaValidRingClass(arena, boardPrefs)}`
+      ? `ring-1 ${getArenaValidRingClass(arena)}`
       : ''
 
   const pending =
     isPendingMoveTarget && interactionMode === 'move'
-      ? getArenaPendingMoveRingClasses(arena, boardPrefs)
+      ? getArenaPendingMoveRingClasses(arena)
       : ''
 
   const handleClick = () => {
@@ -88,7 +77,7 @@ export function Tile({
     >
       {isValidMoveDestination && interactionMode === 'move' && canInteract && (
         <span
-          className={`pointer-events-none absolute inset-0 m-auto h-2 w-2 rounded-full ${getArenaValidMoveDotClass(arena, boardPrefs)}`}
+          className={`pointer-events-none absolute inset-0 m-auto h-2 w-2 rounded-full ${getArenaValidMoveDotClass(arena)}`}
           aria-hidden
         />
       )}

@@ -4,13 +4,7 @@ import type { MouseEvent, ReactNode, TouchEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { validateMove } from '@/src/lib/engine/moveValidator'
-import {
-  getArenaBoardBackdropClass,
-  getArenaBoardOuterRingClass,
-  getArenaChromeClasses,
-  type BoardVisualPrefs,
-} from '@/src/lib/board/arenaTheme'
-import { useBoardVisualPrefsStore } from '@/src/lib/store/boardVisualPrefsStore'
+import { getArenaBoardOuterRingClass, getArenaChromeClasses } from '@/src/lib/board/arenaTheme'
 import { useGameStore } from '@/src/lib/store/gameStore'
 import type { GameState, PlayerKey } from '@/src/types/game'
 
@@ -53,13 +47,6 @@ export function GameBoard({
   const error = useGameStore((s) => s.error)
   const errorCode = useGameStore((s) => s.errorCode)
   const setPendingAction = useGameStore((s) => s.setPendingAction)
-
-  const highContrastBoard = useBoardVisualPrefsStore((s) => s.highContrastBoard)
-  const boardMood = useBoardVisualPrefsStore((s) => s.boardMood)
-  const boardPrefs: BoardVisualPrefs = useMemo(
-    () => ({ highContrast: highContrastBoard, mood: boardMood }),
-    [highContrastBoard, boardMood],
-  )
 
   const canInteract =
     status === 'active' && winner === null && turn === localPlayerKey
@@ -134,7 +121,7 @@ export function GameBoard({
       ? pendingAction.targetFence
       : null
 
-  const chrome = getArenaChromeClasses(arena, boardPrefs)
+  const chrome = getArenaChromeClasses(arena)
 
   const handleContextMenu = useCallback(
     (e: MouseEvent) => {
@@ -227,18 +214,13 @@ export function GameBoard({
         onTouchEnd={handleBoardTouchEnd}
       >
         <div
-          className={`pointer-events-none absolute inset-0 z-0 rounded-sm ${getArenaBoardBackdropClass(arena, boardPrefs)}`}
-          aria-hidden
-        />
-        <div
-          className={`absolute inset-0 z-[1] grid grid-cols-9 grid-rows-9 gap-0 overflow-hidden rounded-sm ${getArenaBoardOuterRingClass(arena, boardPrefs)}`}
+          className={`absolute inset-0 z-0 grid grid-cols-9 grid-rows-9 gap-0 overflow-hidden rounded-sm ${getArenaBoardOuterRingClass(arena)}`}
         >
           {tiles}
         </div>
 
         <FenceOverlay
           arena={arena}
-          boardPrefs={boardPrefs}
           fences={fences}
           pendingFence={pendingFenceVisual}
           pendingPlacedBy={turn}
@@ -251,7 +233,6 @@ export function GameBoard({
 
         <FenceSlotGrid
           arena={arena}
-          boardPrefs={boardPrefs}
           orientation={fenceOrientation}
           visible={interactionMode === 'fence' && canInteract}
           onHover={setHoverFenceSlot}

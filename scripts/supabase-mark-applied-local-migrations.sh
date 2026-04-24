@@ -6,7 +6,6 @@
 # Safety: set SUPABASE_MARK_APPLIED_CONFIRM=1
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-bash "$ROOT/scripts/ensure-supabase-linked.sh"
 cd "$ROOT"
 if [ "${SUPABASE_MARK_APPLIED_CONFIRM:-}" != "1" ]; then
   echo "Refusing: set SUPABASE_MARK_APPLIED_CONFIRM=1 only if the remote schema already matches these migrations." >&2

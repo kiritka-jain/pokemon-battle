@@ -1,15 +1,10 @@
 'use client'
 
-import {
-  getArenaFenceGhostBarClass,
-  getArenaFenceSolidBarClass,
-  type BoardVisualPrefs,
-} from '@/src/lib/board/arenaTheme'
+import { getArenaFenceGhostBarClass, getArenaFenceSolidBarClass } from '@/src/lib/board/arenaTheme'
 import type { BoardArenaId, Fence, FenceOrientation, PlayerKey } from '@/src/types/game'
 
 type FenceOverlayProps = {
   arena: BoardArenaId
-  boardPrefs?: BoardVisualPrefs
   fences: Fence[]
   pendingFence: { x: number; y: number; orientation: FenceOrientation } | null
   pendingPlacedBy: PlayerKey | null
@@ -18,20 +13,18 @@ type FenceOverlayProps = {
 
 function GhostBar({
   arena,
-  boardPrefs,
   x,
   y,
   orientation,
   placedBy,
 }: {
   arena: BoardArenaId
-  boardPrefs?: BoardVisualPrefs
   x: number
   y: number
   orientation: FenceOrientation
   placedBy: PlayerKey
 }) {
-  const cls = getArenaFenceGhostBarClass(arena, placedBy, boardPrefs)
+  const cls = getArenaFenceGhostBarClass(arena, placedBy)
   if (orientation === 'H') {
     return (
       <div
@@ -58,7 +51,6 @@ function GhostBar({
 
 export function FenceOverlay({
   arena,
-  boardPrefs,
   fences,
   pendingFence,
   pendingPlacedBy,
@@ -77,7 +69,7 @@ export function FenceOverlay({
         f.orientation === 'H' ? (
           <div
             key={f.id}
-            className={`absolute h-1 ${getArenaFenceSolidBarClass(arena, f.placedBy, boardPrefs)}`}
+            className={`absolute h-1 ${getArenaFenceSolidBarClass(arena, f.placedBy)}`}
             style={{
               left: `${(f.x / 9) * 100}%`,
               top: `calc(${(f.y + 1) / 9 * 100}% - 2px)`,
@@ -87,7 +79,7 @@ export function FenceOverlay({
         ) : (
           <div
             key={f.id}
-            className={`absolute w-1 ${getArenaFenceSolidBarClass(arena, f.placedBy, boardPrefs)}`}
+            className={`absolute w-1 ${getArenaFenceSolidBarClass(arena, f.placedBy)}`}
             style={{
               left: `calc(${(f.x + 1) / 9 * 100}% - 2px)`,
               top: `${(f.y / 9) * 100}%`,
@@ -99,7 +91,6 @@ export function FenceOverlay({
       {pendingFence && pendingPlacedBy && (
         <GhostBar
           arena={arena}
-          boardPrefs={boardPrefs}
           x={pendingFence.x}
           y={pendingFence.y}
           orientation={pendingFence.orientation}
@@ -109,7 +100,6 @@ export function FenceOverlay({
       {hoverFence && pendingPlacedBy && showHover && (
         <GhostBar
           arena={arena}
-          boardPrefs={boardPrefs}
           x={hoverFence.x}
           y={hoverFence.y}
           orientation={hoverFence.orientation}

@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 
-import { BoardVisualSettings } from '@/src/components/board/BoardVisualSettings'
 import { GameBoard } from '@/src/components/board/GameBoard'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
@@ -585,8 +584,6 @@ export default function MatchPage() {
         ) : null}
 
         <Scoreboard localPlayerKey={localPlayerKey} compact />
-
-        <BoardVisualSettings compact />
 
         <div className="w-full max-w-[520px] rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-2 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/60">
           <GameBoard localPlayerKey={localPlayerKey} viewAsPlayer={localPlayerKey} compact />

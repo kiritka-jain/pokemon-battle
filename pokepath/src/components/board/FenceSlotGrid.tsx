@@ -2,12 +2,11 @@
 
 import type { ReactNode } from 'react'
 
-import { getArenaFenceHoverClass, type BoardVisualPrefs } from '@/src/lib/board/arenaTheme'
+import { getArenaFenceHoverClass } from '@/src/lib/board/arenaTheme'
 import type { BoardArenaId, FenceOrientation } from '@/src/types/game'
 
 type FenceSlotGridProps = {
   arena: BoardArenaId
-  boardPrefs?: BoardVisualPrefs
   orientation: FenceOrientation
   visible: boolean
   onHover: (slot: { x: number; y: number; orientation: FenceOrientation } | null) => void
@@ -18,17 +17,10 @@ type FenceSlotGridProps = {
  * Click targets for fence anchors (0–7, 0–7). Only one orientation is shown at a time
  * so horizontal and vertical slots never overlap.
  */
-export function FenceSlotGrid({
-  arena,
-  boardPrefs,
-  orientation,
-  visible,
-  onHover,
-  onPick,
-}: FenceSlotGridProps) {
+export function FenceSlotGrid({ arena, orientation, visible, onHover, onPick }: FenceSlotGridProps) {
   if (!visible) return null
 
-  const hoverCls = `border-0 bg-transparent ${getArenaFenceHoverClass(arena, boardPrefs)}`
+  const hoverCls = `border-0 bg-transparent ${getArenaFenceHoverClass(arena)}`
   const slots: ReactNode[] = []
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
