@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
 import { leaveConfirmationMessage } from '@/src/lib/navigation/leavePageMessages'
@@ -11,11 +11,7 @@ export function GlobalBackHomeLink() {
   const pathname = usePathname()
   const gameStatus = useGameStore((s) => s.status)
   const winner = useGameStore((s) => s.winner)
-  const [hasHistory, setHasHistory] = useState(false)
-
-  useEffect(() => {
-    setHasHistory(window.history.length > 1)
-  }, [])
+  const [hasHistory] = useState(() => (typeof window !== 'undefined' ? window.history.length > 1 : false))
 
   const label = hasHistory ? 'Back' : 'Home'
 
