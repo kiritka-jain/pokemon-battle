@@ -10,11 +10,7 @@ import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
 import { Scoreboard, type ScoreboardTurnStripMode } from '@/src/components/ui/Scoreboard'
 import { buildLocalMatchDisplay } from '@/src/lib/play/localMatchDisplay'
-import {
-  PAWN_PICK_STORAGE_KEY,
-  parsePawnPickJson,
-  serializePawnPick,
-} from '@/src/lib/pokemon/pawnPickStorage'
+import { PAWN_PICK_STORAGE_KEY, serializePawnPick } from '@/src/lib/pokemon/pawnPickStorage'
 import {
   PARTNER_PICK_STORAGE_KEY,
   parsePartnerPickJson,
@@ -101,8 +97,6 @@ export default function PlayPage() {
       useGameStore.getState().setPawnSpecies('player2', pickRandomStarterSpeciesId())
     }
 
-    const trainerKey = sessionUserId ?? 'p1'
-
     queueMicrotask(() => {
       try {
         const rawPartner = sessionStorage.getItem(PARTNER_PICK_STORAGE_KEY)
@@ -111,20 +105,12 @@ export default function PlayPage() {
           parsedPartner ? partnerPickLabel(parsedPartner, starterSpeciesById) : null,
         )
 
-        const rawPawn = sessionStorage.getItem(PAWN_PICK_STORAGE_KEY)
-        const pawnStored = parsePawnPickJson(rawPawn)
-        if (pawnStored?.trainerKey === trainerKey && pawnStored.speciesId) {
-          useGameStore.getState().setPawnSpecies('player1', pawnStored.speciesId)
-          setPawnPickerOpen(false)
-          setPawnPickerOptions(null)
-          return
-        }
-
         const [idA, idB] = parsedPartner?.speciesIds ?? [null, null]
         const sa = idA ? starterSpeciesById(idA) : undefined
         const sb = idB ? starterSpeciesById(idB) : undefined
-        const p1HasPawn = Boolean(useGameStore.getState().players.player1.pawnSpeciesId)
-        if (parsedPartner && sa && sb && !p1HasPawn) {
+        if (parsedPartner && sa && sb) {
+          // Require a fresh board pawn from the current partner list on every local visit.
+          useGameStore.getState().setPawnSpecies('player1', null)
           setPawnPickerOptions([sa, sb])
           setPawnPickerOpen(true)
         } else {

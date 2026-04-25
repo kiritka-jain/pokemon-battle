@@ -8,8 +8,16 @@ import type { PlayerState } from '@/src/types/game'
 
 import { parsePersistedMatchState } from '@/src/lib/match/parsePersistedMatchState'
 
-/** When DB JSON omits `pawnSpeciesId`, keep the same seat's prior client value if user ids still match. */
-function mergePawnFromPrior(parsedSeat: PlayerState, priorSeat: PlayerState): PlayerState {
+/**
+ * When DB JSON omits `pawnSpeciesId`, keep the same seat's prior client value only for the
+ * same match (avoids carrying a pawn from a previous match into a new row hydrate).
+ */
+function mergePawnFromPrior(
+  parsedSeat: PlayerState,
+  priorSeat: PlayerState,
+  matchId: string,
+  priorMatchId: string | null,
+): PlayerState {
   const fromDb = parsedSeat.pawnSpeciesId
   if (fromDb !== undefined && fromDb !== '') {
     return { ...parsedSeat, pawnSpeciesId: fromDb }
@@ -19,7 +27,8 @@ function mergePawnFromPrior(parsedSeat: PlayerState, priorSeat: PlayerState): Pl
     priorPawn !== undefined &&
     priorPawn !== '' &&
     priorSeat.id === parsedSeat.id &&
-    parsedSeat.id !== ''
+    parsedSeat.id !== '' &&
+    priorMatchId === matchId
   ) {
     return { ...parsedSeat, pawnSpeciesId: priorPawn }
   }
@@ -35,6 +44,7 @@ export function hydrateOnlineMatchFromRow(args: {
   display: InitMatchDisplay
 }) {
   const prior = useGameStore.getState()
+  const priorMatchId = prior.matchId
 
   useGameStore.setState(initialGameState)
   useGameStore.getState().initMatch(args.matchId, args.player1Id, args.player2Id, args.display)
@@ -48,8 +58,18 @@ export function hydrateOnlineMatchFromRow(args: {
   })
   if (!parsed) return
 
-  const p1 = mergePawnFromPrior(parsed.players.player1, prior.players.player1)
-  const p2 = mergePawnFromPrior(parsed.players.player2, prior.players.player2)
+  const p1 = mergePawnFromPrior(
+    parsed.players.player1,
+    prior.players.player1,
+    args.matchId,
+    priorMatchId,
+  )
+  const p2 = mergePawnFromPrior(
+    parsed.players.player2,
+    prior.players.player2,
+    args.matchId,
+    priorMatchId,
+  )
 
   useGameStore.setState({
     turn: parsed.turn,

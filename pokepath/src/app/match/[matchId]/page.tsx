@@ -13,6 +13,10 @@ import { VictoryModal } from '@/src/components/ui/VictoryModal'
 import { useToast } from '@/src/components/ui/toast'
 import { hydrateOnlineMatchFromRow } from '@/src/lib/match/hydrateOnlineMatch'
 import {
+  resolveMatchEntryPawnPicker,
+  speciesInPartnerList,
+} from '@/src/lib/match/resolveMatchEntryPawnPicker'
+import {
   PAWN_PICK_MATCH_STORAGE_KEY,
   parsePawnPickJson,
   serializePawnPick,
@@ -504,33 +508,57 @@ export default function MatchPage() {
         const rawPawn = sessionStorage.getItem(PAWN_PICK_MATCH_STORAGE_KEY)
         const pawnStored = parsePawnPickJson(rawPawn)
 
-        const seatPawn = useGameStore.getState().players[localPlayerKey].pawnSpeciesId
-        if (seatPawn) {
-          setPawnPickerOpen(false)
-          setPawnPickerOptions(null)
-          return
-        }
-
-        if (pawnStored?.trainerKey === trainerStorageKey && pawnStored.speciesId) {
-          useGameStore.getState().setPawnSpecies(localPlayerKey, pawnStored.speciesId)
-          setPawnPickerOpen(false)
-          setPawnPickerOptions(null)
-          return
-        }
-
         const rawPartner = sessionStorage.getItem(PARTNER_PICK_STORAGE_KEY)
         const parsedPartner = parsePartnerPickJson(rawPartner)
         const [idA, idB] = parsedPartner?.speciesIds ?? [null, null]
         const sa = idA ? starterSpeciesById(idA) : undefined
         const sb = idB ? starterSpeciesById(idB) : undefined
 
-        if (parsedPartner && sa && sb) {
-          setPawnPickerOptions([sa, sb])
-          setPawnPickerOpen(true)
-        } else {
+        const seatPawn = useGameStore.getState().players[localPlayerKey].pawnSpeciesId
+
+        if (
+          pawnStored?.trainerKey === trainerStorageKey &&
+          pawnStored.speciesId &&
+          parsedPartner &&
+          !speciesInPartnerList(pawnStored.speciesId, parsedPartner)
+        ) {
+          try {
+            sessionStorage.removeItem(PAWN_PICK_MATCH_STORAGE_KEY)
+          } catch {
+            // ignore quota / private mode
+          }
+        }
+
+        const decision = resolveMatchEntryPawnPicker({
+          trainerStorageKey,
+          pawnStored,
+          parsedPartner,
+          optionA: sa,
+          optionB: sb,
+          seatPawnSpeciesId: seatPawn,
+        })
+
+        if (decision.kind === 'applyStored') {
+          useGameStore.getState().setPawnSpecies(localPlayerKey, decision.speciesId)
           setPawnPickerOpen(false)
           setPawnPickerOptions(null)
+          return
         }
+        if (decision.kind === 'trustSeat') {
+          setPawnPickerOpen(false)
+          setPawnPickerOptions(null)
+          return
+        }
+        if (decision.kind === 'openPicker') {
+          if (decision.clearSeat) {
+            useGameStore.getState().setPawnSpecies(localPlayerKey, null)
+          }
+          setPawnPickerOptions(decision.options)
+          setPawnPickerOpen(true)
+          return
+        }
+        setPawnPickerOpen(false)
+        setPawnPickerOptions(null)
       } catch {
         setPawnPickerOpen(false)
         setPawnPickerOptions(null)

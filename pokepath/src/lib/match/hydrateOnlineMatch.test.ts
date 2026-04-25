@@ -113,4 +113,38 @@ describe('hydrateOnlineMatchFromRow', () => {
 
     expect(useGameStore.getState().players.player1.pawnSpeciesId).toBeUndefined()
   })
+
+  it('does not carry prior pawn when hydrating a different match id', () => {
+    const oldMatchId = 'match-old-aaaa'
+    const newMatchId = 'match-new-bbbb'
+    const p1Id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+    const p2Id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+
+    useGameStore.getState().initMatch(oldMatchId, p1Id, p2Id, {})
+    useGameStore.getState().setPawnSpecies('player1', 'charmander')
+
+    const gameState = {
+      turn: 'player1' as const,
+      status: 'active' as const,
+      arena: resolveArenaForMatch(newMatchId),
+      players: {
+        player1: { id: p1Id, pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
+        player2: { id: p2Id, pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+      },
+      fences: [],
+      pendingAction: { type: null },
+      winner: null,
+    }
+
+    hydrateOnlineMatchFromRow({
+      matchId: newMatchId,
+      player1Id: p1Id,
+      player2Id: p2Id,
+      gameState,
+      display: {},
+    })
+
+    expect(useGameStore.getState().matchId).toBe(newMatchId)
+    expect(useGameStore.getState().players.player1.pawnSpeciesId).toBeUndefined()
+  })
 })
