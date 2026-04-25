@@ -11,10 +11,15 @@ import { STARTER_SPECIES } from '@/src/lib/pokemon/starterRoster'
 
 export type StarterPokemonSelectionProps = {
   username: string
-  onContinue: (payload: PartnerPickPayload) => void
+  onChooseRules: (payload: PartnerPickPayload) => void
+  onChoosePlay: (payload: PartnerPickPayload) => void
 }
 
-export function StarterPokemonSelection({ username, onContinue }: StarterPokemonSelectionProps) {
+export function StarterPokemonSelection({
+  username,
+  onChooseRules,
+  onChoosePlay,
+}: StarterPokemonSelectionProps) {
   const offer = useMemo(() => sampleThreeFromRoster(STARTER_SPECIES), [])
 
   const [opened, setOpened] = useState<[boolean, boolean, boolean]>([false, false, false])
@@ -51,21 +56,32 @@ export function StarterPokemonSelection({ username, onContinue }: StarterPokemon
     [canOpenMore, offer, opened],
   )
 
-  const handleContinue = useCallback(() => {
+  const buildPayload = useCallback((): PartnerPickPayload | null => {
     const a = team[0]
     const b = team[1]
-    if (!a || !b) return
+    if (!a || !b) return null
     const i0 = openOrder[0]
     const i1 = openOrder[1]
-    if (i0 === undefined || i1 === undefined) return
+    if (i0 === undefined || i1 === undefined) return null
 
-    const payload: PartnerPickPayload = {
+    return {
       speciesIds: [a.id, b.id],
       pickedAt: Date.now(),
       openedBallIndices: [i0, i1],
     }
-    onContinue(payload)
-  }, [onContinue, openOrder, team])
+  }, [openOrder, team])
+
+  const handleChooseRules = useCallback(() => {
+    const payload = buildPayload()
+    if (!payload) return
+    onChooseRules(payload)
+  }, [buildPayload, onChooseRules])
+
+  const handleChoosePlay = useCallback(() => {
+    const payload = buildPayload()
+    if (!payload) return
+    onChoosePlay(payload)
+  }, [buildPayload, onChoosePlay])
 
   return (
     <div className="relative min-h-full overflow-hidden bg-gradient-to-b from-zinc-950 via-zinc-900 to-black text-zinc-50">
@@ -130,13 +146,22 @@ export function StarterPokemonSelection({ username, onContinue }: StarterPokemon
               transition={{ type: 'spring', stiffness: 320, damping: 28 }}
               className="mt-10 flex justify-center"
             >
-              <button
-                type="button"
-                onClick={handleContinue}
-                className="inline-flex min-h-12 min-w-[220px] items-center justify-center rounded-full bg-red-600 px-8 text-sm font-semibold text-white shadow-lg shadow-red-900/40 ring-2 ring-red-400/30 transition hover:bg-red-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-400/50"
-              >
-                Continue to Route
-              </button>
+              <div className="flex flex-col items-center gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={handleChooseRules}
+                  className="inline-flex min-h-12 min-w-[220px] items-center justify-center rounded-full border border-yellow-300/40 bg-yellow-200/10 px-8 text-sm font-semibold text-yellow-100 shadow-lg shadow-yellow-900/20 transition hover:bg-yellow-200/20 focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-300/40"
+                >
+                  Know the Rules?
+                </button>
+                <button
+                  type="button"
+                  onClick={handleChoosePlay}
+                  className="inline-flex min-h-12 min-w-[220px] items-center justify-center rounded-full bg-red-600 px-8 text-sm font-semibold text-white shadow-lg shadow-red-900/40 ring-2 ring-red-400/30 transition hover:bg-red-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-400/50"
+                >
+                  Ready to Play?
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

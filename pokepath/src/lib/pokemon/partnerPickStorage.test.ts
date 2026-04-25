@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   parsePartnerPickJson,
+  persistPartnerPick,
   serializePartnerPick,
   partnerPickLabel,
 } from '@/src/lib/pokemon/partnerPickStorage'
@@ -46,5 +47,28 @@ describe('partnerPickStorage', () => {
       starterSpeciesById,
     )
     expect(label).toBe('Charmander · Horsea')
+  })
+
+  it('persistPartnerPick writes serialized payload to storage', () => {
+    const payload = {
+      speciesIds: ['charmander', 'Horsea'] as [string, string],
+      pickedAt: 1_700_000_000_000,
+      openedBallIndices: [0, 2] as [number, number],
+    }
+    const setItem = vi.fn()
+    const ok = persistPartnerPick(payload, { setItem })
+    expect(ok).toBe(true)
+    expect(setItem).toHaveBeenCalledWith(
+      'pokepath_partner_pick_v1',
+      '{"speciesIds":["charmander","Horsea"],"pickedAt":1700000000000,"openedBallIndices":[0,2]}',
+    )
+  })
+
+  it('persistPartnerPick returns false when storage throws', () => {
+    const setItem = vi.fn(() => {
+      throw new Error('quota')
+    })
+    const ok = persistPartnerPick({ speciesIds: ['charmander', 'Horsea'] }, { setItem })
+    expect(ok).toBe(false)
   })
 })

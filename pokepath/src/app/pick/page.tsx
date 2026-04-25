@@ -7,8 +7,7 @@ import type { Session } from '@supabase/supabase-js'
 
 import { StarterPokemonSelection } from '@/src/components/pick/StarterPokemonSelection'
 import {
-  PARTNER_PICK_STORAGE_KEY,
-  serializePartnerPick,
+  persistPartnerPick,
   type PartnerPickPayload,
 } from '@/src/lib/pokemon/partnerPickStorage'
 import { getSession, onAuthStateChange } from '@/src/lib/supabase/auth'
@@ -71,19 +70,21 @@ export default function PickPage() {
     }
   }, [])
 
-  const handleContinue = (payload: PartnerPickPayload) => {
-    try {
-      sessionStorage.setItem(PARTNER_PICK_STORAGE_KEY, serializePartnerPick(payload))
-    } catch {
-      // ignore quota / private mode
-    }
+  const handleChooseRules = (payload: PartnerPickPayload) => {
+    persistPartnerPick(payload)
+    router.push('/tutorial')
+  }
+
+  const handleChoosePlay = (payload: PartnerPickPayload) => {
+    persistPartnerPick(payload)
     router.push('/play')
   }
 
   return (
     <StarterPokemonSelection
       username={trainerDisplayName(sessionUserId, profileUsername)}
-      onContinue={handleContinue}
+      onChooseRules={handleChooseRules}
+      onChoosePlay={handleChoosePlay}
     />
   )
 }

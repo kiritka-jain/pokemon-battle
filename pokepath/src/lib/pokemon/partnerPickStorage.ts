@@ -54,6 +54,22 @@ export function serializePartnerPick(payload: PartnerPickPayload): string {
   return JSON.stringify(payload)
 }
 
+type PartnerPickStorage = Pick<Storage, 'setItem'>
+
+export function persistPartnerPick(
+  payload: PartnerPickPayload,
+  storage?: PartnerPickStorage,
+): boolean {
+  const target = storage ?? (typeof sessionStorage !== 'undefined' ? sessionStorage : null)
+  if (!target) return false
+  try {
+    target.setItem(PARTNER_PICK_STORAGE_KEY, serializePartnerPick(payload))
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function partnerPickLabel(
   payload: PartnerPickPayload,
   rosterLookup: (id: string) => StarterSpecies | undefined,
