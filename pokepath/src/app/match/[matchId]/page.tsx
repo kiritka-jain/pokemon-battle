@@ -16,6 +16,7 @@ import {
   resolveMatchEntryPawnPicker,
   speciesInPartnerList,
 } from '@/src/lib/match/resolveMatchEntryPawnPicker'
+import { matchLeaveMessage } from '@/src/lib/navigation/leavePageMessages'
 import {
   PAWN_PICK_MATCH_STORAGE_KEY,
   parsePawnPickJson,
@@ -45,10 +46,6 @@ type TurnPayload = {
   fromUserId: string
   action: PendingAction
   newState: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'>
-}
-
-function leaveMatchMessage() {
-  return 'Leave this match? You can rejoin with the same link while it is in progress.'
 }
 
 export default function MatchPage() {
@@ -584,7 +581,7 @@ export default function MatchPage() {
       const { status, winner: w } = useGameStore.getState()
       if (status === 'active' && !w) {
         e.preventDefault()
-        if (window.confirm(leaveMatchMessage())) {
+        if (window.confirm(matchLeaveMessage())) {
           router.push(href)
         }
       }
