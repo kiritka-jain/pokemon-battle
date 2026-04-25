@@ -120,6 +120,7 @@ export function GameBoard({
     pendingAction.type === 'fence' && pendingAction.targetFence
       ? pendingAction.targetFence
       : null
+  const previewFenceOwner: PlayerKey | null = pendingFenceVisual ? turn : null
 
   const chrome = getArenaChromeClasses(arena)
 
@@ -223,7 +224,7 @@ export function GameBoard({
           arena={arena}
           fences={fences}
           pendingFence={pendingFenceVisual}
-          pendingPlacedBy={turn}
+          pendingPlacedBy={previewFenceOwner}
           hoverFence={
             interactionMode === 'fence' && canInteract
               ? hoverFenceSlot

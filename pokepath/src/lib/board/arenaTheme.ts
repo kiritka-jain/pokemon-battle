@@ -116,27 +116,55 @@ const BOARD_OUTER_RING: Record<BoardArenaId, string> = {
   ground: 'ring-stone-700/25 dark:ring-stone-400/15',
 }
 
-/** Fence bars: keep p1/p2 contrast, tint per arena. */
+/** Fence bars: neutral per arena; ownership is conveyed by glow/tint helpers. */
 const FENCE_P1: Record<BoardArenaId, string> = {
-  water: 'bg-sky-900',
-  grass: 'bg-amber-900',
-  fire: 'bg-red-900',
-  air: 'bg-violet-900',
-  electric: 'bg-amber-900',
-  ground: 'bg-stone-800',
+  water: 'bg-slate-100/95 dark:bg-slate-200/90',
+  grass: 'bg-amber-100/95 dark:bg-amber-200/90',
+  fire: 'bg-orange-100/95 dark:bg-orange-200/90',
+  air: 'bg-violet-100/95 dark:bg-violet-200/90',
+  electric: 'bg-yellow-100/95 dark:bg-yellow-200/90',
+  ground: 'bg-stone-100/95 dark:bg-stone-200/90',
 }
 
 const FENCE_P2: Record<BoardArenaId, string> = {
-  water: 'bg-sky-700',
-  grass: 'bg-amber-700',
-  fire: 'bg-orange-800',
-  air: 'bg-violet-700',
-  electric: 'bg-yellow-800',
-  ground: 'bg-amber-800',
+  water: 'bg-slate-100/95 dark:bg-slate-200/90',
+  grass: 'bg-amber-100/95 dark:bg-amber-200/90',
+  fire: 'bg-orange-100/95 dark:bg-orange-200/90',
+  air: 'bg-violet-100/95 dark:bg-violet-200/90',
+  electric: 'bg-yellow-100/95 dark:bg-yellow-200/90',
+  ground: 'bg-stone-100/95 dark:bg-stone-200/90',
+}
+
+const FENCE_OWNER_GLOW: Record<PlayerKey, string> = {
+  player1: 'drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]',
+  player2: 'drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]',
+}
+
+const FENCE_OWNER_TINT: Record<PlayerKey, string> = {
+  player1: 'ring-1 ring-red-400/65 dark:ring-red-300/70',
+  player2: 'ring-1 ring-blue-400/65 dark:ring-blue-300/70',
+}
+
+const FENCE_GHOST_TINT: Record<PlayerKey, string> = {
+  player1: 'bg-red-200/80 dark:bg-red-200/70',
+  player2: 'bg-blue-200/80 dark:bg-blue-200/70',
 }
 
 export function getArenaFenceSolidBarClass(arena: BoardArenaId, placedBy: PlayerKey): string {
   return placedBy === 'player1' ? FENCE_P1[arena] : FENCE_P2[arena]
+}
+
+/** High-contrast styling to prevent fences blending into textured grids. */
+export function getArenaFenceContrastClass(): string {
+  return 'outline outline-2 -outline-offset-1 outline-black/90 dark:outline-white/85 shadow-[0_0_0_1px_rgba(255,255,255,0.68),0_2px_4px_rgba(0,0,0,0.62)]'
+}
+
+export function getArenaFenceOwnerGlowClass(placedBy: PlayerKey): string {
+  return FENCE_OWNER_GLOW[placedBy]
+}
+
+export function getArenaFenceOwnerTintClass(placedBy: PlayerKey): string {
+  return FENCE_OWNER_TINT[placedBy]
 }
 
 export function getArenaChromeClasses(arena: BoardArenaId): {
@@ -172,5 +200,12 @@ export function getArenaBoardOuterRingClass(arena: BoardArenaId): string {
 }
 
 export function getArenaFenceGhostBarClass(arena: BoardArenaId, placedBy: PlayerKey): string {
-  return `${getArenaFenceSolidBarClass(arena, placedBy)} opacity-50 outline outline-2 outline-dashed outline-black/30 dark:outline-white/20`
+  return [
+    getArenaFenceSolidBarClass(arena, placedBy),
+    getArenaFenceContrastClass(),
+    getArenaFenceOwnerGlowClass(placedBy),
+    getArenaFenceOwnerTintClass(placedBy),
+    FENCE_GHOST_TINT[placedBy],
+    'opacity-50 outline-dashed animate-pulse',
+  ].join(' ')
 }
