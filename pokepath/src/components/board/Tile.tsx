@@ -38,6 +38,7 @@ export function Tile({
   onSelectMove,
 }: TileProps) {
   const textureUrl = getArenaTileTextureUrl(arena)
+  const isTileInteractive = canInteract && interactionMode === 'move'
 
   const validHint =
     interactionMode === 'move' && canInteract && isValidMoveDestination
@@ -50,14 +51,14 @@ export function Tile({
       : ''
 
   const handleClick = () => {
-    if (!canInteract || interactionMode !== 'move') return
+    if (!isTileInteractive) return
     onSelectMove(x, y)
   }
 
   const col = x + 1
   const row = y + 1
   const ariaLabel =
-    canInteract && interactionMode === 'move'
+    isTileInteractive
       ? `Move to column ${col}, row ${row}`
       : `Board square column ${col}, row ${row}`
 
@@ -65,13 +66,14 @@ export function Tile({
     <button
       type="button"
       aria-label={ariaLabel}
+      aria-disabled={!isTileInteractive}
+      tabIndex={isTileInteractive ? 0 : -1}
       onClick={handleClick}
-      disabled={!canInteract || interactionMode !== 'move'}
       className={[
-        'relative flex min-h-0 min-w-0 items-center justify-center overflow-hidden',
+        'relative m-0 flex min-h-0 min-w-0 appearance-none items-center justify-center overflow-hidden border-0 bg-transparent p-0',
         validHint,
         pending,
-        canInteract && interactionMode === 'move'
+        isTileInteractive
           ? 'cursor-pointer hover:brightness-95'
           : 'cursor-default',
       ].join(' ')}
