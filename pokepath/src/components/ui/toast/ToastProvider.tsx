@@ -12,6 +12,7 @@ import {
 import {
   initialToastState,
   toastReducer,
+  type ToastActionButton,
   type ToastVariant,
 } from './toastReducer'
 
@@ -20,6 +21,8 @@ const TOAST_AUTO_DISMISS_MS = 4000
 export type ShowToastOptions = {
   message: string
   variant?: ToastVariant
+  primaryAction?: ToastActionButton
+  secondaryAction?: ToastActionButton
 }
 
 type ToastContextValue = {
@@ -75,7 +78,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       idRef.current += 1
       const id = idRef.current
       const variant = opts.variant ?? 'default'
-      dispatch({ type: 'SHOW', id, message: opts.message, variant })
+      dispatch({
+        type: 'SHOW',
+        id,
+        message: opts.message,
+        variant,
+        primaryAction: opts.primaryAction,
+        secondaryAction: opts.secondaryAction,
+      })
       hideTimerRef.current = setTimeout(() => {
         dispatch({ type: 'DISMISS' })
         hideTimerRef.current = null
@@ -85,6 +95,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   )
 
   const t = state.toast
+  const secondaryAction = t?.secondaryAction
+  const primaryAction = t?.primaryAction
+  const onAction = useCallback(
+    (action: ToastActionButton) => {
+      dismiss()
+      action.onClick()
+    },
+    [dismiss],
+  )
 
   return (
     <ToastContext.Provider value={{ show, dismiss }}>
@@ -97,7 +116,29 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             aria-live={t.variant === 'error' ? 'assertive' : 'polite'}
             aria-atomic="true"
           >
-            {t.message}
+            <p>{t.message}</p>
+            {primaryAction || secondaryAction ? (
+              <div className="mt-2 flex items-center justify-end gap-2">
+                {secondaryAction ? (
+                  <button
+                    type="button"
+                    onClick={() => onAction(secondaryAction)}
+                    className="rounded-md border border-current/30 px-2.5 py-1 text-xs font-medium hover:bg-black/5 dark:hover:bg-white/10"
+                  >
+                    {secondaryAction.label}
+                  </button>
+                ) : null}
+                {primaryAction ? (
+                  <button
+                    type="button"
+                    onClick={() => onAction(primaryAction)}
+                    className="rounded-md border border-current/30 px-2.5 py-1 text-xs font-semibold hover:bg-black/5 dark:hover:bg-white/10"
+                  >
+                    {primaryAction.label}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
           </output>
         ) : null}
       </div>

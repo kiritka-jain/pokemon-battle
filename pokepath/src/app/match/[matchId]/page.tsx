@@ -42,6 +42,8 @@ import type { GameState, PendingAction, PlayerKey } from '@/src/types/game'
 
 /** Avoid duplicate POST /api/match/end in React Strict Mode (dev). */
 const reportedMatchEnd = new Set<string>()
+/** Avoid duplicate end-game toast in React Strict Mode (dev). */
+const reportedMatchToast = new Set<string>()
 
 const OPPONENT_OFFLINE_MS = 2800
 
@@ -522,6 +524,27 @@ export default function MatchPage() {
   }, [matchId, postMatchEnd, winner])
 
   useEffect(() => {
+    if (!winner || !matchId || !localPlayerKey || !sessionUserId) return
+    const toastKey = `${matchId}:${sessionUserId}`
+    if (reportedMatchToast.has(toastKey)) return
+    reportedMatchToast.add(toastKey)
+
+    const message = winner === localPlayerKey ? 'You win! Match complete.' : 'You lost. Match complete.'
+    showToast({
+      message,
+      variant: winner === localPlayerKey ? 'success' : 'default',
+      primaryAction: {
+        label: 'Home',
+        onClick: () => router.push('/lobby'),
+      },
+      secondaryAction: {
+        label: 'Play Again',
+        onClick: () => router.push('/lobby'),
+      },
+    })
+  }, [localPlayerKey, matchId, router, sessionUserId, showToast, winner])
+
+  useEffect(() => {
     if (loading || !localPlayerKey || !sessionUserId || !matchId) return
 
     queueMicrotask(() => {
@@ -614,6 +637,10 @@ export default function MatchPage() {
     [router],
   )
 
+  const goToLobby = useCallback(() => {
+    router.push('/lobby')
+  }, [router])
+
   if (loading || !sessionUserId) {
     return (
       <div className="flex min-h-full flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
@@ -704,7 +731,10 @@ export default function MatchPage() {
           open={Boolean(winner)}
           title={winTitle}
           subtitle={winner ? `Match ${matchId.slice(0, 8)}…` : undefined}
-          onPrimary={() => router.push('/lobby')}
+          primaryLabel="Home"
+          onPrimary={goToLobby}
+          secondaryLabel="Play Again"
+          onSecondary={goToLobby}
         />
 
         {pawnPickerOpen && pawnPickerOptions && (

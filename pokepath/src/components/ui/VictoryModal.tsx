@@ -6,6 +6,8 @@ type VictoryModalProps = {
   subtitle?: string
   primaryLabel?: string
   onPrimary: () => void
+  secondaryLabel?: string
+  onSecondary?: () => void
 }
 
 export function VictoryModal({
@@ -14,6 +16,8 @@ export function VictoryModal({
   subtitle,
   primaryLabel = 'Back to lobby',
   onPrimary,
+  secondaryLabel,
+  onSecondary,
 }: VictoryModalProps) {
   if (!open) return null
 
@@ -31,13 +35,24 @@ export function VictoryModal({
         {subtitle ? (
           <p className="mt-2 text-center text-sm text-zinc-600 dark:text-zinc-400">{subtitle}</p>
         ) : null}
-        <button
-          type="button"
-          onClick={onPrimary}
-          className="mt-6 flex h-11 w-full items-center justify-center rounded-lg bg-emerald-700 text-sm font-medium text-white dark:bg-emerald-600"
-        >
-          {primaryLabel}
-        </button>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+          {secondaryLabel && onSecondary ? (
+            <button
+              type="button"
+              onClick={onSecondary}
+              className="flex h-11 w-full items-center justify-center rounded-lg border border-zinc-300 bg-white text-sm font-medium text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+            >
+              {secondaryLabel}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={onPrimary}
+            className="flex h-11 w-full items-center justify-center rounded-lg bg-emerald-700 text-sm font-medium text-white dark:bg-emerald-600"
+          >
+            {primaryLabel}
+          </button>
+        </div>
       </div>
     </div>
   )
