@@ -126,4 +126,55 @@ describe('parsePersistedMatchState', () => {
     expect(parsed?.status).toBe('active')
     expect(parsed?.pendingAction).toEqual({ type: null })
   })
+
+  it('parses valid pending move and fence actions', () => {
+    const moveRaw = {
+      turn: 'player1',
+      players: {
+        player1: { id: 'p1', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
+        player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+      },
+      pendingAction: { type: 'move', targetPos: { x: 4, y: 7 } },
+    }
+    const fenceRaw = {
+      turn: 'player1',
+      players: {
+        player1: { id: 'p1', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
+        player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+      },
+      pendingAction: { type: 'fence', targetFence: { x: 3, y: 3, orientation: 'H' } },
+    }
+
+    expect(parsePersistedMatchState(moveRaw, match)?.pendingAction).toEqual({
+      type: 'move',
+      targetPos: { x: 4, y: 7 },
+    })
+    expect(parsePersistedMatchState(fenceRaw, match)?.pendingAction).toEqual({
+      type: 'fence',
+      targetFence: { x: 3, y: 3, orientation: 'H' },
+    })
+  })
+
+  it('drops malformed pending actions to null action', () => {
+    const raw = {
+      turn: 'player1',
+      players: {
+        player1: { id: 'p1', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
+        player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+      },
+      pendingAction: { type: 'move', targetPos: { x: 'bad', y: 7 } },
+    }
+    expect(parsePersistedMatchState(raw, match)?.pendingAction).toEqual({ type: null })
+  })
+
+  it('returns null when fencesLeft is not finite', () => {
+    const raw = {
+      turn: 'player1',
+      players: {
+        player1: { id: 'p1', pos: { x: 4, y: 8 }, fencesLeft: 'NaN', type: 'Normal' },
+        player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+      },
+    }
+    expect(parsePersistedMatchState(raw, match)).toBeNull()
+  })
 })

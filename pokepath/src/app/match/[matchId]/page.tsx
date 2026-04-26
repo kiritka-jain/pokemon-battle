@@ -11,11 +11,14 @@ import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell
 import { Scoreboard } from '@/src/components/ui/Scoreboard'
 import { VictoryModal } from '@/src/components/ui/VictoryModal'
 import { useToast } from '@/src/components/ui/toast'
+import { applyCommittedTurn } from '@/src/lib/engine/applyCommittedTurn'
 import { hydrateOnlineMatchFromRow } from '@/src/lib/match/hydrateOnlineMatch'
+import { mergePawnsAfterCommit } from '@/src/lib/match/mergePawnsAfterCommit'
 import {
   resolveMatchEntryPawnPicker,
   speciesInPartnerList,
 } from '@/src/lib/match/resolveMatchEntryPawnPicker'
+import { normalizedTurnSnapshotJson } from '@/src/lib/match/snapshotUtils'
 import { matchLeaveMessage } from '@/src/lib/navigation/leavePageMessages'
 import {
   PAWN_PICK_MATCH_STORAGE_KEY,
@@ -44,6 +47,7 @@ const OPPONENT_OFFLINE_MS = 2800
 
 type TurnPayload = {
   fromUserId: string
+  stateVersion: number
   action: PendingAction
   newState: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'>
 }
@@ -256,13 +260,16 @@ export default function MatchPage() {
       }
 
       const json = (await res.json()) as { stateVersion?: number }
-      if (typeof json.stateVersion === 'number') {
-        stateVersionRef.current = json.stateVersion
-        plyCount.current = json.stateVersion
+      if (typeof json.stateVersion !== 'number' || !Number.isInteger(json.stateVersion)) {
+        throw new Error('Missing state version in save response')
       }
+
+      stateVersionRef.current = json.stateVersion
+      plyCount.current = json.stateVersion
 
       broadcastTurn({
         fromUserId: sessionUserId,
+        stateVersion: json.stateVersion,
         action: ctx.committedAction,
         newState: ctx.snapshot,
       })
@@ -323,17 +330,35 @@ export default function MatchPage() {
         return
       }
 
-      stateVersionRef.current += 1
+      const applied = applyCommittedTurn(state, senderKey, p.action)
+      if (!applied.ok) {
+        console.warn('[match] Rejected unresolvable opponent turn', applied.reason, p)
+        return
+      }
+
+      const merged = mergePawnsAfterCommit(applied.next, p.newState, state, senderKey)
+      const expected = normalizedTurnSnapshotJson(merged)
+      const received = normalizedTurnSnapshotJson(p.newState)
+      if (expected !== received) {
+        console.warn('[match] Rejected mismatched opponent state payload', p)
+        return
+      }
+
+      if (!Number.isInteger(p.stateVersion) || p.stateVersion < 0) {
+        console.warn('[match] TURN missing valid stateVersion', p)
+        return
+      }
+      stateVersionRef.current = Math.max(stateVersionRef.current, p.stateVersion)
       plyCount.current = stateVersionRef.current
 
       useGameStore.getState().applyOpponentAction({
-        turn: p.newState.turn,
-        players: p.newState.players,
-        fences: p.newState.fences,
-        winner: p.newState.winner,
-        status: p.newState.status,
-        pendingAction: p.newState.pendingAction,
-        arena: p.newState.arena,
+        turn: merged.turn,
+        players: merged.players,
+        fences: merged.fences,
+        winner: merged.winner,
+        status: merged.status,
+        pendingAction: merged.pendingAction,
+        arena: merged.arena,
       })
     }
 

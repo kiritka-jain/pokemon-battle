@@ -7,6 +7,40 @@ function parsePawnSpeciesId(raw: unknown): string | undefined {
   return starterSpeciesById(raw) ? raw : undefined
 }
 
+function parseBoardPosition(raw: unknown): { x: number; y: number } | null {
+  if (!raw || typeof raw !== 'object') return null
+  const r = raw as Record<string, unknown>
+  const x = Number(r.x)
+  const y = Number(r.y)
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null
+  return { x, y }
+}
+
+function parsePendingAction(raw: unknown): GameState['pendingAction'] {
+  if (!raw || typeof raw !== 'object') return { type: null }
+  const pa = raw as Record<string, unknown>
+  if (pa.type === null || pa.type === undefined) return { type: null }
+
+  if (pa.type === 'move') {
+    const targetPos = parseBoardPosition(pa.targetPos)
+    if (!targetPos) return { type: null }
+    return { type: 'move', targetPos }
+  }
+
+  if (pa.type === 'fence') {
+    if (!pa.targetFence || typeof pa.targetFence !== 'object') return { type: null }
+    const tf = pa.targetFence as Record<string, unknown>
+    const x = Number(tf.x)
+    const y = Number(tf.y)
+    const orientation = tf.orientation
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return { type: null }
+    if (orientation !== 'H' && orientation !== 'V') return { type: null }
+    return { type: 'fence', targetFence: { x, y, orientation } }
+  }
+
+  return { type: null }
+}
+
 export function parsePersistedMatchState(
   raw: unknown,
   match: { id: string; player1_id: string; player2_id: string },
@@ -23,17 +57,14 @@ export function parsePersistedMatchState(
     return null
   }
 
-  const pos = (p: Record<string, unknown>) => {
-    const posRaw = p.pos as Record<string, unknown> | undefined
-    if (!posRaw) return null
-    const x = Number(posRaw.x)
-    const y = Number(posRaw.y)
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return null
-    return { x, y }
-  }
+  const pos = (p: Record<string, unknown>) => parseBoardPosition(p.pos)
   const pos1 = pos(p1)
   const pos2 = pos(p2)
   if (!pos1 || !pos2) return null
+
+  const p1FencesLeft = Number(p1.fencesLeft)
+  const p2FencesLeft = Number(p2.fencesLeft)
+  if (!Number.isFinite(p1FencesLeft) || !Number.isFinite(p2FencesLeft)) return null
 
   let status: GameStatus = 'active'
   if (o.status === 'active' || o.status === 'finished' || o.status === 'waiting') {
@@ -41,16 +72,7 @@ export function parsePersistedMatchState(
   }
 
   const fences = Array.isArray(o.fences) ? (o.fences as GameState['fences']) : []
-
-  let pendingAction: GameState['pendingAction'] = { type: null }
-  if (o.pendingAction && typeof o.pendingAction === 'object') {
-    const pa = o.pendingAction as Record<string, unknown>
-    if (pa.type === null || pa.type === undefined) {
-      pendingAction = { type: null }
-    } else if (pa.type === 'move' || pa.type === 'fence') {
-      pendingAction = pa as unknown as GameState['pendingAction']
-    }
-  }
+  const pendingAction = parsePendingAction(o.pendingAction)
 
   let winner: GameState['winner'] = null
   if (o.winner === 'player1' || o.winner === 'player2') {
@@ -71,14 +93,14 @@ export function parsePersistedMatchState(
       player1: {
         id: String(p1.id),
         pos: pos1,
-        fencesLeft: Number(p1.fencesLeft),
+        fencesLeft: p1FencesLeft,
         type: String(p1.type ?? 'Normal'),
         ...(pawn1 !== undefined ? { pawnSpeciesId: pawn1 } : {}),
       },
       player2: {
         id: String(p2.id),
         pos: pos2,
-        fencesLeft: Number(p2.fencesLeft),
+        fencesLeft: p2FencesLeft,
         type: String(p2.type ?? 'Normal'),
         ...(pawn2 !== undefined ? { pawnSpeciesId: pawn2 } : {}),
       },

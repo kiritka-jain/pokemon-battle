@@ -59,6 +59,7 @@ export function MobileActionTray(props: MobileActionTrayProps) {
     if (errCode === 'TRAP_OPPONENT') {
       showToast({ message: TRAP_OPPONENT_TOAST_MESSAGE, variant: 'error' })
       clearCommitErrorCode()
+      return
     }
     const err = useGameStore.getState().error
     if (err) {
