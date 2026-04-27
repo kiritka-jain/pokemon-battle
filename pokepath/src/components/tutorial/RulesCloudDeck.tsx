@@ -36,7 +36,7 @@ export function RulesCloudDeck() {
   const touchStartX = useRef<number | null>(null)
 
   const n = GAME_RULE_SLIDES.length
-  const text = GAME_RULE_SLIDES[index]!
+  const slide = GAME_RULE_SLIDES[index]!
 
   const go = useCallback(
     (dir: -1 | 1) => {
@@ -86,13 +86,17 @@ export function RulesCloudDeck() {
           onTouchEnd={onTouchEnd}
         >
           <CloudBackdrop shadowId={shadowFilterId} />
-          <p
+          <div
             id="rules-cloud-text"
             aria-live="polite"
-            className="relative z-10 max-w-[16.5rem] text-center text-sm font-medium leading-relaxed text-zinc-800 dark:text-zinc-100 sm:text-base"
+            className="relative z-10 max-w-[17.5rem] text-center leading-relaxed text-zinc-800 dark:text-zinc-100"
           >
-            {text}
-          </p>
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{slide.title}</h2>
+            <p className="mt-2 text-sm font-medium sm:text-base">{slide.body}</p>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
+              {slide.takeaway}
+            </p>
+          </div>
         </div>
 
         <div className="mt-2 flex items-center justify-center gap-3">

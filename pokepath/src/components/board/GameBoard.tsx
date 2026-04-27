@@ -3,9 +3,11 @@
 import type { MouseEvent, ReactNode, TouchEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { validateFencePlacement } from '@/src/lib/engine/fenceValidator'
 import { validateMove } from '@/src/lib/engine/moveValidator'
 import { getArenaBoardOuterRingClass, getArenaChromeClasses } from '@/src/lib/board/arenaTheme'
 import { useGameStore } from '@/src/lib/store/gameStore'
+import { fenceValidationSummary } from '@/src/lib/tutorial/validationFeedback'
 import type { GameState, PlayerKey } from '@/src/types/game'
 
 import { FenceOverlay } from './FenceOverlay'
@@ -51,10 +53,8 @@ export function GameBoard({
   const canInteract =
     status === 'active' && winner === null && turn === localPlayerKey
 
-  const validDestinations = useMemo(() => {
-    const set = new Set<string>()
-    if (!canInteract) return set
-    const gs: GameState = {
+  const currentGameState = useMemo<GameState>(
+    () => ({
       matchId,
       status,
       turn,
@@ -65,29 +65,54 @@ export function GameBoard({
       winner,
       error,
       errorCode,
-    }
+    }),
+    [
+      matchId,
+      arena,
+      status,
+      turn,
+      player1,
+      player2,
+      fences,
+      pendingAction,
+      winner,
+      error,
+      errorCode,
+    ],
+  )
+
+  const validDestinations = useMemo(() => {
+    const set = new Set<string>()
+    if (!canInteract) return set
     for (let x = 0; x < 9; x++) {
       for (let y = 0; y < 9; y++) {
-        if (validateMove(gs.turn, { x, y }, gs).valid) {
+        if (validateMove(currentGameState.turn, { x, y }, currentGameState).valid) {
           set.add(`${x},${y}`)
         }
       }
     }
     return set
-  }, [
-    canInteract,
-    matchId,
-    arena,
-    status,
-    turn,
-    player1,
-    player2,
-    fences,
-    pendingAction,
-    winner,
-    error,
-    errorCode,
-  ])
+  }, [canInteract, currentGameState])
+
+  const getFenceSlotValidity = useCallback(
+    (x: number, y: number, orientation: 'H' | 'V') =>
+      validateFencePlacement(turn, x, y, orientation, currentGameState).valid,
+    [currentGameState, turn],
+  )
+
+  const hoverFenceHint = useMemo(() => {
+    if (interactionMode !== 'fence' || !canInteract || !hoverFenceSlot) {
+      return null
+    }
+    const result = validateFencePlacement(
+      turn,
+      hoverFenceSlot.x,
+      hoverFenceSlot.y,
+      hoverFenceSlot.orientation,
+      currentGameState,
+    )
+    return fenceValidationSummary(result)
+  }, [canInteract, currentGameState, hoverFenceSlot, interactionMode, turn])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -207,6 +232,14 @@ export function GameBoard({
           </p>
         )}
       </div>
+      {interactionMode === 'fence' && canInteract && (
+        <p
+          className={`${compact ? 'mb-2 text-xs' : 'mb-3 text-sm'} min-h-5 text-zinc-600 dark:text-zinc-400`}
+          aria-live="polite"
+        >
+          {hoverFenceHint ?? 'Hover or focus a gap to preview whether that fence is legal.'}
+        </p>
+      )}
 
       <div
         className={`relative mx-auto aspect-square w-[100vw] max-w-[500px] select-none ${
@@ -236,6 +269,7 @@ export function GameBoard({
           arena={arena}
           orientation={fenceOrientation}
           visible={interactionMode === 'fence' && canInteract}
+          getSlotValidity={getFenceSlotValidity}
           onHover={setHoverFenceSlot}
           onPick={onPickFence}
         />
