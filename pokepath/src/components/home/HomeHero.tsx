@@ -65,8 +65,15 @@ export function HomeHero() {
         Welcome, {name}
       </p>
       <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">
-        Begin your Pokepath journey
+        Race the route, block the path
       </h1>
+      <p className="max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400 sm:text-base">
+        PokéPath: Route Rush is a Pokémon-themed tactical board duel. Move your partner
+        across the 9x9 route, place fences to force detours, and reach the far side first.
+      </p>
+      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+        Not a traditional Pokémon battle simulator: a quick route strategy game.
+      </p>
     </div>
   )
 }

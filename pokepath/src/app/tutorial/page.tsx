@@ -10,11 +10,12 @@ export default function TutorialPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-yellow-700 dark:text-yellow-300">
-              Trainer Handbook
+              Route Rush Handbook
             </p>
-            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Game rules</h1>
+            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Route duel rules</h1>
             <p className="mt-1 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
-              Professor Oak walks you through the essentials—one rule at a time.
+              Professor Oak explains how to win this Pokémon-themed path strategy game:
+              race to the far side, place fences, and never seal every route.
             </p>
           </div>
           <Link href="/" className="shrink-0 text-sm font-medium text-rose-700 underline dark:text-rose-400">
@@ -27,7 +28,7 @@ export default function TutorialPage() {
           <div className="flex w-full min-w-0 flex-1 flex-col items-center md:max-w-[58%] md:items-start">
             <RulesCloudDeck />
             <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400 md:text-left">
-              Ready to practice?{' '}
+              Ready to practice the route duel?{' '}
               <Link href="/play" className="font-medium text-emerald-700 underline dark:text-emerald-400">
                 Open the practice board
               </Link>

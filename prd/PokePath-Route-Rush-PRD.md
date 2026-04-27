@@ -1,7 +1,7 @@
 # 📘 Product Requirements Document: PokéPath - Route Rush
 
 ## 1. Executive Summary
-**PokéPath: Route Rush** is a turn-based, 2-player strategic board game designed for mobile-web browsers. By combining the rigorous, zero-luck tactical mechanics of the board game *Quoridor* with the nostalgic, 8-bit aesthetic of classic Pokémon games, we are creating a highly engaging, quick-session multiplayer experience.
+**PokéPath: Route Rush** is a turn-based, 2-player tactical route duel designed for mobile-web browsers. It is not a traditional Pokémon combat simulator; Pokémon provide the nostalgic theme, partner identity, and future ability hooks while the core gameplay focuses on zero-luck path racing, fence placement, and spatial strategy inspired by *Quoridor*.
 
 ---
 
@@ -9,7 +9,8 @@
 
 ### Target Audience
 * **Casual Gamers:** Looking for quick 5–10 minute competitive matches.
-* **Pokémon Fans:** Players who enjoy strategy and nostalgia over RNG (Random Number Generation).
+* **Pokémon Fans:** Players who enjoy nostalgic Pokémon presentation, quick duels, and strategy over RNG (Random Number Generation).
+* **Abstract Strategy Players:** Players who like chess-like positional games with simple rules and high tactical depth.
 * **Mobile Users:** Players who want a high-quality "app-like" experience directly in their mobile browser without downloading an app.
 
 ### Success Metrics (KPIs)
@@ -23,7 +24,7 @@
 
 ### The Arena
 * **Grid Dimensions:** 9x9 square tiles.
-* **Visual Theme:** Classic "Route 1" grass environment.
+* **Visual Theme:** Type-inspired route arenas with classic Pokémon flavor.
 * **Starting Positions:** Player 1 (Red) starts at the center of the bottom edge. Player 2 (Blue) starts at the center of the top edge.
 * **Win Condition:** The first player to move their Trainer to any tile on the opponent's starting baseline wins instantly.
 
@@ -33,7 +34,7 @@ Players take turns. On a player's turn, they must take exactly **one** of the fo
 2.  **Place Obstacle:** Drop one "Sudowoodo" (fence) on the board.
 
 ### Obstacle (Fence) Rules
-* **Inventory:** Each player starts with exactly 8 fences.
+* **Inventory:** Each player starts with exactly 10 fences.
 * **Size:** A fence covers exactly two grid edges.
 * **Placement Restrictions:** Fences cannot overlap each other, and they cannot intersect another fence.
 * **The "Path of Hope" Rule:** A fence cannot be placed if it completely blocks either player from reaching their respective finish lines. A valid route must always exist for both players.
@@ -52,7 +53,7 @@ Because mobile screens are small, tapping a tiny grid edge to place a fence can 
 * **Tap 2 (Confirm):** A prominent "Confirm Move" button lights up at the bottom of the screen. The turn only executes when this button is pressed.
 
 ### Screen Flow Map
-* **Screen 1: Landing Page.** Features social login, a "Play Now" button, and a global leaderboard.
+* **Screen 1: Landing Page.** Clearly frames Route Rush as a Pokémon-themed tactical route duel, with entry points for learning, practice, ranked play, and the global leaderboard.
 * **Screen 2: Trainer Card (Profile).** Displays the user's competitive rating, total wins/losses, and preferred Trainer Sprite.
 * **Screen 3: Matchmaking.** A simple waiting lobby while connecting to an opponent.
 * **Screen 4: Game Board.** The active 9x9 grid, turn indicators, and fence inventory belts.
