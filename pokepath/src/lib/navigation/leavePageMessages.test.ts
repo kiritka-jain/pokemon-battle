@@ -6,6 +6,7 @@ import {
   matchLeaveMessage,
   playLeaveMessage,
   requiresLeaveConfirmation,
+  vsComputerLeaveMessage,
 } from './leavePageMessages'
 
 describe('leavePageMessages', () => {
@@ -18,6 +19,11 @@ describe('leavePageMessages', () => {
   it('requires confirmation on play page', () => {
     expect(requiresLeaveConfirmation('/play')).toBe(true)
     expect(leaveConfirmationMessage('/play')).toBe(playLeaveMessage())
+  })
+
+  it('requires confirmation on vs-computer page', () => {
+    expect(requiresLeaveConfirmation('/play/vs-computer')).toBe(true)
+    expect(leaveConfirmationMessage('/play/vs-computer')).toBe(vsComputerLeaveMessage())
   })
 
   it('requires confirmation on active match without winner', () => {

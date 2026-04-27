@@ -1,3 +1,4 @@
+import { LOCAL_AI_PRACTICE_MATCH_ID } from '@/src/lib/match/localAiPracticeMatchId'
 import { LOCAL_DEV_MATCH_ID } from '@/src/lib/match/localDevMatchId'
 import type { BoardArenaId } from '@/src/types/game'
 import { BOARD_ARENA_IDS } from '@/src/types/game'
@@ -21,7 +22,7 @@ export function isBoardArenaId(v: unknown): v is BoardArenaId {
  * before `game_state` exists.
  */
 export function resolveArenaForMatch(matchId: string): BoardArenaId {
-  if (matchId === LOCAL_DEV_MATCH_ID) {
+  if (matchId === LOCAL_DEV_MATCH_ID || matchId === LOCAL_AI_PRACTICE_MATCH_ID) {
     const i = Math.floor(Math.random() * BOARD_ARENA_IDS.length)
     return BOARD_ARENA_IDS[i]!
   }

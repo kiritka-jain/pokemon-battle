@@ -32,9 +32,13 @@ export default function TutorialPage() {
           <div className="flex w-full min-w-0 flex-1 flex-col items-center md:max-w-[58%] md:items-start">
             <RulesCloudDeck />
             <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400 md:text-left">
-              Ready to practice the route duel?{' '}
+              Ready to practice?{' '}
+              <Link href="/play/vs-computer" className="font-medium text-emerald-700 underline dark:text-emerald-400">
+                Play vs computer
+              </Link>
+              {' · '}
               <Link href="/play" className="font-medium text-emerald-700 underline dark:text-emerald-400">
-                Open the practice board
+                Pass-and-play board
               </Link>
             </p>
           </div>

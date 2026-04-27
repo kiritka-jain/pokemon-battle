@@ -20,3 +20,20 @@ export function buildLocalMatchDisplay(
     player2Username: 'Guest',
   }
 }
+
+/** Labels for `/play/vs-computer`: human vs AI opponent. */
+export function buildAiPracticeMatchDisplay(
+  sessionUserId: string | null,
+  profileUsername: string | null | undefined,
+): InitMatchDisplay | undefined {
+  if (!sessionUserId) {
+    return undefined
+  }
+  const player1Username =
+    profileUsername ??
+    displayNameForSeat({ username: undefined, userId: sessionUserId })
+  return {
+    player1Username,
+    player2Username: 'Computer',
+  }
+}

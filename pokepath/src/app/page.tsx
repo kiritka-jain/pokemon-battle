@@ -21,12 +21,23 @@ export default function Home() {
           </Link>
 
           <Link
-            href="/play"
+            href="/play/vs-computer"
             className="block w-full rounded-xl border border-emerald-200 bg-emerald-50/70 p-5 transition-colors hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30"
           >
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Practice route duel</h2>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Practice vs computer</h2>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Try movement and fence placement on a pass-and-play board with no sign-in needed.
+              Play a full route duel against a local AI with difficulty levels and undo—no ranked
+              impact.
+            </p>
+          </Link>
+
+          <Link
+            href="/play"
+            className="block w-full rounded-xl border border-teal-200 bg-teal-50/70 p-5 transition-colors hover:bg-teal-100 dark:border-teal-900/50 dark:bg-teal-950/20 dark:hover:bg-teal-900/30"
+          >
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Pass-and-play board</h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Try movement and fence placement on a shared device with no sign-in needed.
             </p>
           </Link>
 

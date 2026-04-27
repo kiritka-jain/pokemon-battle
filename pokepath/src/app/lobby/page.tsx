@@ -161,10 +161,16 @@ export default function LobbyPage() {
 
         <div className="mt-6 flex flex-col gap-2 border-t border-zinc-200 pt-6 dark:border-zinc-800">
           <Link
+            href="/play/vs-computer"
+            className="text-center text-sm font-medium text-emerald-700 underline dark:text-emerald-400"
+          >
+            Practice vs computer
+          </Link>
+          <Link
             href="/play"
             className="text-center text-sm text-zinc-600 underline dark:text-zinc-400"
           >
-            Local practice board
+            Local pass-and-play board
           </Link>
           <button
             type="button"

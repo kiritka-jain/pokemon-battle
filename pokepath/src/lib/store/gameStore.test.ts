@@ -4,6 +4,8 @@ import { resolveArenaForMatch } from '@/src/lib/board/arenaForMatch'
 import { getFenceId } from '@/src/lib/engine/boardUtils'
 import type { Fence } from '@/src/types/game'
 
+import { LOCAL_AI_OPPONENT_ID, LOCAL_AI_PRACTICE_MATCH_ID } from '@/src/lib/match/localAiPracticeMatchId'
+
 import { initialGameState, LOCAL_DEV_MATCH_ID, useGameStore } from './gameStore'
 
 const fence = (partial: Omit<Fence, 'placedBy'> & { placedBy?: Fence['placedBy'] }): Fence => ({
@@ -197,6 +199,18 @@ describe('useGameStore', () => {
     expect(s.turn).toBe('player1')
     expect(s.players.player1.pos).toEqual({ x: 4, y: 8 })
     expect(s.pendingAction.type).toBe('move')
+  })
+
+  it('commitAction enforces actingUserId for local AI practice match id', () => {
+    useGameStore.getState().initMatch(LOCAL_AI_PRACTICE_MATCH_ID, 'human-1', LOCAL_AI_OPPONENT_ID)
+    useGameStore.getState().setPendingAction({
+      type: 'move',
+      targetPos: { x: 4, y: 7 },
+    })
+    useGameStore.getState().commitAction({ actingUserId: 'wrong-id' })
+    const s = useGameStore.getState()
+    expect(s.error).toBe('Not your turn')
+    expect(s.players.player1.pos).toEqual({ x: 4, y: 8 })
   })
 
   it('commitAction skips actingUserId check for local-dev match id', () => {

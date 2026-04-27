@@ -10,12 +10,16 @@ export function playLeaveMessage() {
   return 'Leave practice mode? Your current local board progress will be lost.'
 }
 
+export function vsComputerLeaveMessage() {
+  return 'Leave computer practice? Your current board progress and undo history will be lost.'
+}
+
 export function isMatchRoute(pathname: string) {
   return /^\/match\/[^/]+$/.test(pathname)
 }
 
 export function requiresLeaveConfirmation(pathname: string, state?: MatchLeaveState) {
-  if (pathname === '/play') {
+  if (pathname === '/play' || pathname === '/play/vs-computer') {
     return true
   }
 
@@ -37,6 +41,10 @@ export function leaveConfirmationMessage(pathname: string, state?: MatchLeaveSta
 
   if (pathname === '/play') {
     return playLeaveMessage()
+  }
+
+  if (pathname === '/play/vs-computer') {
+    return vsComputerLeaveMessage()
   }
 
   return matchLeaveMessage()

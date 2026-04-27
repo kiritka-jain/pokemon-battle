@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Fence } from '@/src/types/game'
 
 import { getFenceId } from './boardUtils'
-import { hasPathToGoal } from './pathfinding'
+import { hasPathToGoal, shortestPathLengthToGoal } from './pathfinding'
 
 const fence = (partial: Omit<Fence, 'placedBy'> & { placedBy?: Fence['placedBy'] }): Fence => ({
   placedBy: 'player1',
@@ -57,5 +57,26 @@ describe('hasPathToGoal', () => {
   it('returns true when already on the goal row', () => {
     expect(hasPathToGoal({ x: 3, y: 0 }, 0, [])).toBe(true)
     expect(hasPathToGoal({ x: 5, y: 8 }, 8, [])).toBe(true)
+  })
+})
+
+describe('shortestPathLengthToGoal', () => {
+  it('returns 0 when already on goal row', () => {
+    expect(shortestPathLengthToGoal({ x: 4, y: 0 }, 0, [])).toBe(0)
+    expect(shortestPathLengthToGoal({ x: 4, y: 8 }, 8, [])).toBe(0)
+  })
+
+  it('returns 8 for straight open path P1 bottom to top row', () => {
+    expect(shortestPathLengthToGoal({ x: 4, y: 8 }, 0, [])).toBe(8)
+  })
+
+  it('returns null when wall blocks like hasPathToGoal', () => {
+    const fences = fullHorizontalWall(6)
+    expect(shortestPathLengthToGoal({ x: 4, y: 8 }, 0, fences)).toBeNull()
+  })
+
+  it('still shortest column path when gap exists in partial wall', () => {
+    const fences = fullHorizontalWall(6).filter((f) => f.x !== 4)
+    expect(shortestPathLengthToGoal({ x: 4, y: 8 }, 0, fences)).toBe(8)
   })
 })

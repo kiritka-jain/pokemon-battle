@@ -35,3 +35,38 @@ export function hasPathToGoal(
 
   return false
 }
+
+/**
+ * Minimum orthogonal steps from `startPos` to any cell on `targetRow`, or null if unreachable.
+ * One step = one edge in the same graph as `hasPathToGoal` / `getNeighbors`.
+ */
+export function shortestPathLengthToGoal(
+  startPos: Position,
+  targetRow: number,
+  fences: Fence[]
+): number | null {
+  if (startPos.y === targetRow) {
+    return 0
+  }
+  const queue: Position[] = [startPos]
+  const dist = new Map<string, number>([[`${startPos.x},${startPos.y}`, 0]])
+
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    const d = dist.get(`${current.x},${current.y}`)!
+    for (const neighbor of getNeighbors(current, fences)) {
+      const key = `${neighbor.x},${neighbor.y}`
+      if (dist.has(key)) {
+        continue
+      }
+      const nextDist = d + 1
+      if (neighbor.y === targetRow) {
+        return nextDist
+      }
+      dist.set(key, nextDist)
+      queue.push(neighbor)
+    }
+  }
+
+  return null
+}
