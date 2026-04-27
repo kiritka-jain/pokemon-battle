@@ -10,9 +10,9 @@ import { parsePersistedMatchState } from '@/src/lib/match/parsePersistedMatchSta
 
 /**
  * When DB JSON omits `pawnSpeciesId`, keep the same seat's prior client value only for the
- * same match (avoids carrying a pawn from a previous match into a new row hydrate).
+ * same match (avoids carrying a board Pokemon from a previous match into a new row hydrate).
  */
-function mergePawnFromPrior(
+function mergeBoardPokemonSpeciesFromPrior(
   parsedSeat: PlayerState,
   priorSeat: PlayerState,
   matchId: string,
@@ -22,15 +22,15 @@ function mergePawnFromPrior(
   if (fromDb !== undefined && fromDb !== '') {
     return { ...parsedSeat, pawnSpeciesId: fromDb }
   }
-  const priorPawn = priorSeat.pawnSpeciesId
+  const priorSpecies = priorSeat.pawnSpeciesId
   if (
-    priorPawn !== undefined &&
-    priorPawn !== '' &&
+    priorSpecies !== undefined &&
+    priorSpecies !== '' &&
     priorSeat.id === parsedSeat.id &&
     parsedSeat.id !== '' &&
     priorMatchId === matchId
   ) {
-    return { ...parsedSeat, pawnSpeciesId: priorPawn }
+    return { ...parsedSeat, pawnSpeciesId: priorSpecies }
   }
   return { ...parsedSeat }
 }
@@ -58,13 +58,13 @@ export function hydrateOnlineMatchFromRow(args: {
   })
   if (!parsed) return
 
-  const p1 = mergePawnFromPrior(
+  const p1 = mergeBoardPokemonSpeciesFromPrior(
     parsed.players.player1,
     prior.players.player1,
     args.matchId,
     priorMatchId,
   )
-  const p2 = mergePawnFromPrior(
+  const p2 = mergeBoardPokemonSpeciesFromPrior(
     parsed.players.player2,
     prior.players.player2,
     args.matchId,

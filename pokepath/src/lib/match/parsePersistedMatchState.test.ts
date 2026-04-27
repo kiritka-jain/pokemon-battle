@@ -68,7 +68,7 @@ describe('parsePersistedMatchState', () => {
     expect(parsePersistedMatchState(raw, match)).toBeNull()
   })
 
-  it('parses valid pawnSpeciesId when present on players', () => {
+  it('parses valid board Pokemon species id when present on players', () => {
     const raw = {
       turn: 'player1',
       players: {
@@ -93,7 +93,7 @@ describe('parsePersistedMatchState', () => {
     expect(parsed?.players.player2.pawnSpeciesId).toBe('pikachu')
   })
 
-  it('omits invalid pawnSpeciesId from persisted payload', () => {
+  it('omits invalid board Pokemon species id from persisted payload', () => {
     const raw = {
       turn: 'player1',
       players: {

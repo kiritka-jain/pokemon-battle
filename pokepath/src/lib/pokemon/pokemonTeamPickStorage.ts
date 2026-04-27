@@ -1,8 +1,9 @@
 import type { StarterSpecies } from '@/src/lib/pokemon/starterRoster'
 
-export const PARTNER_PICK_STORAGE_KEY = 'pokepath_partner_pick_v1'
+/** Session key string unchanged so existing saves keep working. */
+export const POKEMON_TEAM_PICK_STORAGE_KEY = 'pokepath_partner_pick_v1'
 
-export type PartnerPickPayload = {
+export type PokemonTeamPickPayload = {
   speciesIds: [string, string]
   pickedAt?: number
   /** Ball indices (0–2) in the order the player opened them. */
@@ -17,7 +18,7 @@ function isBallIndex(v: unknown): v is number {
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 2
 }
 
-export function parsePartnerPickJson(raw: string | null): PartnerPickPayload | null {
+export function parsePokemonTeamPickJson(raw: string | null): PokemonTeamPickPayload | null {
   if (raw == null || raw === '') return null
   try {
     const v: unknown = JSON.parse(raw)
@@ -36,7 +37,7 @@ export function parsePartnerPickJson(raw: string | null): PartnerPickPayload | n
       if (!isBallIndex(i0) || !isBallIndex(i1)) return null
     }
 
-    const base: PartnerPickPayload = { speciesIds: [a, b] }
+    const base: PokemonTeamPickPayload = { speciesIds: [a, b] }
     if (typeof pickedAt === 'number') base.pickedAt = pickedAt
     if (Array.isArray(openedBallIndices) && openedBallIndices.length === 2) {
       const [i0, i1] = openedBallIndices
@@ -50,28 +51,28 @@ export function parsePartnerPickJson(raw: string | null): PartnerPickPayload | n
   }
 }
 
-export function serializePartnerPick(payload: PartnerPickPayload): string {
+export function serializePokemonTeamPick(payload: PokemonTeamPickPayload): string {
   return JSON.stringify(payload)
 }
 
-type PartnerPickStorage = Pick<Storage, 'setItem'>
+type PokemonTeamPickStorage = Pick<Storage, 'setItem'>
 
-export function persistPartnerPick(
-  payload: PartnerPickPayload,
-  storage?: PartnerPickStorage,
+export function persistPokemonTeamPick(
+  payload: PokemonTeamPickPayload,
+  storage?: PokemonTeamPickStorage,
 ): boolean {
   const target = storage ?? (typeof sessionStorage !== 'undefined' ? sessionStorage : null)
   if (!target) return false
   try {
-    target.setItem(PARTNER_PICK_STORAGE_KEY, serializePartnerPick(payload))
+    target.setItem(POKEMON_TEAM_PICK_STORAGE_KEY, serializePokemonTeamPick(payload))
     return true
   } catch {
     return false
   }
 }
 
-export function partnerPickLabel(
-  payload: PartnerPickPayload,
+export function pokemonTeamPickLabel(
+  payload: PokemonTeamPickPayload,
   rosterLookup: (id: string) => StarterSpecies | undefined,
 ): string {
   const [a, b] = payload.speciesIds

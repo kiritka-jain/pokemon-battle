@@ -217,7 +217,7 @@ describe('POST /api/match/state', () => {
     })
   })
 
-  it('persists actor pawnSpeciesId on first commit when client sends valid roster id', async () => {
+  it('persists actor board Pokemon species id on first commit when client sends valid roster id', async () => {
     getUserFromBearerMock.mockResolvedValue({ user: { id: 'p1' } })
 
     const matchLookup = makeBuilder({
@@ -279,7 +279,7 @@ describe('POST /api/match/state', () => {
     expect(payload?.game_state?.players?.player1?.pawnSpeciesId).toBe('charmander')
   })
 
-  it('returns state_mismatch when client forges opponent pawnSpeciesId', async () => {
+  it('returns state_mismatch when client forges opponent board Pokemon species id', async () => {
     getUserFromBearerMock.mockResolvedValue({ user: { id: 'p1' } })
 
     const existingState = {

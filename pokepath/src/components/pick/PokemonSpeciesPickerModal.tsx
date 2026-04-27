@@ -5,14 +5,14 @@ import { useCallback, useState } from 'react'
 
 import type { StarterSpecies } from '@/src/lib/pokemon/starterRoster'
 
-export type PawnSpeciesPickerModalProps = {
+export type PokemonSpeciesPickerModalProps = {
   open: boolean
-  /** Two partners from the same roster order as partner pick */
+  /** Two Pokemon from the same roster order as the team pick flow */
   options: [StarterSpecies, StarterSpecies]
   onConfirm: (speciesId: string) => void
 }
 
-export function PawnSpeciesPickerModal({ open, options, onConfirm }: PawnSpeciesPickerModalProps) {
+export function PokemonSpeciesPickerModal({ open, options, onConfirm }: PokemonSpeciesPickerModalProps) {
   const [selected, setSelected] = useState<string | null>(null)
 
   const handleConfirm = useCallback(() => {
@@ -29,19 +29,19 @@ export function PawnSpeciesPickerModal({ open, options, onConfirm }: PawnSpecies
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="pawn-picker-title"
+      aria-labelledby="board-pokemon-picker-title"
     >
       <div className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-950 p-6 text-zinc-50 shadow-2xl">
-        <h2 id="pawn-picker-title" className="text-center text-lg font-semibold tracking-tight">
-          Choose your board partner
+        <h2 id="board-pokemon-picker-title" className="text-center text-lg font-semibold tracking-tight">
+          Choose your board Pokemon
         </h2>
         <p className="mt-2 text-center text-sm text-zinc-400">
-          Pick one Pokémon from your team to represent you on the route.
+          Pick one Pokemon from your team to represent you on the route.
         </p>
 
         <div className="mt-8 flex justify-center gap-6">
-          <PawnOptionCard species={a} selected={selected === a.id} onSelect={() => setSelected(a.id)} />
-          <PawnOptionCard species={b} selected={selected === b.id} onSelect={() => setSelected(b.id)} />
+          <PokemonOptionCard species={a} selected={selected === a.id} onSelect={() => setSelected(a.id)} />
+          <PokemonOptionCard species={b} selected={selected === b.id} onSelect={() => setSelected(b.id)} />
         </div>
 
         <div className="mt-8 flex justify-center">
@@ -59,7 +59,7 @@ export function PawnSpeciesPickerModal({ open, options, onConfirm }: PawnSpecies
   )
 }
 
-function PawnOptionCard({
+function PokemonOptionCard({
   species,
   selected,
   onSelect,

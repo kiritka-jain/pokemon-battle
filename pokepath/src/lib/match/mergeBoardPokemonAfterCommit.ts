@@ -1,15 +1,15 @@
 import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
 import type { GameState, PlayerKey, PlayerState } from '@/src/types/game'
 
-function validatedPawnSpeciesId(id: unknown): string | undefined {
+function validatedBoardPokemonSpeciesId(id: unknown): string | undefined {
   if (typeof id !== 'string' || id === '') return undefined
   return starterSpeciesById(id) ? id : undefined
 }
 
-function withPawn(p: PlayerState, pawn: string | undefined): PlayerState {
+function withBoardPokemonSpecies(p: PlayerState, speciesId: string | undefined): PlayerState {
   const next: PlayerState = { ...p }
-  if (pawn !== undefined && pawn !== '') {
-    next.pawnSpeciesId = pawn
+  if (speciesId !== undefined && speciesId !== '') {
+    next.pawnSpeciesId = speciesId
   } else {
     delete next.pawnSpeciesId
   }
@@ -17,10 +17,10 @@ function withPawn(p: PlayerState, pawn: string | undefined): PlayerState {
 }
 
 /**
- * After a validated turn, merge board pawn ids: actor's pawn may be taken from the
- * client's newState (validated roster id); opponent's pawn always comes from `base` (DB).
+ * After a validated turn, merge board Pokemon species ids: the actor's Pokemon may be taken
+ * from the client's newState (validated roster id); the opponent's always comes from `base` (DB).
  */
-export function mergePawnsAfterCommit(
+export function mergeBoardPokemonAfterCommit(
   appliedNext: GameState,
   newState: Pick<GameState, 'players'>,
   base: GameState,
@@ -28,7 +28,7 @@ export function mergePawnsAfterCommit(
 ): GameState {
   const opponentKey: PlayerKey = actorKey === 'player1' ? 'player2' : 'player1'
 
-  const actorFromClient = validatedPawnSpeciesId(newState.players[actorKey].pawnSpeciesId)
+  const actorFromClient = validatedBoardPokemonSpeciesId(newState.players[actorKey].pawnSpeciesId)
   const actorFinal =
     actorFromClient !== undefined ? actorFromClient : base.players[actorKey].pawnSpeciesId
 
@@ -37,11 +37,11 @@ export function mergePawnsAfterCommit(
   return {
     ...appliedNext,
     players: {
-      player1: withPawn(
+      player1: withBoardPokemonSpecies(
         appliedNext.players.player1,
         actorKey === 'player1' ? actorFinal : opponentFinal,
       ),
-      player2: withPawn(
+      player2: withBoardPokemonSpecies(
         appliedNext.players.player2,
         actorKey === 'player2' ? actorFinal : opponentFinal,
       ),

@@ -7,9 +7,9 @@ import type { Session } from '@supabase/supabase-js'
 
 import { StarterPokemonSelection } from '@/src/components/pick/StarterPokemonSelection'
 import {
-  persistPartnerPick,
-  type PartnerPickPayload,
-} from '@/src/lib/pokemon/partnerPickStorage'
+  persistPokemonTeamPick,
+  type PokemonTeamPickPayload,
+} from '@/src/lib/pokemon/pokemonTeamPickStorage'
 import { getSession, onAuthStateChange } from '@/src/lib/supabase/auth'
 import { supabase } from '@/src/lib/supabase/client'
 
@@ -70,13 +70,13 @@ export default function PickPage() {
     }
   }, [])
 
-  const handleChooseRules = (payload: PartnerPickPayload) => {
-    persistPartnerPick(payload)
+  const handleChooseRules = (payload: PokemonTeamPickPayload) => {
+    persistPokemonTeamPick(payload)
     router.push('/tutorial')
   }
 
-  const handleChoosePlay = (payload: PartnerPickPayload) => {
-    persistPartnerPick(payload)
+  const handleChoosePlay = (payload: PokemonTeamPickPayload) => {
+    persistPokemonTeamPick(payload)
     router.push('/play')
   }
 

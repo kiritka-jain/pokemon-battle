@@ -5,17 +5,20 @@ import { useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 
 import { GameBoard } from '@/src/components/board/GameBoard'
-import { PawnSpeciesPickerModal } from '@/src/components/pick/PawnSpeciesPickerModal'
+import { PokemonSpeciesPickerModal } from '@/src/components/pick/PokemonSpeciesPickerModal'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
 import { Scoreboard, type ScoreboardTurnStripMode } from '@/src/components/ui/Scoreboard'
 import { buildLocalMatchDisplay } from '@/src/lib/play/localMatchDisplay'
-import { PAWN_PICK_STORAGE_KEY, serializePawnPick } from '@/src/lib/pokemon/pawnPickStorage'
 import {
-  PARTNER_PICK_STORAGE_KEY,
-  parsePartnerPickJson,
-  partnerPickLabel,
-} from '@/src/lib/pokemon/partnerPickStorage'
+  BOARD_POKEMON_PICK_LOCAL_STORAGE_KEY,
+  serializeBoardPokemonPick,
+} from '@/src/lib/pokemon/boardPokemonPickStorage'
+import {
+  parsePokemonTeamPickJson,
+  POKEMON_TEAM_PICK_STORAGE_KEY,
+  pokemonTeamPickLabel,
+} from '@/src/lib/pokemon/pokemonTeamPickStorage'
 import { pickRandomStarterSpeciesId } from '@/src/lib/pokemon/pickRandomStarterSpeciesId'
 import type { StarterSpecies } from '@/src/lib/pokemon/starterRoster'
 import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
@@ -31,9 +34,9 @@ const PLAY_TURN_STRIP: ScoreboardTurnStripMode = 'activePlayer'
 export default function PlayPage() {
   const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [profileUsername, setProfileUsername] = useState<string | null | undefined>(undefined)
-  const [partnerLine, setPartnerLine] = useState<string | null>(null)
-  const [pawnPickerOpen, setPawnPickerOpen] = useState(false)
-  const [pawnPickerOptions, setPawnPickerOptions] = useState<[StarterSpecies, StarterSpecies] | null>(
+  const [pokemonTeamLine, setPokemonTeamLine] = useState<string | null>(null)
+  const [pokemonPickerOpen, setPokemonPickerOpen] = useState(false)
+  const [pokemonPickerOptions, setPokemonPickerOptions] = useState<[StarterSpecies, StarterSpecies] | null>(
     null,
   )
   const profileFetchSeq = useRef(0)
@@ -94,57 +97,57 @@ export default function PlayPage() {
     const p2 = useGameStore.getState().players.player2
     const isGuestSeat = p2.id === LOCAL_P2 || p2.username === 'Guest'
     if (isGuestSeat) {
-      useGameStore.getState().setPawnSpecies('player2', pickRandomStarterSpeciesId())
+      useGameStore.getState().setPokemonSpecies('player2', pickRandomStarterSpeciesId())
     }
 
     queueMicrotask(() => {
       try {
-        const rawPartner = sessionStorage.getItem(PARTNER_PICK_STORAGE_KEY)
-        const parsedPartner = parsePartnerPickJson(rawPartner)
-        setPartnerLine(
-          parsedPartner ? partnerPickLabel(parsedPartner, starterSpeciesById) : null,
+        const rawPokemonTeam = sessionStorage.getItem(POKEMON_TEAM_PICK_STORAGE_KEY)
+        const parsedPokemonTeam = parsePokemonTeamPickJson(rawPokemonTeam)
+        setPokemonTeamLine(
+          parsedPokemonTeam ? pokemonTeamPickLabel(parsedPokemonTeam, starterSpeciesById) : null,
         )
 
-        const [idA, idB] = parsedPartner?.speciesIds ?? [null, null]
+        const [idA, idB] = parsedPokemonTeam?.speciesIds ?? [null, null]
         const sa = idA ? starterSpeciesById(idA) : undefined
         const sb = idB ? starterSpeciesById(idB) : undefined
-        if (parsedPartner && sa && sb) {
-          // Require a fresh board pawn from the current partner list on every local visit.
-          useGameStore.getState().setPawnSpecies('player1', null)
-          setPawnPickerOptions([sa, sb])
-          setPawnPickerOpen(true)
+        if (parsedPokemonTeam && sa && sb) {
+          // Require a fresh board Pokemon from the current team list on every local visit.
+          useGameStore.getState().setPokemonSpecies('player1', null)
+          setPokemonPickerOptions([sa, sb])
+          setPokemonPickerOpen(true)
         } else {
-          setPawnPickerOpen(false)
-          setPawnPickerOptions(null)
+          setPokemonPickerOpen(false)
+          setPokemonPickerOptions(null)
         }
       } catch {
-        setPartnerLine(null)
-        setPawnPickerOpen(false)
-        setPawnPickerOptions(null)
+        setPokemonTeamLine(null)
+        setPokemonPickerOpen(false)
+        setPokemonPickerOptions(null)
       }
     })
   }, [sessionUserId, profileUsername])
 
-  const trainerKeyForPawn = sessionUserId ?? 'p1'
+  const trainerKeyForBoardPokemon = sessionUserId ?? 'p1'
 
   return (
     // pb-32: MobileActionTray is fixed bottom-0 and always mounted; padding keeps the board scrollable above it.
     <div className="flex min-h-full flex-col items-center gap-4 px-4 pb-32 pt-8">
-      {pawnPickerOpen && pawnPickerOptions && (
-        <PawnSpeciesPickerModal
+      {pokemonPickerOpen && pokemonPickerOptions && (
+        <PokemonSpeciesPickerModal
           open
-          options={pawnPickerOptions}
+          options={pokemonPickerOptions}
           onConfirm={(speciesId) => {
             try {
               sessionStorage.setItem(
-                PAWN_PICK_STORAGE_KEY,
-                serializePawnPick({ trainerKey: trainerKeyForPawn, speciesId }),
+                BOARD_POKEMON_PICK_LOCAL_STORAGE_KEY,
+                serializeBoardPokemonPick({ trainerKey: trainerKeyForBoardPokemon, speciesId }),
               )
             } catch {
               // ignore quota / private mode
             }
-            useGameStore.getState().setPawnSpecies('player1', speciesId)
-            setPawnPickerOpen(false)
+            useGameStore.getState().setPokemonSpecies('player1', speciesId)
+            setPokemonPickerOpen(false)
           }}
         />
       )}
@@ -157,8 +160,8 @@ export default function PlayPage() {
           {winner && ` · Winner: ${winner}`}
           {status === 'finished' && ' · Game over'}
         </p>
-        {partnerLine && (
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Partners: {partnerLine}</p>
+        {pokemonTeamLine && (
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Pokemons: {pokemonTeamLine}</p>
         )}
       </div>
 

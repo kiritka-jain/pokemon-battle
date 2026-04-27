@@ -4,15 +4,15 @@ import { AnimatePresence, motion } from 'framer-motion'
 import Image from 'next/image'
 import { useCallback, useMemo, useState } from 'react'
 
-import type { PartnerPickPayload } from '@/src/lib/pokemon/partnerPickStorage'
+import type { PokemonTeamPickPayload } from '@/src/lib/pokemon/pokemonTeamPickStorage'
 import { sampleThreeFromRoster } from '@/src/lib/pokemon/sampleThreeFromRoster'
 import type { StarterSpecies } from '@/src/lib/pokemon/starterRoster'
 import { STARTER_SPECIES } from '@/src/lib/pokemon/starterRoster'
 
 export type StarterPokemonSelectionProps = {
   username: string
-  onChooseRules: (payload: PartnerPickPayload) => void
-  onChoosePlay: (payload: PartnerPickPayload) => void
+  onChooseRules: (payload: PokemonTeamPickPayload) => void
+  onChoosePlay: (payload: PokemonTeamPickPayload) => void
 }
 
 export function StarterPokemonSelection({
@@ -56,7 +56,7 @@ export function StarterPokemonSelection({
     [canOpenMore, offer, opened],
   )
 
-  const buildPayload = useCallback((): PartnerPickPayload | null => {
+  const buildPayload = useCallback((): PokemonTeamPickPayload | null => {
     const a = team[0]
     const b = team[1]
     if (!a || !b) return null
@@ -129,8 +129,8 @@ export function StarterPokemonSelection({
             </p>
 
             <div className="flex justify-center gap-6">
-              <TeamSlot label="Partner 1" species={team[0]} />
-              <TeamSlot label="Partner 2" species={team[1]} />
+              <TeamSlot label="Pokemon 1" species={team[0]} />
+              <TeamSlot label="Pokemon 2" species={team[1]} />
             </div>
           </div>
         </section>

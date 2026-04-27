@@ -68,7 +68,7 @@ export function HomeHero() {
         Race the route, block the path
       </h1>
       <p className="max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400 sm:text-base">
-        PokéPath: Route Rush is a Pokémon-themed tactical board duel. Move your partner
+        PokéPath: Route Rush is a Pokémon-themed tactical board duel. Move your Pokemon
         across the 9x9 route, place fences to force detours, and reach the far side first.
       </p>
       <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">

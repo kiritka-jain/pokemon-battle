@@ -10,13 +10,13 @@ describe('hydrateOnlineMatchFromRow', () => {
     useGameStore.setState(initialGameState)
   })
 
-  it('preserves prior pawnSpeciesId when persisted JSON omits it for the same user id', () => {
+  it('preserves prior board Pokemon species id when persisted JSON omits it for the same user id', () => {
     const matchId = 'match-hydrate-1'
     const p1Id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
     const p2Id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
 
     useGameStore.getState().initMatch(matchId, p1Id, p2Id, {})
-    useGameStore.getState().setPawnSpecies('player1', 'charmander')
+    useGameStore.getState().setPokemonSpecies('player1', 'charmander')
 
     const gameState = {
       turn: 'player1' as const,
@@ -43,13 +43,13 @@ describe('hydrateOnlineMatchFromRow', () => {
     expect(useGameStore.getState().players.player2.pawnSpeciesId).toBeUndefined()
   })
 
-  it('uses DB pawn when present over stale prior value', () => {
+  it('uses DB board Pokemon species when present over stale prior value', () => {
     const matchId = 'match-hydrate-2'
     const p1Id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
     const p2Id = 'dddddddd-dddd-dddd-dddd-dddddddddddd'
 
     useGameStore.getState().initMatch(matchId, p1Id, p2Id, {})
-    useGameStore.getState().setPawnSpecies('player1', 'oddish')
+    useGameStore.getState().setPokemonSpecies('player1', 'oddish')
 
     const gameState = {
       turn: 'player1' as const,
@@ -81,13 +81,13 @@ describe('hydrateOnlineMatchFromRow', () => {
     expect(useGameStore.getState().players.player1.pawnSpeciesId).toBe('pikachu')
   })
 
-  it('does not carry prior pawn when seat user id changed', () => {
+  it('does not carry prior board Pokemon when seat user id changed', () => {
     const matchId = 'match-hydrate-3'
     const oldP1 = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'
     const p2Id = 'ffffffff-ffff-ffff-ffff-ffffffffffff'
 
     useGameStore.getState().initMatch(matchId, oldP1, p2Id, {})
-    useGameStore.getState().setPawnSpecies('player1', 'charmander')
+    useGameStore.getState().setPokemonSpecies('player1', 'charmander')
 
     const newP1 = '99999999-9999-9999-9999-999999999999'
     const gameState = {
@@ -114,14 +114,14 @@ describe('hydrateOnlineMatchFromRow', () => {
     expect(useGameStore.getState().players.player1.pawnSpeciesId).toBeUndefined()
   })
 
-  it('does not carry prior pawn when hydrating a different match id', () => {
+  it('does not carry prior board Pokemon when hydrating a different match id', () => {
     const oldMatchId = 'match-old-aaaa'
     const newMatchId = 'match-new-bbbb'
     const p1Id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
     const p2Id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
 
     useGameStore.getState().initMatch(oldMatchId, p1Id, p2Id, {})
-    useGameStore.getState().setPawnSpecies('player1', 'charmander')
+    useGameStore.getState().setPokemonSpecies('player1', 'charmander')
 
     const gameState = {
       turn: 'player1' as const,

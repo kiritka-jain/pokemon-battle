@@ -1,7 +1,7 @@
 # 📘 Product Requirements Document: PokéPath - Route Rush
 
 ## 1. Executive Summary
-**PokéPath: Route Rush** is a turn-based, 2-player tactical route duel designed for mobile-web browsers. It is not a traditional Pokémon combat simulator; Pokémon provide the nostalgic theme, partner identity, and future ability hooks while the core gameplay focuses on zero-luck path racing, fence placement, and spatial strategy inspired by *Quoridor*.
+**PokéPath: Route Rush** is a turn-based, 2-player tactical route duel designed for mobile-web browsers. It is not a traditional Pokémon combat simulator; Pokémon provide the nostalgic theme, trainer and Pokemon identity, and future ability hooks while the core gameplay focuses on zero-luck path racing, fence placement, and spatial strategy inspired by *Quoridor*.
 
 ---
 

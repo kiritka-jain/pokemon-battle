@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 
 import { GameBoard } from '@/src/components/board/GameBoard'
-import { PawnSpeciesPickerModal } from '@/src/components/pick/PawnSpeciesPickerModal'
+import { PokemonSpeciesPickerModal } from '@/src/components/pick/PokemonSpeciesPickerModal'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
 import { Scoreboard } from '@/src/components/ui/Scoreboard'
@@ -13,22 +13,19 @@ import { VictoryModal } from '@/src/components/ui/VictoryModal'
 import { useToast } from '@/src/components/ui/toast'
 import { applyCommittedTurn } from '@/src/lib/engine/applyCommittedTurn'
 import { hydrateOnlineMatchFromRow } from '@/src/lib/match/hydrateOnlineMatch'
-import { mergePawnsAfterCommit } from '@/src/lib/match/mergePawnsAfterCommit'
+import { mergeBoardPokemonAfterCommit } from '@/src/lib/match/mergeBoardPokemonAfterCommit'
 import {
-  resolveMatchEntryPawnPicker,
-  speciesInPartnerList,
-} from '@/src/lib/match/resolveMatchEntryPawnPicker'
+  resolveMatchEntryBoardPokemonPicker,
+  speciesInPokemonTeam,
+} from '@/src/lib/match/resolveMatchEntryBoardPokemonPicker'
 import { normalizedTurnSnapshotJson } from '@/src/lib/match/snapshotUtils'
 import { matchLeaveMessage } from '@/src/lib/navigation/leavePageMessages'
 import {
-  PAWN_PICK_MATCH_STORAGE_KEY,
-  parsePawnPickJson,
-  serializePawnPick,
-} from '@/src/lib/pokemon/pawnPickStorage'
-import {
-  PARTNER_PICK_STORAGE_KEY,
-  parsePartnerPickJson,
-} from '@/src/lib/pokemon/partnerPickStorage'
+  BOARD_POKEMON_PICK_MATCH_STORAGE_KEY,
+  parseBoardPokemonPickJson,
+  serializeBoardPokemonPick,
+} from '@/src/lib/pokemon/boardPokemonPickStorage'
+import { POKEMON_TEAM_PICK_STORAGE_KEY, parsePokemonTeamPickJson } from '@/src/lib/pokemon/pokemonTeamPickStorage'
 import type { StarterSpecies } from '@/src/lib/pokemon/starterRoster'
 import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
 import {
@@ -67,8 +64,8 @@ export default function MatchPage() {
   const [opponentId, setOpponentId] = useState<string | null>(null)
   const [opponentDisconnected, setOpponentDisconnected] = useState(false)
   const [resigning, setResigning] = useState(false)
-  const [pawnPickerOpen, setPawnPickerOpen] = useState(false)
-  const [pawnPickerOptions, setPawnPickerOptions] = useState<[StarterSpecies, StarterSpecies] | null>(
+  const [pokemonPickerOpen, setPokemonPickerOpen] = useState(false)
+  const [pokemonPickerOptions, setPokemonPickerOptions] = useState<[StarterSpecies, StarterSpecies] | null>(
     null,
   )
 
@@ -338,7 +335,7 @@ export default function MatchPage() {
         return
       }
 
-      const merged = mergePawnsAfterCommit(applied.next, p.newState, state, senderKey)
+      const merged = mergeBoardPokemonAfterCommit(applied.next, p.newState, state, senderKey)
       const expected = normalizedTurnSnapshotJson(merged)
       const received = normalizedTurnSnapshotJson(p.newState)
       if (expected !== received) {
@@ -550,63 +547,64 @@ export default function MatchPage() {
     queueMicrotask(() => {
       try {
         const trainerStorageKey = `${sessionUserId}:${matchId}`
-        const rawPawn = sessionStorage.getItem(PAWN_PICK_MATCH_STORAGE_KEY)
-        const pawnStored = parsePawnPickJson(rawPawn)
+        const rawBoardPick = sessionStorage.getItem(BOARD_POKEMON_PICK_MATCH_STORAGE_KEY)
+        const boardPickStored = parseBoardPokemonPickJson(rawBoardPick)
 
-        const rawPartner = sessionStorage.getItem(PARTNER_PICK_STORAGE_KEY)
-        const parsedPartner = parsePartnerPickJson(rawPartner)
-        const [idA, idB] = parsedPartner?.speciesIds ?? [null, null]
+        const rawPokemonTeam = sessionStorage.getItem(POKEMON_TEAM_PICK_STORAGE_KEY)
+        const parsedPokemonTeam = parsePokemonTeamPickJson(rawPokemonTeam)
+        const [idA, idB] = parsedPokemonTeam?.speciesIds ?? [null, null]
         const sa = idA ? starterSpeciesById(idA) : undefined
         const sb = idB ? starterSpeciesById(idB) : undefined
 
-        const seatPawn = useGameStore.getState().players[localPlayerKey].pawnSpeciesId
+        const seatBoardPokemonSpeciesId =
+          useGameStore.getState().players[localPlayerKey].pawnSpeciesId
 
         if (
-          pawnStored?.trainerKey === trainerStorageKey &&
-          pawnStored.speciesId &&
-          parsedPartner &&
-          !speciesInPartnerList(pawnStored.speciesId, parsedPartner)
+          boardPickStored?.trainerKey === trainerStorageKey &&
+          boardPickStored.speciesId &&
+          parsedPokemonTeam &&
+          !speciesInPokemonTeam(boardPickStored.speciesId, parsedPokemonTeam)
         ) {
           try {
-            sessionStorage.removeItem(PAWN_PICK_MATCH_STORAGE_KEY)
+            sessionStorage.removeItem(BOARD_POKEMON_PICK_MATCH_STORAGE_KEY)
           } catch {
             // ignore quota / private mode
           }
         }
 
-        const decision = resolveMatchEntryPawnPicker({
+        const decision = resolveMatchEntryBoardPokemonPicker({
           trainerStorageKey,
-          pawnStored,
-          parsedPartner,
+          boardPickStored,
+          parsedPokemonTeam,
           optionA: sa,
           optionB: sb,
-          seatPawnSpeciesId: seatPawn,
+          seatBoardPokemonSpeciesId,
         })
 
         if (decision.kind === 'applyStored') {
-          useGameStore.getState().setPawnSpecies(localPlayerKey, decision.speciesId)
-          setPawnPickerOpen(false)
-          setPawnPickerOptions(null)
+          useGameStore.getState().setPokemonSpecies(localPlayerKey, decision.speciesId)
+          setPokemonPickerOpen(false)
+          setPokemonPickerOptions(null)
           return
         }
         if (decision.kind === 'trustSeat') {
-          setPawnPickerOpen(false)
-          setPawnPickerOptions(null)
+          setPokemonPickerOpen(false)
+          setPokemonPickerOptions(null)
           return
         }
         if (decision.kind === 'openPicker') {
           if (decision.clearSeat) {
-            useGameStore.getState().setPawnSpecies(localPlayerKey, null)
+            useGameStore.getState().setPokemonSpecies(localPlayerKey, null)
           }
-          setPawnPickerOptions(decision.options)
-          setPawnPickerOpen(true)
+          setPokemonPickerOptions(decision.options)
+          setPokemonPickerOpen(true)
           return
         }
-        setPawnPickerOpen(false)
-        setPawnPickerOptions(null)
+        setPokemonPickerOpen(false)
+        setPokemonPickerOptions(null)
       } catch {
-        setPawnPickerOpen(false)
-        setPawnPickerOptions(null)
+        setPokemonPickerOpen(false)
+        setPokemonPickerOptions(null)
       }
     })
   }, [loading, localPlayerKey, sessionUserId, matchId])
@@ -737,22 +735,22 @@ export default function MatchPage() {
           onSecondary={goToLobby}
         />
 
-        {pawnPickerOpen && pawnPickerOptions && (
-          <PawnSpeciesPickerModal
+        {pokemonPickerOpen && pokemonPickerOptions && (
+          <PokemonSpeciesPickerModal
             open
-            options={pawnPickerOptions}
+            options={pokemonPickerOptions}
             onConfirm={(speciesId) => {
               const trainerStorageKey = `${sessionUserId}:${matchId}`
               try {
                 sessionStorage.setItem(
-                  PAWN_PICK_MATCH_STORAGE_KEY,
-                  serializePawnPick({ trainerKey: trainerStorageKey, speciesId }),
+                  BOARD_POKEMON_PICK_MATCH_STORAGE_KEY,
+                  serializeBoardPokemonPick({ trainerKey: trainerStorageKey, speciesId }),
                 )
               } catch {
                 // ignore quota / private mode
               }
-              useGameStore.getState().setPawnSpecies(localPlayerKey, speciesId)
-              setPawnPickerOpen(false)
+              useGameStore.getState().setPokemonSpecies(localPlayerKey, speciesId)
+              setPokemonPickerOpen(false)
             }}
           />
         )}

@@ -69,16 +69,16 @@ describe('snapshotUtils', () => {
     )
   })
 
-  it('normalizedTurnSnapshotJson includes pawnSpeciesId when set', () => {
+  it('normalizedTurnSnapshotJson includes board Pokemon species id when set', () => {
     const base = stateWithDisplay()
-    const withPawn: GameState = {
+    const withBoardPokemon: GameState = {
       ...base,
       players: {
         player1: { ...base.players.player1, pawnSpeciesId: 'charmander' },
         player2: { ...base.players.player2 },
       },
     }
-    const norm = normalizedTurnSnapshotJson(pickTurnSnapshot(withPawn))
+    const norm = normalizedTurnSnapshotJson(pickTurnSnapshot(withBoardPokemon))
     expect(norm).toContain('pawnSpeciesId')
     expect(norm).toContain('charmander')
   })

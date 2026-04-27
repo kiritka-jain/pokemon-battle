@@ -28,7 +28,7 @@ export const GAME_RULE_SLIDES = [
   },
   {
     title: 'Jump Over Rivals',
-    body: 'When pawns stand face to face and the space behind the rival is open, jump straight over them.',
+    body: 'When Pokemon stand face to face and the space behind the rival is open, jump straight over them.',
     takeaway: 'A jump can turn a blocked lane into a fast lane.',
   },
   {

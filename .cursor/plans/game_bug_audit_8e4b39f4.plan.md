@@ -89,7 +89,7 @@ The client then applies `p.newState` via `applyOpponentAction`.
 
 **Impact:** A modified client could send a legal `action` but an arbitrary `newState` (teleport, extra fences, etc.). Honest peers would show a wrong board until a full hydrate from DB (if/when postgres catches up). Server truth remains protected for persistence, but **local PvP experience and any logic that trusts local store** are wrong.
 
-**Fix direction:** After `validateIncomingTurn`, derive the next snapshot with [`applyCommittedTurn`](pokepath/src/lib/engine/applyCommittedTurn.ts) (plus the same pawn merge as the server: [`mergePawnsAfterCommit`](pokepath/src/lib/match/mergePawnsAfterCommit.ts) using `p.newState` only for validated actor pawn id), then apply **that** snapshot (or reject if `normalizedTurnSnapshotJson` does not match opponent payload).
+**Fix direction:** After `validateIncomingTurn`, derive the next snapshot with [`applyCommittedTurn`](pokepath/src/lib/engine/applyCommittedTurn.ts) (plus the same board Pokémon merge as the server: [`mergeBoardPokemonAfterCommit`](pokepath/src/lib/match/mergeBoardPokemonAfterCommit.ts) using `p.newState` only for validated actor board Pokémon species id), then apply **that** snapshot (or reject if `normalizedTurnSnapshotJson` does not match opponent payload).
 
 ---
 

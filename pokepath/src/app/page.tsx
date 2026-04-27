@@ -45,10 +45,9 @@ export default function Home() {
             href="/pick"
             className="block w-full rounded-xl border border-red-200 bg-red-50/70 p-5 transition-colors hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/25 dark:hover:bg-red-900/30"
           >
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Choose your partners</h2>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Choose your Pokemons</h2>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Open two of three Pokéballs and pick the companions who will represent you on
-              the route.
+              Open two of three Pokéballs and pick the Pokemon who will represent you on the route.
             </p>
           </Link>
 

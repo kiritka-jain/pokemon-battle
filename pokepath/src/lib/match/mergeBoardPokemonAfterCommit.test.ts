@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { resolveArenaForMatch } from '@/src/lib/board/arenaForMatch'
 import type { GameState } from '@/src/types/game'
 
-import { mergePawnsAfterCommit } from './mergePawnsAfterCommit'
+import { mergeBoardPokemonAfterCommit } from './mergeBoardPokemonAfterCommit'
 
 const arena = resolveArenaForMatch('m1')
 
-function baseState(p2Pawn?: string): GameState {
+function baseState(p2PokemonSpecies?: string): GameState {
   return {
     matchId: 'm1',
     status: 'active',
@@ -25,7 +25,7 @@ function baseState(p2Pawn?: string): GameState {
         pos: { x: 4, y: 0 },
         fencesLeft: 10,
         type: 'Normal',
-        ...(p2Pawn ? { pawnSpeciesId: p2Pawn } : {}),
+        ...(p2PokemonSpecies ? { pawnSpeciesId: p2PokemonSpecies } : {}),
       },
     },
     fences: [],
@@ -36,8 +36,8 @@ function baseState(p2Pawn?: string): GameState {
   }
 }
 
-describe('mergePawnsAfterCommit', () => {
-  it('takes actor pawn from newState when valid', () => {
+describe('mergeBoardPokemonAfterCommit', () => {
+  it('takes actor board Pokemon species from newState when valid', () => {
     const base = baseState()
     const appliedNext: GameState = {
       ...base,
@@ -56,12 +56,12 @@ describe('mergePawnsAfterCommit', () => {
         player2: { ...appliedNext.players.player2 },
       },
     }
-    const merged = mergePawnsAfterCommit(appliedNext, newState, base, 'player1')
+    const merged = mergeBoardPokemonAfterCommit(appliedNext, newState, base, 'player1')
     expect(merged.players.player1.pawnSpeciesId).toBe('charmander')
     expect(merged.players.player2.pawnSpeciesId).toBeUndefined()
   })
 
-  it('keeps opponent pawn from base, ignoring forged value in newState', () => {
+  it('keeps opponent board Pokemon from base, ignoring forged value in newState', () => {
     const base = baseState('pikachu')
     const appliedNext: GameState = {
       ...base,
@@ -80,14 +80,14 @@ describe('mergePawnsAfterCommit', () => {
         },
       },
     }
-    const merged = mergePawnsAfterCommit(appliedNext, newState, base, 'player1')
+    const merged = mergeBoardPokemonAfterCommit(appliedNext, newState, base, 'player1')
     expect(merged.players.player1.pawnSpeciesId).toBe('Bulbasaur')
     expect(merged.players.player2.pawnSpeciesId).toBe('pikachu')
   })
 
-  it('drops invalid actor pawn id from newState and falls back to base', () => {
+  it('drops invalid actor species id from newState and falls back to base', () => {
     const base = baseState()
-    const baseWithPawn: GameState = {
+    const baseWithBoardPokemon: GameState = {
       ...base,
       players: {
         player1: { ...base.players.player1, pawnSpeciesId: 'oddish' },
@@ -95,11 +95,11 @@ describe('mergePawnsAfterCommit', () => {
       },
     }
     const appliedNext: GameState = {
-      ...baseWithPawn,
+      ...baseWithBoardPokemon,
       turn: 'player2',
       players: {
-        player1: { ...baseWithPawn.players.player1, pos: { x: 4, y: 7 } },
-        player2: { ...baseWithPawn.players.player2 },
+        player1: { ...baseWithBoardPokemon.players.player1, pos: { x: 4, y: 7 } },
+        player2: { ...baseWithBoardPokemon.players.player2 },
       },
     }
     const newState = {
@@ -111,7 +111,7 @@ describe('mergePawnsAfterCommit', () => {
         player2: { ...appliedNext.players.player2 },
       },
     }
-    const merged = mergePawnsAfterCommit(appliedNext, newState, baseWithPawn, 'player1')
+    const merged = mergeBoardPokemonAfterCommit(appliedNext, newState, baseWithBoardPokemon, 'player1')
     expect(merged.players.player1.pawnSpeciesId).toBe('oddish')
   })
 })

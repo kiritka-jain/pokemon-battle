@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 
 import { GameBoard } from '@/src/components/board/GameBoard'
-import { PawnSpeciesPickerModal } from '@/src/components/pick/PawnSpeciesPickerModal'
+import { PokemonSpeciesPickerModal } from '@/src/components/pick/PokemonSpeciesPickerModal'
 import { MobileActionTray } from '@/src/components/ui/MobileActionTray'
 import { PortraitOnlyGameShell } from '@/src/components/ui/PortraitOnlyGameShell'
 import { Scoreboard } from '@/src/components/ui/Scoreboard'
@@ -17,12 +17,15 @@ import {
 import { LOCAL_AI_OPPONENT_ID, LOCAL_AI_PRACTICE_MATCH_ID } from '@/src/lib/match/localAiPracticeMatchId'
 import { pickTurnSnapshot, type TurnSnapshot } from '@/src/lib/match/snapshotUtils'
 import { buildAiPracticeMatchDisplay } from '@/src/lib/play/localMatchDisplay'
-import { PAWN_PICK_STORAGE_KEY, serializePawnPick } from '@/src/lib/pokemon/pawnPickStorage'
 import {
-  PARTNER_PICK_STORAGE_KEY,
-  parsePartnerPickJson,
-  partnerPickLabel,
-} from '@/src/lib/pokemon/partnerPickStorage'
+  BOARD_POKEMON_PICK_LOCAL_STORAGE_KEY,
+  serializeBoardPokemonPick,
+} from '@/src/lib/pokemon/boardPokemonPickStorage'
+import {
+  parsePokemonTeamPickJson,
+  POKEMON_TEAM_PICK_STORAGE_KEY,
+  pokemonTeamPickLabel,
+} from '@/src/lib/pokemon/pokemonTeamPickStorage'
 import { pickRandomStarterSpeciesId } from '@/src/lib/pokemon/pickRandomStarterSpeciesId'
 import type { StarterSpecies } from '@/src/lib/pokemon/starterRoster'
 import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
@@ -52,9 +55,9 @@ function buildGameStateSnapshot(): GameState {
 export default function VsComputerPage() {
   const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [profileUsername, setProfileUsername] = useState<string | null | undefined>(undefined)
-  const [partnerLine, setPartnerLine] = useState<string | null>(null)
-  const [pawnPickerOpen, setPawnPickerOpen] = useState(false)
-  const [pawnPickerOptions, setPawnPickerOptions] = useState<[StarterSpecies, StarterSpecies] | null>(
+  const [pokemonTeamLine, setPokemonTeamLine] = useState<string | null>(null)
+  const [pokemonPickerOpen, setPokemonPickerOpen] = useState(false)
+  const [pokemonPickerOptions, setPokemonPickerOptions] = useState<[StarterSpecies, StarterSpecies] | null>(
     null,
   )
   const [difficulty, setDifficulty] = useState<AiDifficulty>('normal')
@@ -118,7 +121,7 @@ export default function VsComputerPage() {
     const humanId = sessionUserId ?? SYNTH_HUMAN_ID
     const display = buildAiPracticeMatchDisplay(sessionUserId, profileUsername)
     useGameStore.getState().initMatch(LOCAL_AI_PRACTICE_MATCH_ID, humanId, LOCAL_AI_OPPONENT_ID, display)
-    useGameStore.getState().setPawnSpecies('player2', pickRandomStarterSpeciesId())
+    useGameStore.getState().setPokemonSpecies('player2', pickRandomStarterSpeciesId())
     snapshotStartHumanTurnRef.current = pickTurnSnapshot(useGameStore.getState())
 
     queueMicrotask(() => {
@@ -128,27 +131,27 @@ export default function VsComputerPage() {
 
     queueMicrotask(() => {
       try {
-        const rawPartner = sessionStorage.getItem(PARTNER_PICK_STORAGE_KEY)
-        const parsedPartner = parsePartnerPickJson(rawPartner)
-        setPartnerLine(
-          parsedPartner ? partnerPickLabel(parsedPartner, starterSpeciesById) : null,
+        const rawPokemonTeam = sessionStorage.getItem(POKEMON_TEAM_PICK_STORAGE_KEY)
+        const parsedPokemonTeam = parsePokemonTeamPickJson(rawPokemonTeam)
+        setPokemonTeamLine(
+          parsedPokemonTeam ? pokemonTeamPickLabel(parsedPokemonTeam, starterSpeciesById) : null,
         )
 
-        const [idA, idB] = parsedPartner?.speciesIds ?? [null, null]
+        const [idA, idB] = parsedPokemonTeam?.speciesIds ?? [null, null]
         const sa = idA ? starterSpeciesById(idA) : undefined
         const sb = idB ? starterSpeciesById(idB) : undefined
-        if (parsedPartner && sa && sb) {
-          useGameStore.getState().setPawnSpecies('player1', null)
-          setPawnPickerOptions([sa, sb])
-          setPawnPickerOpen(true)
+        if (parsedPokemonTeam && sa && sb) {
+          useGameStore.getState().setPokemonSpecies('player1', null)
+          setPokemonPickerOptions([sa, sb])
+          setPokemonPickerOpen(true)
         } else {
-          setPawnPickerOpen(false)
-          setPawnPickerOptions(null)
+          setPokemonPickerOpen(false)
+          setPokemonPickerOptions(null)
         }
       } catch {
-        setPartnerLine(null)
-        setPawnPickerOpen(false)
-        setPawnPickerOptions(null)
+        setPokemonTeamLine(null)
+        setPokemonPickerOpen(false)
+        setPokemonPickerOptions(null)
       }
     })
   }, [sessionUserId, profileUsername, restartNonce])
@@ -212,7 +215,7 @@ export default function VsComputerPage() {
     setRedoStack([])
   }, [])
 
-  const trainerKeyForPawn = sessionUserId ?? SYNTH_HUMAN_ID
+  const trainerKeyForBoardPokemon = sessionUserId ?? SYNTH_HUMAN_ID
 
   const difficultyBtn = (d: AiDifficulty, label: string) => (
     <button
@@ -231,21 +234,21 @@ export default function VsComputerPage() {
 
   return (
     <div className="flex min-h-full flex-col items-center gap-4 px-4 pb-32 pt-8">
-      {pawnPickerOpen && pawnPickerOptions && (
-        <PawnSpeciesPickerModal
+      {pokemonPickerOpen && pokemonPickerOptions && (
+        <PokemonSpeciesPickerModal
           open
-          options={pawnPickerOptions}
+          options={pokemonPickerOptions}
           onConfirm={(speciesId) => {
             try {
               sessionStorage.setItem(
-                PAWN_PICK_STORAGE_KEY,
-                serializePawnPick({ trainerKey: trainerKeyForPawn, speciesId }),
+                BOARD_POKEMON_PICK_LOCAL_STORAGE_KEY,
+                serializeBoardPokemonPick({ trainerKey: trainerKeyForBoardPokemon, speciesId }),
               )
             } catch {
               // ignore
             }
-            useGameStore.getState().setPawnSpecies('player1', speciesId)
-            setPawnPickerOpen(false)
+            useGameStore.getState().setPokemonSpecies('player1', speciesId)
+            setPokemonPickerOpen(false)
           }}
         />
       )}
@@ -259,8 +262,8 @@ export default function VsComputerPage() {
           {winner && ` · Winner: ${winner === 'player1' ? 'You' : 'Computer'}`}
           {status === 'finished' && ' · Game over'}
         </p>
-        {partnerLine && (
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Partners: {partnerLine}</p>
+        {pokemonTeamLine && (
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Pokemons: {pokemonTeamLine}</p>
         )}
         <p className="mt-2 flex flex-wrap items-center justify-center gap-2">
           <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Difficulty</span>

@@ -7,8 +7,8 @@ import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
 import { useGameStore } from '@/src/lib/store/gameStore'
 import type { PlayerKey, PlayerState } from '@/src/types/game'
 
-/** Shared chrome for board pawns (no seat-colored red/blue disks). */
-const PAWN_SHELL_BASE =
+/** Shared chrome for board Pokemon tokens (no seat-colored red/blue disks). */
+const BOARD_POKEMON_SHELL_BASE =
   'absolute h-[11%] max-h-14 w-[11%] max-w-14 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full shadow-md ring-2 transition-all duration-300 ease-in-out ring-zinc-400/55 dark:ring-zinc-500/60'
 
 /**
@@ -28,13 +28,13 @@ export function PlayerSprites() {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
-      <PawnToken
+      <BoardPokemonToken
         playerKey="player1"
         player={p1}
         trainerLabel={name1}
         style={styleFor(p1.pos.x, p1.pos.y)}
       />
-      <PawnToken
+      <BoardPokemonToken
         playerKey="player2"
         player={p2}
         trainerLabel={name2}
@@ -44,7 +44,7 @@ export function PlayerSprites() {
   )
 }
 
-function PawnToken({
+function BoardPokemonToken({
   playerKey,
   player,
   trainerLabel,
@@ -65,7 +65,7 @@ function PawnToken({
       ? `${species.displayName}, ${seatLabel}, ${trainerLabel}`
       : `${seatLabel}, ${trainerLabel}`
 
-  const shellClass = `${PAWN_SHELL_BASE} bg-zinc-100/95 dark:bg-zinc-900/95`
+  const shellClass = `${BOARD_POKEMON_SHELL_BASE} bg-zinc-100/95 dark:bg-zinc-900/95`
 
   if (species?.imageSrc) {
     return (

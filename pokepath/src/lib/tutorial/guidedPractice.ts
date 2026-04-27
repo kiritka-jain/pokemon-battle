@@ -77,7 +77,7 @@ export const GUIDED_PRACTICE_LESSONS = [
     id: 'first-step',
     eyebrow: 'Lesson 1',
     title: 'Take the shortest legal step',
-    setup: 'Your pawn starts near the bottom edge and races upward.',
+    setup: 'Your Pokemon starts near the bottom edge and races upward.',
     prompt: 'Which move advances toward the goal without breaking movement rules?',
     state: baseState(),
     choices: [
@@ -88,7 +88,7 @@ export const GUIDED_PRACTICE_LESSONS = [
         isAnswer: true,
         expectedValid: true,
         successText: 'Correct. A one-square orthogonal step toward the goal is legal.',
-        mistakeText: 'That should have been legal. Check the pawn position and target square.',
+        mistakeText: 'That should have been legal. Check the Pokemon position and target square.',
       },
       {
         id: 'double-step',
@@ -160,7 +160,7 @@ export const GUIDED_PRACTICE_LESSONS = [
         isAnswer: false,
         expectedValid: false,
         successText: 'The engine rejects this because you jump over rivals; you never land on them.',
-        mistakeText: 'That should be rejected because pawns cannot share a square.',
+        mistakeText: 'That should be rejected because Pokemon cannot share a square.',
       },
     ],
   },
