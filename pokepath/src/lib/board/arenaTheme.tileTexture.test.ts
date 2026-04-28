@@ -18,13 +18,11 @@ describe('arena tile textures', () => {
     }
   })
 
-  it('uses different texture layer classes for light vs dark squares', () => {
-    expect(getArenaTileTextureLayerClasses(true)).not.toBe(
-      getArenaTileTextureLayerClasses(false)
-    )
+  it('uses the light texture classes for uniform board tiles', () => {
+    expect(getArenaTileTextureLayerClasses(true)).toContain('brightness-105')
   })
 
-  it('uses different shade layer classes for light vs dark squares', () => {
-    expect(getArenaTileShadeLayerClasses(true)).not.toBe(getArenaTileShadeLayerClasses(false))
+  it('uses the light shade classes for uniform board tiles', () => {
+    expect(getArenaTileShadeLayerClasses(true)).toContain('bg-transparent')
   })
 })

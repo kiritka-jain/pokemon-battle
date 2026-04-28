@@ -186,7 +186,7 @@ export function GameBoard({
           arena={arena}
           x={x}
           y={y}
-          isLight={(x + y) % 2 === 0}
+          isLight
           interactionMode={interactionMode}
           isPendingMoveTarget={Boolean(isPending)}
           isValidMoveDestination={validDestinations.has(key)}
