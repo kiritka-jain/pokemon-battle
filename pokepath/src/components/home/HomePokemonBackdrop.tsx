@@ -55,7 +55,7 @@ export function HomePokemonBackdrop() {
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      className="pointer-events-none absolute inset-0 z-[2] overflow-hidden"
       aria-hidden
     >
       {SPRITES.map((sprite) => (
@@ -81,13 +81,13 @@ export function HomePokemonBackdrop() {
                 }
           }
         >
-          <div className="relative h-full w-full opacity-[0.18] saturate-50 contrast-95 dark:opacity-[0.13] dark:saturate-[0.85]">
+          <div className="relative h-full w-full opacity-[0.38] dark:opacity-[0.30]">
             <Image
               src={sprite.src}
               alt=""
               fill
-              sizes="(max-width: 640px) 22vw, 160px"
-              className="object-contain grayscale"
+              sizes="(max-width: 640px) 28vw, 180px"
+              className="object-contain"
               priority={false}
             />
           </div>
