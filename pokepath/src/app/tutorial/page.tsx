@@ -1,9 +1,7 @@
 import Link from 'next/link'
 
-import { GuidedPracticePanel } from '@/src/components/tutorial/GuidedPracticePanel'
 import { ProfessorOakFigure } from '@/src/components/tutorial/ProfessorOakFigure'
 import { RulesCloudDeck } from '@/src/components/tutorial/RulesCloudDeck'
-import { STRATEGY_GUIDE } from '@/src/lib/tutorial/gameRules'
 
 export default function TutorialPage() {
   return (
@@ -42,22 +40,6 @@ export default function TutorialPage() {
               </Link>
             </p>
           </div>
-        </div>
-
-        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {STRATEGY_GUIDE.map((item) => (
-            <section
-              key={item.title}
-              className="rounded-2xl border border-sky-100 bg-sky-50/70 p-4 dark:border-sky-950 dark:bg-sky-950/20"
-            >
-              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{item.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{item.body}</p>
-            </section>
-          ))}
-        </div>
-
-        <div className="mt-8">
-          <GuidedPracticePanel />
         </div>
       </main>
     </div>

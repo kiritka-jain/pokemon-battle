@@ -4,11 +4,6 @@ export type GameRuleSlide = {
   takeaway: string
 }
 
-export type StrategyGuideItem = {
-  title: string
-  body: string
-}
-
 /** One rule per swipeable slide (Quoridor-style path game). */
 export const GAME_RULE_SLIDES = [
   {
@@ -47,22 +42,3 @@ export const GAME_RULE_SLIDES = [
     takeaway: 'Preview first, commit when the route looks right.',
   },
 ] as const satisfies readonly GameRuleSlide[]
-
-export const STRATEGY_GUIDE = [
-  {
-    title: 'Count shortest paths',
-    body: 'Before spending a fence, compare your quickest route with your rival quickest route.',
-  },
-  {
-    title: 'Do not panic fence',
-    body: 'A late fence is valuable only if it changes the race. Sometimes moving keeps tempo better.',
-  },
-  {
-    title: 'Avoid walling yourself in',
-    body: 'Fences affect both trainers. Leave yourself a clean exit before building a long wall.',
-  },
-  {
-    title: 'Watch jump threats',
-    body: 'Standing directly in front of a rival can give them a free jump unless a fence changes the lane.',
-  },
-] as const satisfies readonly StrategyGuideItem[]
