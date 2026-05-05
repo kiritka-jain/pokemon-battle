@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { Session } from '@supabase/supabase-js'
@@ -22,6 +23,7 @@ import {
   serializeBoardPokemonPick,
 } from '@/src/lib/pokemon/boardPokemonPickStorage'
 import {
+  isPokemonTeamPickReadyForStarters,
   parsePokemonTeamPickJson,
   POKEMON_TEAM_PICK_STORAGE_KEY,
   pokemonTeamPickLabel,
@@ -53,6 +55,8 @@ function buildGameStateSnapshot(): GameState {
 }
 
 export default function VsComputerPage() {
+  const router = useRouter()
+  const pathname = usePathname()
   const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [profileUsername, setProfileUsername] = useState<string | null | undefined>(undefined)
   const [pokemonTeamLine, setPokemonTeamLine] = useState<string | null>(null)
@@ -118,6 +122,18 @@ export default function VsComputerPage() {
   }, [])
 
   useEffect(() => {
+    try {
+      const rawTeam = sessionStorage.getItem(POKEMON_TEAM_PICK_STORAGE_KEY)
+      const parsedTeam = parsePokemonTeamPickJson(rawTeam)
+      if (!isPokemonTeamPickReadyForStarters(parsedTeam, starterSpeciesById)) {
+        router.replace(`/pick?continue=${encodeURIComponent(pathname)}`)
+        return
+      }
+    } catch {
+      router.replace(`/pick?continue=${encodeURIComponent(pathname)}`)
+      return
+    }
+
     const humanId = sessionUserId ?? SYNTH_HUMAN_ID
     const display = buildAiPracticeMatchDisplay(sessionUserId, profileUsername)
     useGameStore.getState().initMatch(LOCAL_AI_PRACTICE_MATCH_ID, humanId, LOCAL_AI_OPPONENT_ID, display)
@@ -154,7 +170,7 @@ export default function VsComputerPage() {
         setPokemonPickerOptions(null)
       }
     })
-  }, [sessionUserId, profileUsername, restartNonce])
+  }, [sessionUserId, profileUsername, restartNonce, router, pathname])
 
   useEffect(() => {
     if (turn !== 'player2' || status !== 'active' || winner !== null) {
@@ -297,7 +313,7 @@ export default function VsComputerPage() {
           </button>
         </div>
         <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
-          <Link href="/play" className="underline">
+          <Link href="/pick?continue=/play" className="underline">
             Pass-and-play board
           </Link>
           {' · '}

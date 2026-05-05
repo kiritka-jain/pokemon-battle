@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { homeActionTiles } from './homeActionTiles'
 
 describe('homeActionTiles', () => {
-  it('returns four tiles for guests with login redirects on Pokémon and lobby', () => {
+  it('returns four tiles for guests with login redirect on lobby only', () => {
     const tiles = homeActionTiles(false)
     expect(tiles).toHaveLength(4)
     expect(tiles[0]).toMatchObject({
@@ -11,12 +11,12 @@ describe('homeActionTiles', () => {
       title: 'Know the rules',
     })
     expect(tiles[1]).toMatchObject({
-      href: '/play/vs-computer',
+      href: '/pick?continue=/play/vs-computer',
       title: 'Play with computer',
     })
     expect(tiles[2]).toMatchObject({
-      href: '/login?redirect=/pick',
-      title: 'Sign in to choose your Pokémon',
+      href: '/pick',
+      title: 'Choose your Pokémon',
     })
     expect(tiles[3]).toMatchObject({
       href: '/login?redirect=/lobby',

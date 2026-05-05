@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  isPokemonTeamPickReadyForStarters,
   parsePokemonTeamPickJson,
   persistPokemonTeamPick,
   POKEMON_TEAM_PICK_STORAGE_KEY,
@@ -67,5 +68,21 @@ describe('pokemon team pick storage', () => {
     })
     const ok = persistPokemonTeamPick({ speciesIds: ['charmander', 'Horsea'] }, { setItem })
     expect(ok).toBe(false)
+  })
+
+  it('isPokemonTeamPickReadyForStarters requires parsed team and roster ids', () => {
+    expect(isPokemonTeamPickReadyForStarters(null, starterSpeciesById)).toBe(false)
+    expect(
+      isPokemonTeamPickReadyForStarters(
+        parsePokemonTeamPickJson(JSON.stringify({ speciesIds: ['nope', 'pikachu'] })),
+        starterSpeciesById,
+      ),
+    ).toBe(false)
+    expect(
+      isPokemonTeamPickReadyForStarters(
+        parsePokemonTeamPickJson(JSON.stringify({ speciesIds: ['charmander', 'pikachu'] })),
+        starterSpeciesById,
+      ),
+    ).toBe(true)
   })
 })

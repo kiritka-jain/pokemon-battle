@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import type { Session } from '@supabase/supabase-js'
@@ -15,6 +16,7 @@ import {
   serializeBoardPokemonPick,
 } from '@/src/lib/pokemon/boardPokemonPickStorage'
 import {
+  isPokemonTeamPickReadyForStarters,
   parsePokemonTeamPickJson,
   POKEMON_TEAM_PICK_STORAGE_KEY,
   pokemonTeamPickLabel,
@@ -32,6 +34,8 @@ const LOCAL_P2 = 'p2'
 const PLAY_TURN_STRIP: ScoreboardTurnStripMode = 'activePlayer'
 
 export default function PlayPage() {
+  const router = useRouter()
+  const pathname = usePathname()
   const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [profileUsername, setProfileUsername] = useState<string | null | undefined>(undefined)
   const [pokemonTeamLine, setPokemonTeamLine] = useState<string | null>(null)
@@ -91,6 +95,18 @@ export default function PlayPage() {
   }, [])
 
   useEffect(() => {
+    try {
+      const rawTeam = sessionStorage.getItem(POKEMON_TEAM_PICK_STORAGE_KEY)
+      const parsedTeam = parsePokemonTeamPickJson(rawTeam)
+      if (!isPokemonTeamPickReadyForStarters(parsedTeam, starterSpeciesById)) {
+        router.replace(`/pick?continue=${encodeURIComponent(pathname)}`)
+        return
+      }
+    } catch {
+      router.replace(`/pick?continue=${encodeURIComponent(pathname)}`)
+      return
+    }
+
     const display = buildLocalMatchDisplay(sessionUserId, profileUsername)
     useGameStore.getState().initMatch(LOCAL_DEV_MATCH_ID, LOCAL_P1, LOCAL_P2, display)
 
@@ -126,7 +142,7 @@ export default function PlayPage() {
         setPokemonPickerOptions(null)
       }
     })
-  }, [sessionUserId, profileUsername])
+  }, [sessionUserId, profileUsername, router, pathname])
 
   const trainerKeyForBoardPokemon = sessionUserId ?? 'p1'
 

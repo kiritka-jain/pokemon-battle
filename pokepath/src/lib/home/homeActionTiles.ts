@@ -17,18 +17,17 @@ export function homeActionTiles(isAuthed: boolean): HomeActionTile[] {
       accent: 'yellow',
     },
     {
-      href: '/play/vs-computer',
+      href: '/pick?continue=/play/vs-computer',
       title: 'Play with computer',
       description:
-        'Play a full route duel against a local AI with difficulty levels and undo—no ranked impact.',
+        'Choose your team, then play a full route duel against a local AI with difficulty levels and undo—no ranked impact.',
       accent: 'emerald',
     },
     {
-      href: isAuthed ? '/pick' : '/login?redirect=/pick',
-      title: isAuthed ? 'Choose your Pokémon' : 'Sign in to choose your Pokémon',
-      description: isAuthed
-        ? 'Open two of three Pokéballs and pick the Pokémon who will represent you on the route.'
-        : 'Sign in to open two of three Pokéballs and pick your Pokémon for the route.',
+      href: '/pick',
+      title: 'Choose your Pokémon',
+      description:
+        'Open two of three Pokéballs and pick the Pokémon who will represent you on the route.',
       accent: 'red',
     },
     {

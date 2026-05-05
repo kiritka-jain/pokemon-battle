@@ -1,11 +1,12 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Session } from '@supabase/supabase-js'
 
 import { StarterPokemonSelection } from '@/src/components/pick/StarterPokemonSelection'
+import { safeInternalContinuePath } from '@/src/lib/navigation/safeContinuePath'
 import {
   persistPokemonTeamPick,
   type PokemonTeamPickPayload,
@@ -20,8 +21,22 @@ function trainerDisplayName(sessionUserId: string | null, profileUsername: strin
   return trimmed && trimmed.length > 0 ? trimmed : 'Trainer'
 }
 
-export default function PickPage() {
+function PickFallback() {
+  return (
+    <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-zinc-950 px-6 py-16">
+      <p className="text-sm text-zinc-400">Loading…</p>
+    </div>
+  )
+}
+
+function PickContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const continueAfterPick = useMemo(
+    () => safeInternalContinuePath(searchParams.get('continue')),
+    [searchParams],
+  )
+
   const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [profileUsername, setProfileUsername] = useState<string | null | undefined>(undefined)
   const profileFetchSeq = useRef(0)
@@ -77,7 +92,7 @@ export default function PickPage() {
 
   const handleChoosePlay = (payload: PokemonTeamPickPayload) => {
     persistPokemonTeamPick(payload)
-    router.push('/play')
+    router.push(continueAfterPick ?? '/play')
   }
 
   return (
@@ -86,5 +101,13 @@ export default function PickPage() {
       onChooseRules={handleChooseRules}
       onChoosePlay={handleChoosePlay}
     />
+  )
+}
+
+export default function PickPage() {
+  return (
+    <Suspense fallback={<PickFallback />}>
+      <PickContent />
+    </Suspense>
   )
 }

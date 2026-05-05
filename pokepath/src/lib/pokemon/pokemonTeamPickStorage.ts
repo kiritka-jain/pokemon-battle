@@ -80,3 +80,12 @@ export function pokemonTeamPickLabel(
   const nb = rosterLookup(b)?.displayName ?? b
   return `${na} · ${nb}`
 }
+
+export function isPokemonTeamPickReadyForStarters(
+  parsed: PokemonTeamPickPayload | null,
+  rosterLookup: (id: string) => StarterSpecies | undefined,
+): boolean {
+  if (!parsed) return false
+  const [a, b] = parsed.speciesIds
+  return Boolean(a && b && rosterLookup(a) && rosterLookup(b))
+}

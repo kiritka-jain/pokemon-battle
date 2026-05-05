@@ -602,12 +602,13 @@ export default function MatchPage() {
         }
         setPokemonPickerOpen(false)
         setPokemonPickerOptions(null)
+        router.replace(`/pick?continue=${encodeURIComponent(`/match/${matchId}`)}`)
       } catch {
         setPokemonPickerOpen(false)
         setPokemonPickerOptions(null)
       }
     })
-  }, [loading, localPlayerKey, sessionUserId, matchId])
+  }, [loading, localPlayerKey, sessionUserId, matchId, router])
 
   useEffect(() => {
     if (!matchId || loading) return
