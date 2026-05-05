@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import Image from 'next/image'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useId, useMemo, useState } from 'react'
 
 import type { PokemonTeamPickPayload } from '@/src/lib/pokemon/pokemonTeamPickStorage'
 import { sampleThreeFromRoster } from '@/src/lib/pokemon/sampleThreeFromRoster'
@@ -362,13 +362,106 @@ function SpeciesVisual({
 }
 
 function PokeBallSvg({ className }: { className?: string }) {
+  const rawId = useId().replace(/:/g, '')
+  const id = (suffix: string) => `pokeball-${rawId}-${suffix}`
+
   return (
     <svg className={className} viewBox="0 0 100 100" aria-hidden>
-      <circle cx="50" cy="50" r="48" fill="#f4f4f5" stroke="#18181b" strokeWidth="4" />
-      <path d="M2 50 H98" stroke="#18181b" strokeWidth="4" />
-      <circle cx="50" cy="50" r="14" fill="#fafafa" stroke="#18181b" strokeWidth="4" />
-      <path d="M2 50 A48 48 0 0 1 98 50 Z" fill="#dc2626" />
-      <circle cx="50" cy="50" r="6" fill="#18181b" />
+      <defs>
+        <radialGradient id={id('red')} cx="36%" cy="30%" r="78%">
+          <stop offset="0%" stopColor="#fb7185" />
+          <stop offset="42%" stopColor="#dc2626" />
+          <stop offset="100%" stopColor="#7f1d1d" />
+        </radialGradient>
+        <radialGradient id={id('white')} cx="44%" cy="36%" r="88%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="50%" stopColor="#f4f4f5" />
+          <stop offset="100%" stopColor="#9ca3af" />
+        </radialGradient>
+        <radialGradient id={id('gloss')} cx="38%" cy="32%" r="55%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+          <stop offset="55%" stopColor="#ffffff" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id={id('ring')} cx="38%" cy="34%" r="72%">
+          <stop offset="0%" stopColor="#fafafa" />
+          <stop offset="70%" stopColor="#d4d4d8" />
+          <stop offset="100%" stopColor="#a1a1aa" />
+        </radialGradient>
+        <radialGradient id={id('button')} cx="36%" cy="30%" r="68%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#d4d4d8" />
+        </radialGradient>
+        <radialGradient id={id('shadowFill')} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+        </radialGradient>
+        <clipPath id={id('upper')}>
+          <path d="M 2 50 A 48 48 0 0 1 98 50 Z" />
+        </clipPath>
+        <filter id={id('blur')} x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" />
+        </filter>
+      </defs>
+
+      {/* Ground shadow */}
+      <ellipse
+        cx="50"
+        cy="91"
+        rx="24"
+        ry="5.5"
+        fill={`url(#${id('shadowFill')})`}
+        filter={`url(#${id('blur')})`}
+      />
+
+      {/* Lower hemisphere */}
+      <path d="M 2 50 A 48 48 0 0 0 98 50 Z" fill={`url(#${id('white')})`} />
+
+      {/* Upper hemisphere */}
+      <path d="M 2 50 A 48 48 0 0 1 98 50 Z" fill={`url(#${id('red')})`} />
+
+      {/* Curved equator band */}
+      <path
+        d="M 3.5 46.2 Q 50 51.8 96.5 46.2 L 96.5 53.8 Q 50 48.2 3.5 53.8 Z"
+        fill="#0a0a0a"
+      />
+
+      {/* Specular highlight (red half only) */}
+      <g clipPath={`url(#${id('upper')})`}>
+        <ellipse
+          cx="34"
+          cy="34"
+          rx="17"
+          ry="21"
+          fill={`url(#${id('gloss')})`}
+          transform="rotate(-18 34 34)"
+        />
+      </g>
+
+      {/* Center button: outer black bezel */}
+      <circle cx="50" cy="50" r="13.2" fill="#18181b" />
+      {/* Middle inset ring */}
+      <circle
+        cx="50"
+        cy="50"
+        r="10.2"
+        fill={`url(#${id('ring')})`}
+        stroke="#52525b"
+        strokeWidth="0.35"
+      />
+      {/* Inner convex button */}
+      <circle cx="50" cy="50" r="6.4" fill={`url(#${id('button')})`} stroke="#a1a1aa" strokeWidth="0.25" />
+
+      {/* Sphere rim */}
+      <circle
+        cx="50"
+        cy="50"
+        r="48"
+        fill="none"
+        stroke="#27272a"
+        strokeWidth="0.85"
+        opacity="0.95"
+      />
     </svg>
   )
 }
