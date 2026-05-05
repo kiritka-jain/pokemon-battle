@@ -242,7 +242,7 @@ export function GameBoard({
       )}
 
       <div
-        className={`relative mx-auto aspect-square w-[100vw] max-w-[500px] select-none ${
+        className={`relative mx-auto aspect-square w-full max-w-[500px] select-none touch-none overscroll-contain [&_button]:touch-none ${
           viewAsPlayer === 'player2' ? 'origin-center rotate-180' : ''
         }`}
         onTouchEnd={handleBoardTouchEnd}
