@@ -9,7 +9,7 @@ export default function Home() {
         className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-amber-50/85 via-zinc-50/78 to-emerald-50/83 dark:from-zinc-950/88 dark:via-black/74 dark:to-zinc-900/86"
         aria-hidden
       />
-      <main className="relative z-10 w-full max-w-5xl rounded-2xl border border-white/55 bg-white/35 p-8 shadow-[0_8px_40px_rgba(0,0,0,0.08)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/12 dark:bg-zinc-950/45 dark:shadow-[0_8px_40px_rgba(0,0,0,0.45)] sm:p-10">
+      <main className="relative z-10 w-full max-w-5xl sm:rounded-2xl sm:border sm:border-white/55 sm:bg-white/35 sm:p-10 sm:shadow-[0_8px_40px_rgba(0,0,0,0.08)] sm:backdrop-blur-2xl sm:backdrop-saturate-150 sm:dark:border-white/12 sm:dark:bg-zinc-950/45 sm:dark:shadow-[0_8px_40px_rgba(0,0,0,0.45)]">
         <HomePageClient />
       </main>
     </div>
