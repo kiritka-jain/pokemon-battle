@@ -62,7 +62,7 @@ export function HomePageClient() {
   const isAuthed = Boolean(session)
   const tiles = homeActionTiles(isAuthed)
   const gridWrapperClass =
-    'mt-8 rounded-2xl border border-white/55 bg-white/35 p-6 shadow-[0_8px_40px_rgba(0,0,0,0.08)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/12 dark:bg-zinc-950/45 dark:shadow-[0_8px_40px_rgba(0,0,0,0.45)] sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none sm:backdrop-saturate-100'
+    'mt-8 rounded-2xl border border-white/45 bg-white/22 p-6 shadow-[0_6px_28px_rgba(0,0,0,0.06)] backdrop-blur-lg backdrop-saturate-150 dark:border-white/10 dark:bg-zinc-950/32 dark:shadow-[0_6px_28px_rgba(0,0,0,0.35)] sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none sm:backdrop-saturate-100'
 
   return (
     <>

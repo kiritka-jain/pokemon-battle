@@ -1,4 +1,4 @@
-export type HomeActionTileAccent = 'yellow' | 'emerald' | 'red' | 'indigo'
+export type HomeActionTileAccent = 'yellow' | 'emerald' | 'indigo'
 
 export type HomeActionTile = {
   href: string
@@ -22,13 +22,6 @@ export function homeActionTiles(isAuthed: boolean): HomeActionTile[] {
       description:
         'Choose your team, then play a full route duel against a local AI with difficulty levels and undo—no ranked impact.',
       accent: 'emerald',
-    },
-    {
-      href: '/pick',
-      title: 'Choose your Pokémon',
-      description:
-        'Open two of three Pokéballs and pick the Pokémon who will represent you on the route.',
-      accent: 'red',
     },
     {
       href: isAuthed ? '/lobby' : '/login?redirect=/lobby',
