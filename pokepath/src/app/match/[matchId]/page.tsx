@@ -51,6 +51,11 @@ type TurnPayload = {
   newState: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'>
 }
 
+type BoardPokemonPayload = {
+  fromUserId: string
+  speciesId: string
+}
+
 export default function MatchPage() {
   const params = useParams()
   const router = useRouter()
@@ -75,6 +80,8 @@ export default function MatchPage() {
   const displayRef = useRef<InitMatchDisplay>({})
   const playersRef = useRef<{ p1: string; p2: string } | null>(null)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const channelSubscribedRef = useRef(false)
+  const pendingBoardPokemonSpeciesRef = useRef<string | null>(null)
   const opponentOfflineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const winner = useGameStore((s) => s.winner)
@@ -195,6 +202,24 @@ export default function MatchPage() {
     })
   }, [])
 
+  const sendBoardPokemonBroadcast = useCallback(
+    (speciesId: string) => {
+      if (!starterSpeciesById(speciesId) || !sessionUserId) return
+      const ch = channelRef.current
+      if (!ch || !channelSubscribedRef.current) {
+        pendingBoardPokemonSpeciesRef.current = speciesId
+        return
+      }
+      const payload: BoardPokemonPayload = { fromUserId: sessionUserId, speciesId }
+      void ch.send({
+        type: 'broadcast',
+        event: 'board_pokemon',
+        payload: payload as unknown as Record<string, unknown>,
+      })
+    },
+    [sessionUserId],
+  )
+
   const afterSuccessfulCommit = useCallback(
     async (ctx: {
       preCommitSnapshot: Pick<
@@ -309,6 +334,22 @@ export default function MatchPage() {
       },
     })
     channelRef.current = room
+    channelSubscribedRef.current = false
+
+    const onBroadcastBoardPokemon = ({ payload }: { payload: Record<string, unknown> }) => {
+      const p = payload as unknown as BoardPokemonPayload
+      if (!p?.fromUserId || typeof p.speciesId !== 'string') return
+      if (p.fromUserId === sessionUserId) return
+      if (p.fromUserId !== opponentId) {
+        console.warn('[match] board_pokemon from unexpected user', p.fromUserId)
+        return
+      }
+      if (!starterSpeciesById(p.speciesId)) return
+      const state = useGameStore.getState()
+      const seat = playerKeyForUserId(state, p.fromUserId)
+      if (seat === null) return
+      useGameStore.getState().setPokemonSpecies(seat, p.speciesId)
+    }
 
     const onBroadcastTurn = ({ payload }: { payload: Record<string, unknown> }) => {
       const p = payload as unknown as TurnPayload
@@ -361,6 +402,7 @@ export default function MatchPage() {
       })
     }
 
+    room.on('broadcast', { event: 'board_pokemon' }, onBroadcastBoardPokemon)
     room.on('broadcast', { event: 'turn' }, onBroadcastTurn)
 
     room.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` }, (payload) => {
@@ -391,8 +433,19 @@ export default function MatchPage() {
 
     void room.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
+        channelSubscribedRef.current = true
         await room.track({ online_at: Date.now() })
         refreshOpponentPresence(room, opponentId)
+        const pending = pendingBoardPokemonSpeciesRef.current
+        if (pending && starterSpeciesById(pending)) {
+          pendingBoardPokemonSpeciesRef.current = null
+          const payload: BoardPokemonPayload = { fromUserId: sessionUserId, speciesId: pending }
+          void room.send({
+            type: 'broadcast',
+            event: 'board_pokemon',
+            payload: payload as unknown as Record<string, unknown>,
+          })
+        }
       }
     })
 
@@ -401,6 +454,7 @@ export default function MatchPage() {
         clearTimeout(opponentOfflineTimerRef.current)
         opponentOfflineTimerRef.current = null
       }
+      channelSubscribedRef.current = false
       channelRef.current = null
       void supabase.removeChannel(room)
     }
@@ -583,6 +637,7 @@ export default function MatchPage() {
 
         if (decision.kind === 'applyStored') {
           useGameStore.getState().setPokemonSpecies(localPlayerKey, decision.speciesId)
+          sendBoardPokemonBroadcast(decision.speciesId)
           setPokemonPickerOpen(false)
           setPokemonPickerOptions(null)
           return
@@ -608,7 +663,7 @@ export default function MatchPage() {
         setPokemonPickerOptions(null)
       }
     })
-  }, [loading, localPlayerKey, sessionUserId, matchId, router])
+  }, [loading, localPlayerKey, sessionUserId, matchId, router, sendBoardPokemonBroadcast])
 
   useEffect(() => {
     if (!matchId || loading) return
@@ -741,6 +796,7 @@ export default function MatchPage() {
             open
             options={pokemonPickerOptions}
             onConfirm={(speciesId) => {
+              if (!localPlayerKey || !sessionUserId) return
               const trainerStorageKey = `${sessionUserId}:${matchId}`
               try {
                 sessionStorage.setItem(
@@ -751,6 +807,7 @@ export default function MatchPage() {
                 // ignore quota / private mode
               }
               useGameStore.getState().setPokemonSpecies(localPlayerKey, speciesId)
+              sendBoardPokemonBroadcast(speciesId)
               setPokemonPickerOpen(false)
             }}
           />

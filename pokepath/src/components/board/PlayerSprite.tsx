@@ -79,9 +79,9 @@ function BoardPokemonToken({
   /** Undo board `rotate-180` for this subtree so facing stays in engine (+y / −y home) space. */
   const seatCounterClass =
     viewAsPlayer === 'player2' ? 'h-full w-full origin-center rotate-180' : 'h-full w-full'
-  /** Player 2 home is y=0 (up in engine); flip so art faces that row. Player 1 faces y=8. */
+  /** Player 2 home is y=0 (up in engine); mirror horizontally so art faces the far row without inverting upright sprites. */
   const faceHomeClass =
-    playerKey === 'player2' ? 'h-full w-full origin-center scale-y-[-1]' : 'h-full w-full'
+    playerKey === 'player2' ? 'h-full w-full origin-center scale-x-[-1]' : 'h-full w-full'
 
   if (species?.imageSrc) {
     return (
