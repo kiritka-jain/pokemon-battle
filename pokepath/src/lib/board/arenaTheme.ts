@@ -31,9 +31,10 @@ const CHROME = {
 
 const FENCE_HOVER = 'hover:bg-emerald-400/15 active:bg-emerald-400/25'
 
-const VALID_DOT = 'bg-emerald-600/50 dark:bg-emerald-300/40'
+const VALID_DOT =
+  'bg-emerald-500/95 dark:bg-emerald-200/95 ring-1 ring-white/80 dark:ring-black/70 shadow-[0_0_0_1px_rgba(0,0,0,0.2),0_0_8px_rgba(16,185,129,0.7)]'
 
-const VALID_RING = 'ring-emerald-500/60'
+const VALID_RING = 'ring-emerald-500/85 dark:ring-emerald-200/80'
 
 const PENDING_OFFSET = 'ring-offset-emerald-100 dark:ring-offset-emerald-950'
 
@@ -41,10 +42,10 @@ const PENDING_OFFSET = 'ring-offset-emerald-100 dark:ring-offset-emerald-950'
 const PENDING_MOVE_RING =
   'ring-2 ring-amber-400/95 dark:ring-amber-300/85' as const
 
-const BOARD_OUTER_RING = 'ring-emerald-900/20 dark:ring-emerald-400/15'
+const BOARD_OUTER_RING = 'ring-emerald-950/35 dark:ring-emerald-100/30'
 
 /** Chalk-line colour for the soccer-field overlay (consumed via `currentColor`). */
-const FIELD_LINE = 'text-emerald-900/70 dark:text-emerald-200/55'
+const FIELD_LINE = 'text-emerald-950/85 dark:text-emerald-100/75'
 
 /** Fence bars: neutral per arena; ownership is conveyed by glow/tint helpers. */
 const FENCE_P1 = 'bg-amber-100/95 dark:bg-amber-200/90'

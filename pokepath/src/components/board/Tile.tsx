@@ -39,7 +39,7 @@ export function Tile({
 
   const validHint =
     interactionMode === 'move' && canInteract && isValidMoveDestination
-      ? `ring-1 ${getArenaValidRingClass(arena)}`
+      ? `ring-2 ${getArenaValidRingClass(arena)}`
       : ''
 
   const pending =
@@ -78,7 +78,7 @@ export function Tile({
       <span className={getArenaTileShadeLayerClasses(isLight)} aria-hidden />
       {isValidMoveDestination && interactionMode === 'move' && canInteract && (
         <span
-          className={`pointer-events-none relative z-10 m-auto h-2 w-2 rounded-full ${getArenaValidMoveDotClass(arena)}`}
+          className={`pointer-events-none relative z-10 m-auto h-3 w-3 rounded-full ${getArenaValidMoveDotClass(arena)}`}
           aria-hidden
         />
       )}

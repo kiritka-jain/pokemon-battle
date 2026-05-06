@@ -32,15 +32,15 @@ export function ArenaFieldOverlay({ arena }: ArenaFieldOverlayProps) {
       focusable={false}
     >
       <g
-        className={`${lineClass} opacity-70 mix-blend-multiply dark:opacity-55 dark:mix-blend-screen`}
+        className={`${lineClass} opacity-90 mix-blend-normal dark:opacity-80 dark:mix-blend-normal`}
         fill="none"
         stroke="currentColor"
-        strokeWidth={0.6}
+        strokeWidth={0.75}
         strokeLinecap="round"
         strokeLinejoin="round"
         vectorEffect="non-scaling-stroke"
       >
-        <rect x={0.4} y={0.4} width={89.2} height={89.2} strokeWidth={1.4} />
+        <rect x={0.4} y={0.4} width={89.2} height={89.2} strokeWidth={1.6} />
 
         <line x1={0.4} y1={45} x2={89.6} y2={45} />
       </g>
