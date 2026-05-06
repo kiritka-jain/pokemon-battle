@@ -9,12 +9,7 @@ export type FenceOrientation = 'H' | 'V';
 export type GameStatus = 'waiting' | 'active' | 'finished';
 
 export const BOARD_ARENA_IDS = [
-  'water',
   'grass',
-  'fire',
-  'air',
-  'electric',
-  'ground',
 ] as const
 
 export type BoardArenaId = (typeof BOARD_ARENA_IDS)[number]

@@ -9,12 +9,12 @@ import {
 } from './arenaTheme'
 
 describe('arena tile textures', () => {
-  it('maps each arena to a distinct /board-tiles/*.png URL', () => {
+  it('maps every arena input to the grass tile texture URL', () => {
     const urls = BOARD_ARENA_IDS.map((arena) => getArenaTileTextureUrl(arena))
     const unique = new Set(urls)
-    expect(unique.size).toBe(BOARD_ARENA_IDS.length)
+    expect(unique.size).toBe(1)
     for (const u of urls) {
-      expect(u).toMatch(/^\/board-tiles\/[a-z]+\.png$/)
+      expect(u).toBe('/board-tiles/grass.png')
     }
   })
 

@@ -1,7 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { LOCAL_AI_PRACTICE_MATCH_ID } from '@/src/lib/match/localAiPracticeMatchId'
-import { LOCAL_DEV_MATCH_ID } from '@/src/lib/match/localDevMatchId'
 import { BOARD_ARENA_IDS } from '@/src/types/game'
 
 import { resolveArenaForMatch } from './arenaForMatch'
@@ -16,18 +14,11 @@ describe('resolveArenaForMatch', () => {
     expect(resolveArenaForMatch(id)).toBe(resolveArenaForMatch(id))
   })
 
-  it('maps local dev match id using Math.random index', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-    expect(resolveArenaForMatch(LOCAL_DEV_MATCH_ID)).toBe(BOARD_ARENA_IDS[0])
-  })
-
-  it('uses last arena when random approaches 1', () => {
+  it('always resolves to grass for any match id', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.999)
-    expect(resolveArenaForMatch(LOCAL_DEV_MATCH_ID)).toBe(BOARD_ARENA_IDS[BOARD_ARENA_IDS.length - 1])
-  })
-
-  it('maps local AI practice match id using Math.random index like local dev', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-    expect(resolveArenaForMatch(LOCAL_AI_PRACTICE_MATCH_ID)).toBe(BOARD_ARENA_IDS[0])
+    expect(resolveArenaForMatch('m1')).toBe('grass')
+    expect(resolveArenaForMatch('some-other-match')).toBe('grass')
+    expect(resolveArenaForMatch('')).toBe('grass')
+    expect(resolveArenaForMatch('local-dev-match')).toBe(BOARD_ARENA_IDS[0])
   })
 })

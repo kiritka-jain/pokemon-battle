@@ -33,7 +33,19 @@ describe('parsePersistedMatchState', () => {
     expect(parsed?.fences).toHaveLength(1)
   })
 
-  it('reads persisted arena when valid', () => {
+  it('reads persisted grass arena when valid', () => {
+    const raw = {
+      turn: 'player1',
+      arena: 'grass',
+      players: {
+        player1: { id: 'p1', pos: { x: 4, y: 8 }, fencesLeft: 10, type: 'Normal' },
+        player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
+      },
+    }
+    expect(parsePersistedMatchState(raw, match)?.arena).toBe('grass')
+  })
+
+  it('falls back to grass when persisted arena is a legacy non-grass value', () => {
     const raw = {
       turn: 'player1',
       arena: 'water',
@@ -42,7 +54,7 @@ describe('parsePersistedMatchState', () => {
         player2: { id: 'p2', pos: { x: 4, y: 0 }, fencesLeft: 10, type: 'Normal' },
       },
     }
-    expect(parsePersistedMatchState(raw, match)?.arena).toBe('water')
+    expect(parsePersistedMatchState(raw, match)?.arena).toBe(resolveArenaForMatch('m1'))
   })
 
   it('falls back to resolveArenaForMatch when arena is invalid', () => {

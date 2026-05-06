@@ -19,9 +19,10 @@ describe('arena field-line colour', () => {
     }
   })
 
-  it('produces a distinct class string per arena', () => {
+  it('uses the grass field-line class for every arena input', () => {
     const classes = BOARD_ARENA_IDS.map((arena) => getArenaFieldLineClass(arena))
     const unique = new Set(classes)
-    expect(unique.size).toBe(BOARD_ARENA_IDS.length)
+    expect(unique.size).toBe(1)
+    expect([...unique][0]).toBe('text-emerald-900/70 dark:text-emerald-200/55')
   })
 })

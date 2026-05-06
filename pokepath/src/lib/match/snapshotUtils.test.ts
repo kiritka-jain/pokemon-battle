@@ -61,12 +61,9 @@ describe('snapshotUtils', () => {
     expect(normA).toBe(normB)
   })
 
-  it('normalizedTurnSnapshotJson includes arena', () => {
-    const a = stateWithDisplay()
-    const b = { ...stateWithDisplay(), arena: 'water' as const }
-    expect(normalizedTurnSnapshotJson(pickTurnSnapshot(a))).not.toBe(
-      normalizedTurnSnapshotJson(pickTurnSnapshot(b)),
-    )
+  it('normalizedTurnSnapshotJson includes grass arena in serialized output', () => {
+    const normalized = normalizedTurnSnapshotJson(pickTurnSnapshot(stateWithDisplay()))
+    expect(normalized).toContain('"arena":"grass"')
   })
 
   it('normalizedTurnSnapshotJson includes board Pokemon species id when set', () => {

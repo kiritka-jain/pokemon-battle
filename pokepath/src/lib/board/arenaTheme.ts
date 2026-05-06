@@ -1,17 +1,9 @@
 import type { BoardArenaId, PlayerKey } from '@/src/types/game'
 
-/** Static PNG per arena under `public/board-tiles/`. */
-const ARENA_TEXTURE_BASENAME: Record<BoardArenaId, string> = {
-  water: 'water',
-  grass: 'grass',
-  fire: 'fire',
-  air: 'air',
-  electric: 'electric',
-  ground: 'ground',
-}
+const GRASS_ARENA: BoardArenaId = 'grass'
 
-export function getArenaTileTextureUrl(arena: BoardArenaId): string {
-  return `/board-tiles/${ARENA_TEXTURE_BASENAME[arena]}.png`
+export function getArenaTileTextureUrl(_arena: BoardArenaId): string {
+  return `/board-tiles/${GRASS_ARENA}.png`
 }
 
 /** Background image layer (caller sets `style={{ backgroundImage }}`). */
@@ -31,119 +23,33 @@ export function getArenaTileShadeLayerClasses(isLight: boolean): string {
 }
 
 /** Move/Fence toolbar chrome. */
-const CHROME: Record<
-  BoardArenaId,
-  { shell: string; inactive: string; active: string }
-> = {
-  water: {
-    shell: 'border-sky-800/30 bg-sky-50/80 dark:border-sky-700/40 dark:bg-sky-950/40',
-    inactive: 'text-sky-800/80 dark:text-sky-200/70',
-    active: 'bg-white text-sky-950 shadow dark:bg-sky-900 dark:text-sky-50',
-  },
-  grass: {
-    shell: 'border-emerald-800/30 bg-emerald-50/80 dark:border-emerald-700/40 dark:bg-emerald-950/40',
-    inactive: 'text-emerald-800/80 dark:text-emerald-200/70',
-    active: 'bg-white text-emerald-950 shadow dark:bg-emerald-900 dark:text-emerald-50',
-  },
-  fire: {
-    shell: 'border-orange-800/30 bg-orange-50/80 dark:border-orange-800/40 dark:bg-orange-950/35',
-    inactive: 'text-orange-900/80 dark:text-orange-200/70',
-    active: 'bg-white text-orange-950 shadow dark:bg-orange-900 dark:text-orange-50',
-  },
-  air: {
-    shell: 'border-violet-800/30 bg-violet-50/80 dark:border-violet-700/40 dark:bg-violet-950/35',
-    inactive: 'text-violet-900/80 dark:text-violet-200/70',
-    active: 'bg-white text-violet-950 shadow dark:bg-violet-900 dark:text-violet-50',
-  },
-  electric: {
-    shell: 'border-amber-800/30 bg-yellow-50/80 dark:border-amber-800/40 dark:bg-amber-950/35',
-    inactive: 'text-amber-900/80 dark:text-amber-200/70',
-    active: 'bg-white text-amber-950 shadow dark:bg-amber-900 dark:text-amber-50',
-  },
-  ground: {
-    shell: 'border-stone-700/35 bg-stone-100/90 dark:border-stone-600/40 dark:bg-stone-900/45',
-    inactive: 'text-stone-800/80 dark:text-stone-200/70',
-    active: 'bg-white text-stone-950 shadow dark:bg-stone-800 dark:text-stone-50',
-  },
-}
+const CHROME = {
+  shell: 'border-emerald-800/30 bg-emerald-50/80 dark:border-emerald-700/40 dark:bg-emerald-950/40',
+  inactive: 'text-emerald-800/80 dark:text-emerald-200/70',
+  active: 'bg-white text-emerald-950 shadow dark:bg-emerald-900 dark:text-emerald-50',
+} as const
 
-const FENCE_HOVER: Record<BoardArenaId, string> = {
-  water: 'hover:bg-sky-400/15 active:bg-sky-400/25',
-  grass: 'hover:bg-emerald-400/15 active:bg-emerald-400/25',
-  fire: 'hover:bg-orange-400/15 active:bg-orange-400/25',
-  air: 'hover:bg-violet-400/15 active:bg-violet-400/25',
-  electric: 'hover:bg-amber-400/15 active:bg-amber-400/25',
-  ground: 'hover:bg-amber-600/15 active:bg-amber-600/25',
-}
+const FENCE_HOVER = 'hover:bg-emerald-400/15 active:bg-emerald-400/25'
 
-const VALID_DOT: Record<BoardArenaId, string> = {
-  water: 'bg-sky-600/50 dark:bg-sky-300/40',
-  grass: 'bg-emerald-600/50 dark:bg-emerald-300/40',
-  fire: 'bg-orange-600/50 dark:bg-orange-300/40',
-  air: 'bg-violet-600/50 dark:bg-violet-300/40',
-  electric: 'bg-amber-600/50 dark:bg-amber-300/40',
-  ground: 'bg-stone-600/50 dark:bg-stone-300/40',
-}
+const VALID_DOT = 'bg-emerald-600/50 dark:bg-emerald-300/40'
 
-const VALID_RING: Record<BoardArenaId, string> = {
-  water: 'ring-sky-500/60',
-  grass: 'ring-emerald-500/60',
-  fire: 'ring-orange-500/60',
-  air: 'ring-violet-500/60',
-  electric: 'ring-amber-500/60',
-  ground: 'ring-amber-700/55',
-}
+const VALID_RING = 'ring-emerald-500/60'
 
-const PENDING_OFFSET: Record<BoardArenaId, string> = {
-  water: 'ring-offset-sky-100 dark:ring-offset-sky-950',
-  grass: 'ring-offset-emerald-100 dark:ring-offset-emerald-950',
-  fire: 'ring-offset-orange-100 dark:ring-offset-orange-950',
-  air: 'ring-offset-violet-100 dark:ring-offset-violet-950',
-  electric: 'ring-offset-yellow-100 dark:ring-offset-amber-950',
-  ground: 'ring-offset-amber-100 dark:ring-offset-stone-900',
-}
+const PENDING_OFFSET = 'ring-offset-emerald-100 dark:ring-offset-emerald-950'
 
 /** Strong ring for pending move target (readable on all tile hues). */
 const PENDING_MOVE_RING =
   'ring-2 ring-amber-400/95 dark:ring-amber-300/85' as const
 
-const BOARD_OUTER_RING: Record<BoardArenaId, string> = {
-  water: 'ring-sky-900/20 dark:ring-sky-300/15',
-  grass: 'ring-emerald-900/20 dark:ring-emerald-400/15',
-  fire: 'ring-orange-900/20 dark:ring-orange-300/15',
-  air: 'ring-violet-900/20 dark:ring-violet-300/15',
-  electric: 'ring-amber-900/20 dark:ring-amber-300/15',
-  ground: 'ring-stone-700/25 dark:ring-stone-400/15',
-}
+const BOARD_OUTER_RING = 'ring-emerald-900/20 dark:ring-emerald-400/15'
 
 /** Chalk-line colour for the soccer-field overlay (consumed via `currentColor`). */
-const FIELD_LINE: Record<BoardArenaId, string> = {
-  water: 'text-sky-900/70 dark:text-sky-200/55',
-  grass: 'text-emerald-900/70 dark:text-emerald-200/55',
-  fire: 'text-orange-950/70 dark:text-orange-200/55',
-  air: 'text-violet-950/70 dark:text-violet-200/55',
-  electric: 'text-amber-950/70 dark:text-amber-200/55',
-  ground: 'text-stone-800/70 dark:text-stone-200/55',
-}
+const FIELD_LINE = 'text-emerald-900/70 dark:text-emerald-200/55'
 
 /** Fence bars: neutral per arena; ownership is conveyed by glow/tint helpers. */
-const FENCE_P1: Record<BoardArenaId, string> = {
-  water: 'bg-slate-100/95 dark:bg-slate-200/90',
-  grass: 'bg-amber-100/95 dark:bg-amber-200/90',
-  fire: 'bg-orange-100/95 dark:bg-orange-200/90',
-  air: 'bg-violet-100/95 dark:bg-violet-200/90',
-  electric: 'bg-yellow-100/95 dark:bg-yellow-200/90',
-  ground: 'bg-stone-100/95 dark:bg-stone-200/90',
-}
+const FENCE_P1 = 'bg-amber-100/95 dark:bg-amber-200/90'
 
-const FENCE_P2: Record<BoardArenaId, string> = {
-  water: 'bg-slate-100/95 dark:bg-slate-200/90',
-  grass: 'bg-amber-100/95 dark:bg-amber-200/90',
-  fire: 'bg-orange-100/95 dark:bg-orange-200/90',
-  air: 'bg-violet-100/95 dark:bg-violet-200/90',
-  electric: 'bg-yellow-100/95 dark:bg-yellow-200/90',
-  ground: 'bg-stone-100/95 dark:bg-stone-200/90',
-}
+const FENCE_P2 = 'bg-amber-100/95 dark:bg-amber-200/90'
 
 const FENCE_OWNER_GLOW: Record<PlayerKey, string> = {
   player1: 'drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]',
@@ -161,7 +67,8 @@ const FENCE_GHOST_TINT: Record<PlayerKey, string> = {
 }
 
 export function getArenaFenceSolidBarClass(arena: BoardArenaId, placedBy: PlayerKey): string {
-  return placedBy === 'player1' ? FENCE_P1[arena] : FENCE_P2[arena]
+  void arena
+  return placedBy === 'player1' ? FENCE_P1 : FENCE_P2
 }
 
 /** High-contrast styling to prevent fences blending into textured grids. */
@@ -182,35 +89,43 @@ export function getArenaChromeClasses(arena: BoardArenaId): {
   inactive: string
   active: string
 } {
-  return CHROME[arena]
+  void arena
+  return CHROME
 }
 
 export function getArenaFenceHoverClass(arena: BoardArenaId): string {
-  return FENCE_HOVER[arena]
+  void arena
+  return FENCE_HOVER
 }
 
 export function getArenaValidMoveDotClass(arena: BoardArenaId): string {
-  return VALID_DOT[arena]
+  void arena
+  return VALID_DOT
 }
 
 export function getArenaValidRingClass(arena: BoardArenaId): string {
-  return VALID_RING[arena]
+  void arena
+  return VALID_RING
 }
 
 export function getArenaPendingRingOffsetClass(arena: BoardArenaId): string {
-  return PENDING_OFFSET[arena]
+  void arena
+  return PENDING_OFFSET
 }
 
 export function getArenaPendingMoveRingClasses(arena: BoardArenaId): string {
-  return `${PENDING_MOVE_RING} ring-offset-2 ${PENDING_OFFSET[arena]}`
+  void arena
+  return `${PENDING_MOVE_RING} ring-offset-2 ${PENDING_OFFSET}`
 }
 
 export function getArenaBoardOuterRingClass(arena: BoardArenaId): string {
-  return `ring-1 ${BOARD_OUTER_RING[arena]}`
+  void arena
+  return `ring-1 ${BOARD_OUTER_RING}`
 }
 
 export function getArenaFieldLineClass(arena: BoardArenaId): string {
-  return FIELD_LINE[arena]
+  void arena
+  return FIELD_LINE
 }
 
 export function getArenaFenceGhostBarClass(arena: BoardArenaId, placedBy: PlayerKey): string {
