@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import type { GameState } from '@/src/types/game'
 
-import { normalizedTurnSnapshotJson, pickTurnSnapshot } from './snapshotUtils'
+import {
+  normalizedTurnSnapshotJson,
+  normalizedTurnSnapshotJsonIgnoringBoardPokemon,
+  pickTurnSnapshot,
+} from './snapshotUtils'
 
 function stateWithDisplay(): GameState {
   return {
@@ -78,5 +82,29 @@ describe('snapshotUtils', () => {
     const norm = normalizedTurnSnapshotJson(pickTurnSnapshot(withBoardPokemon))
     expect(norm).toContain('pawnSpeciesId')
     expect(norm).toContain('charmander')
+  })
+
+  it('normalizedTurnSnapshotJsonIgnoringBoardPokemon treats differing species as equal', () => {
+    const base = stateWithDisplay()
+    const a: GameState = {
+      ...base,
+      players: {
+        player1: { ...base.players.player1, pawnSpeciesId: 'charmander' },
+        player2: { ...base.players.player2, pawnSpeciesId: 'pikachu' },
+      },
+    }
+    const b: GameState = {
+      ...base,
+      players: {
+        player1: { ...base.players.player1 },
+        player2: { ...base.players.player2 },
+      },
+    }
+    expect(normalizedTurnSnapshotJsonIgnoringBoardPokemon(pickTurnSnapshot(a))).toBe(
+      normalizedTurnSnapshotJsonIgnoringBoardPokemon(pickTurnSnapshot(b)),
+    )
+    expect(normalizedTurnSnapshotJson(pickTurnSnapshot(a))).not.toBe(
+      normalizedTurnSnapshotJson(pickTurnSnapshot(b)),
+    )
   })
 })

@@ -18,7 +18,7 @@ import {
   resolveMatchEntryBoardPokemonPicker,
   speciesInPokemonTeam,
 } from '@/src/lib/match/resolveMatchEntryBoardPokemonPicker'
-import { normalizedTurnSnapshotJson } from '@/src/lib/match/snapshotUtils'
+import { normalizedTurnSnapshotJsonIgnoringBoardPokemon } from '@/src/lib/match/snapshotUtils'
 import { matchLeaveMessage } from '@/src/lib/navigation/leavePageMessages'
 import {
   BOARD_POKEMON_PICK_MATCH_STORAGE_KEY,
@@ -377,8 +377,8 @@ export default function MatchPage() {
       }
 
       const merged = mergeBoardPokemonAfterCommit(applied.next, p.newState, state, senderKey)
-      const expected = normalizedTurnSnapshotJson(merged)
-      const received = normalizedTurnSnapshotJson(p.newState)
+      const expected = normalizedTurnSnapshotJsonIgnoringBoardPokemon(merged)
+      const received = normalizedTurnSnapshotJsonIgnoringBoardPokemon(p.newState)
       if (expected !== received) {
         console.warn('[match] Rejected mismatched opponent state payload', p)
         return

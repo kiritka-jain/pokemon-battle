@@ -72,3 +72,34 @@ export function normalizedTurnSnapshotJson(
     pendingAction: s.pendingAction,
   })
 }
+
+/**
+ * Same as `normalizedTurnSnapshotJson` but omits `pawnSpeciesId` (board Pokémon art).
+ * Use when validating realtime turn broadcasts: merge keeps species from the receiver's
+ * store while the sender snapshot may omit the opponent's pick until DB sync.
+ */
+export function normalizedTurnSnapshotJsonIgnoringBoardPokemon(
+  s: Pick<GameState, 'turn' | 'players' | 'fences' | 'winner' | 'status' | 'pendingAction' | 'arena'>,
+): string {
+  const normPlayer = (pk: PlayerKey) => {
+    const p = s.players[pk]
+    return {
+      id: p.id,
+      pos: p.pos,
+      fencesLeft: p.fencesLeft,
+      type: p.type,
+    }
+  }
+  return JSON.stringify({
+    arena: s.arena,
+    turn: s.turn,
+    players: {
+      player1: normPlayer('player1'),
+      player2: normPlayer('player2'),
+    },
+    fences: s.fences,
+    winner: s.winner,
+    status: s.status,
+    pendingAction: s.pendingAction,
+  })
+}
