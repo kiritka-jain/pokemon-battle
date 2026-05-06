@@ -289,7 +289,7 @@ export function GameBoard({
           onPick={onPickFence}
         />
 
-        <PlayerSprites />
+        <PlayerSprites viewAsPlayer={viewAsPlayer} />
       </div>
     </div>
   )

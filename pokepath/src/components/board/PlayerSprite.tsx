@@ -7,14 +7,19 @@ import { starterSpeciesById } from '@/src/lib/pokemon/starterRoster'
 import { useGameStore } from '@/src/lib/store/gameStore'
 import type { PlayerKey, PlayerState } from '@/src/types/game'
 
-/** Shared chrome for board Pokemon tokens (no seat-colored red/blue disks). */
+/** Positioning shell only — no disk, ring, or shadow (Pokémon reads as on the field). */
 const BOARD_POKEMON_SHELL_BASE =
-  'absolute h-[11%] max-h-14 w-[11%] max-w-14 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full shadow-md ring-2 transition-all duration-300 ease-in-out ring-zinc-400/55 dark:ring-zinc-500/60'
+  'absolute h-[11%] max-h-14 w-[11%] max-w-14 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-sm transition-all duration-300 ease-in-out'
+
+type PlayerSpritesProps = {
+  /** Seat perspective for board rotation; sprite facing undoes rotation in token space. */
+  viewAsPlayer?: PlayerKey
+}
 
 /**
  * Renders both trainers as absolutely positioned layers over the board grid.
  */
-export function PlayerSprites() {
+export function PlayerSprites({ viewAsPlayer = 'player1' }: PlayerSpritesProps) {
   const p1 = useGameStore((s) => s.players.player1)
   const p2 = useGameStore((s) => s.players.player2)
 
@@ -33,12 +38,14 @@ export function PlayerSprites() {
         player={p1}
         trainerLabel={name1}
         style={styleFor(p1.pos.x, p1.pos.y)}
+        viewAsPlayer={viewAsPlayer}
       />
       <BoardPokemonToken
         playerKey="player2"
         player={p2}
         trainerLabel={name2}
         style={styleFor(p2.pos.x, p2.pos.y)}
+        viewAsPlayer={viewAsPlayer}
       />
     </div>
   )
@@ -49,11 +56,13 @@ function BoardPokemonToken({
   player,
   trainerLabel,
   style,
+  viewAsPlayer,
 }: {
   playerKey: PlayerKey
   player: PlayerState
   trainerLabel: string
   style: { left: string; top: string }
+  viewAsPlayer: PlayerKey
 }) {
   const species = player.pawnSpeciesId
     ? starterSpeciesById(player.pawnSpeciesId)
@@ -65,38 +74,49 @@ function BoardPokemonToken({
       ? `${species.displayName}, ${seatLabel}, ${trainerLabel}`
       : `${seatLabel}, ${trainerLabel}`
 
-  const shellClass = `${BOARD_POKEMON_SHELL_BASE} bg-zinc-100/95 dark:bg-zinc-900/95`
+  const shellClass = `${BOARD_POKEMON_SHELL_BASE} bg-transparent`
+
+  /** Undo board `rotate-180` for this subtree so facing stays in engine (+y / −y home) space. */
+  const seatCounterClass =
+    viewAsPlayer === 'player2' ? 'h-full w-full origin-center rotate-180' : 'h-full w-full'
+  /** Player 2 home is y=0 (up in engine); flip so art faces that row. Player 1 faces y=8. */
+  const faceHomeClass =
+    playerKey === 'player2' ? 'h-full w-full origin-center scale-y-[-1]' : 'h-full w-full'
 
   if (species?.imageSrc) {
     return (
       <div className={shellClass} style={style} aria-label={ariaLabel}>
-        <Image
-          src={species.imageSrc}
-          alt=""
-          fill
-          className="object-cover object-center"
-          sizes="56px"
-          priority
-        />
+        <div className={seatCounterClass}>
+          <div className={`relative h-full w-full ${faceHomeClass}`}>
+            <Image
+              src={species.imageSrc}
+              alt=""
+              fill
+              className="object-cover object-center"
+              sizes="56px"
+              priority
+            />
+          </div>
+        </div>
       </div>
     )
   }
 
   if (species) {
     return (
-      <div
-        className={`${shellClass} flex items-center justify-center text-2xl sm:text-3xl`}
-        style={style}
-        aria-label={ariaLabel}
-      >
-        <span aria-hidden>{species.emoji}</span>
+      <div className={shellClass} style={style} aria-label={ariaLabel}>
+        <div className={seatCounterClass}>
+          <div className={`relative flex h-full w-full items-center justify-center text-2xl sm:text-3xl ${faceHomeClass}`}>
+            <span aria-hidden>{species.emoji}</span>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
     <div
-      className={`${shellClass} flex items-center justify-center bg-zinc-200/90 dark:bg-zinc-800/90`}
+      className={`${shellClass} flex items-center justify-center bg-zinc-200/40 dark:bg-zinc-800/40`}
       style={style}
       aria-label={ariaLabel}
     >

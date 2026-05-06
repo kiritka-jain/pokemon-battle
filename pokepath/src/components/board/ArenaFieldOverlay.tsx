@@ -42,8 +42,6 @@ export function ArenaFieldOverlay({ arena }: ArenaFieldOverlayProps) {
         vectorEffect="non-scaling-stroke"
       >
         <rect x={0.4} y={0.4} width={89.2} height={89.2} strokeWidth={1.6} />
-
-        <line x1={0.4} y1={45} x2={89.6} y2={45} />
       </g>
 
       <g
@@ -63,16 +61,16 @@ export function ArenaFieldOverlay({ arena }: ArenaFieldOverlayProps) {
 
       <g
         transform="translate(45 45)"
-        stroke="rgba(0,0,0,0.58)"
+        stroke="rgba(0,0,0,0.35)"
         strokeWidth={1}
-        opacity={0.72}
+        opacity={0.4}
         vectorEffect="non-scaling-stroke"
       >
-        <path d="M -10 0 A 10 10 0 0 0 10 0 Z" fill="rgba(239,68,68,0.56)" />
-        <path d="M -10 0 A 10 10 0 0 1 10 0 Z" fill="rgba(255,255,255,0.62)" />
-        <rect x={-10} y={-0.9} width={20} height={1.8} fill="rgba(0,0,0,0.62)" stroke="none" />
-        <circle r={3} fill="rgba(0,0,0,0.62)" stroke="none" />
-        <circle r={1.6} fill="rgba(255,255,255,0.8)" stroke="none" />
+        <path d="M -10 0 A 10 10 0 0 0 10 0 Z" fill="rgba(239,68,68,0.28)" />
+        <path d="M -10 0 A 10 10 0 0 1 10 0 Z" fill="rgba(255,255,255,0.32)" />
+        <rect x={-10} y={-0.9} width={20} height={1.8} fill="rgba(0,0,0,0.32)" stroke="none" />
+        <circle r={3} fill="rgba(0,0,0,0.32)" stroke="none" />
+        <circle r={1.6} fill="rgba(255,255,255,0.45)" stroke="none" />
       </g>
     </svg>
   )
