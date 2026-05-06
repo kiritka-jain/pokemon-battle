@@ -32,7 +32,7 @@ function loadingShell(message: string) {
     <div className="relative flex min-h-full flex-1 items-center justify-center overflow-hidden bg-gradient-to-b from-amber-50 via-zinc-50 to-emerald-50 px-6 py-12 dark:from-zinc-950 dark:via-black dark:to-zinc-900">
       <HomePokemonBackdrop />
       <div
-        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-amber-50/72 via-zinc-50/65 to-emerald-50/70 dark:from-zinc-950/76 dark:via-black/62 dark:to-zinc-900/74"
+        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-amber-50/40 via-zinc-50/38 to-emerald-50/42 dark:from-zinc-950/48 dark:via-black/40 dark:to-zinc-900/48"
         aria-hidden
       />
       <p className="relative z-10 text-zinc-600 dark:text-zinc-400">{message}</p>
@@ -158,12 +158,12 @@ export default function LobbyPage() {
     <div className="relative flex min-h-full flex-1 flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-amber-50 via-zinc-50 to-emerald-50 px-6 py-16 dark:from-zinc-950 dark:via-black dark:to-zinc-900">
       <HomePokemonBackdrop />
       <div
-        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-amber-50/72 via-zinc-50/65 to-emerald-50/70 dark:from-zinc-950/76 dark:via-black/62 dark:to-zinc-900/74"
+        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-amber-50/40 via-zinc-50/38 to-emerald-50/42 dark:from-zinc-950/48 dark:via-black/40 dark:to-zinc-900/48"
         aria-hidden
       />
 
       <motion.main
-        className="relative z-10 w-full max-w-md rounded-2xl border border-white/45 bg-white/22 p-8 shadow-[0_6px_28px_rgba(0,0,0,0.06)] backdrop-blur-lg backdrop-saturate-150 dark:border-white/10 dark:bg-zinc-950/32 dark:shadow-[0_6px_28px_rgba(0,0,0,0.35)]"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-white/30 bg-white/[0.11] p-8 shadow-[0_6px_28px_rgba(0,0,0,0.04)] backdrop-blur-sm backdrop-saturate-150 dark:border-white/[0.08] dark:bg-zinc-950/[0.14] dark:shadow-[0_6px_28px_rgba(0,0,0,0.25)]"
         initial={reduceMotion ? false : { opacity: 0, y: 14 }}
         animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
@@ -284,16 +284,16 @@ export default function LobbyPage() {
           </Link>
           <Link
             href="/lobby/in-progress"
-            className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300/80 bg-white/60 px-5 text-sm font-medium text-zinc-900 backdrop-blur-sm transition-colors hover:bg-white/90 dark:border-zinc-600 dark:bg-zinc-950/50 dark:text-zinc-100 dark:hover:bg-zinc-900/80"
+            className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300/70 bg-white/35 px-5 text-sm font-medium text-zinc-900 backdrop-blur-sm transition-colors hover:bg-white/55 dark:border-zinc-600 dark:bg-zinc-950/35 dark:text-zinc-100 dark:hover:bg-zinc-900/55"
           >
             In-progress games
           </Link>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 border-t border-zinc-200/80 pt-6 dark:border-zinc-700/80">
+        <div className="mt-6 grid grid-cols-2 gap-3 border-t border-zinc-200/60 pt-6 dark:border-zinc-700/60">
           <Link
             href="/play/vs-computer"
-            className="flex min-h-[4.5rem] flex-col items-center justify-center rounded-xl border border-zinc-300/80 bg-white/50 px-3 py-3 text-center text-sm font-medium text-emerald-800 backdrop-blur-sm transition-colors hover:bg-white/80 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-emerald-300 dark:hover:bg-zinc-900/70"
+            className="flex min-h-[4.5rem] flex-col items-center justify-center rounded-xl border border-zinc-300/70 bg-white/28 px-3 py-3 text-center text-sm font-medium text-emerald-800 backdrop-blur-sm transition-colors hover:bg-white/45 dark:border-zinc-600 dark:bg-zinc-950/28 dark:text-emerald-300 dark:hover:bg-zinc-900/50"
           >
             <span aria-hidden className="mb-1 text-lg">
               🤖
@@ -302,7 +302,7 @@ export default function LobbyPage() {
           </Link>
           <Link
             href="/play"
-            className="flex min-h-[4.5rem] flex-col items-center justify-center rounded-xl border border-zinc-300/80 bg-white/50 px-3 py-3 text-center text-sm font-medium text-zinc-800 backdrop-blur-sm transition-colors hover:bg-white/80 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-100 dark:hover:bg-zinc-900/70"
+            className="flex min-h-[4.5rem] flex-col items-center justify-center rounded-xl border border-zinc-300/70 bg-white/28 px-3 py-3 text-center text-sm font-medium text-zinc-800 backdrop-blur-sm transition-colors hover:bg-white/45 dark:border-zinc-600 dark:bg-zinc-950/28 dark:text-zinc-100 dark:hover:bg-zinc-900/50"
           >
             <span aria-hidden className="mb-1 text-lg">
               👥
@@ -314,7 +314,7 @@ export default function LobbyPage() {
         <button
           type="button"
           onClick={handleSignOut}
-          className="mt-6 flex h-12 w-full items-center justify-center rounded-full border border-zinc-300/90 bg-white/40 px-5 text-sm font-medium text-zinc-900 backdrop-blur-sm transition-colors hover:bg-white/70 dark:border-zinc-600 dark:bg-zinc-950/30 dark:text-zinc-100 dark:hover:bg-zinc-900/60"
+          className="mt-6 flex h-12 w-full items-center justify-center rounded-full border border-zinc-300/70 bg-white/22 px-5 text-sm font-medium text-zinc-900 backdrop-blur-sm transition-colors hover:bg-white/40 dark:border-zinc-600 dark:bg-zinc-950/22 dark:text-zinc-100 dark:hover:bg-zinc-900/45"
         >
           Sign out
         </button>
