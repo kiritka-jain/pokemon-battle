@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { ensureProfileForUserId } from '@/src/lib/match/ensureProfileForAuthUser'
 import { getUserFromBearer } from '@/src/lib/supabase/routeAuth'
 import { supabaseServer } from '@/src/lib/supabase/server'
 
@@ -41,6 +42,16 @@ export async function POST(request: Request) {
 
   if (existing?.id) {
     return NextResponse.json({ matchId: existing.id })
+  }
+
+  for (const uid of [player1Id, player2Id]) {
+    const ensured = await ensureProfileForUserId(supabaseServer, uid)
+    if (!ensured.ok) {
+      return NextResponse.json(
+        { error: `Could not ensure profile for player: ${ensured.error}` },
+        { status: 500 },
+      )
+    }
   }
 
   const { data: created, error: insertError } = await supabaseServer
