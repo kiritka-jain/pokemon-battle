@@ -16,8 +16,7 @@ export default function TutorialPage() {
               Learn the route duel
             </h1>
             <p className="mt-1 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
-              Professor Oak explains how to win this Pokémon-themed path strategy game:
-              race to the far side, place clever fences, jump rivals, and never seal every route.
+              Short rules below—swipe or use the dots to read each one before you play.
             </p>
           </div>
           <Link href="/" className="shrink-0 text-sm font-medium text-rose-700 underline dark:text-rose-400">

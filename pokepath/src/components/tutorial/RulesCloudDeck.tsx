@@ -1,37 +1,15 @@
 'use client'
 
-import { useCallback, useId, useRef, useState, type TouchEvent } from 'react'
+import Image from 'next/image'
+import { useCallback, useRef, useState, type TouchEvent } from 'react'
 
 import { GAME_RULE_SLIDES } from '@/src/lib/tutorial/gameRules'
 
 const SWIPE_PX = 56
 
-function CloudBackdrop({ shadowId }: { shadowId: string }) {
-  return (
-    <svg
-      className="pointer-events-none absolute left-1/2 top-1/2 h-[min(100%,220px)] w-[min(100%,380px)] -translate-x-1/2 -translate-y-1/2 overflow-visible text-white drop-shadow-md dark:text-zinc-800/95"
-      viewBox="0 0 380 200"
-      aria-hidden
-    >
-      <defs>
-        <filter id={shadowId} x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.12" />
-        </filter>
-      </defs>
-      <path
-        filter={`url(#${shadowId})`}
-        fill="currentColor"
-        stroke="rgb(125 211 252 / 0.45)"
-        strokeWidth="1"
-        className="dark:stroke-zinc-600"
-        d="M 95 145 C 55 145 30 115 38 82 C 42 58 62 42 88 40 C 98 18 122 4 152 8 C 168 2 188 4 204 14 C 228 6 254 12 272 30 C 310 22 348 52 348 92 C 348 132 312 162 268 158 C 252 172 228 180 200 176 C 178 188 148 186 124 170 C 108 178 88 176 72 166 C 52 172 28 160 20 138 C 12 116 24 90 48 82 C 52 58 72 42 95 42 Z"
-      />
-    </svg>
-  )
-}
+const LIVE_REGION_ID = 'rules-slide-live'
 
 export function RulesCloudDeck() {
-  const shadowFilterId = useId().replace(/:/g, '')
   const [index, setIndex] = useState(0)
   const touchStartX = useRef<number | null>(null)
 
@@ -60,10 +38,12 @@ export function RulesCloudDeck() {
     else if (dx > SWIPE_PX) go(-1)
   }
 
+  const hasImage = Boolean(slide.imageSrc)
+
   return (
     <div className="flex w-full min-w-0 flex-col items-center">
       <p className="mb-2 text-center text-xs text-zinc-500 dark:text-zinc-400 md:hidden">
-        Swipe the cloud left or right for the next rule
+        Swipe the card left or right for the next rule
       </p>
       <p className="mb-2 hidden text-center text-xs text-zinc-500 dark:text-zinc-400 md:block">
         Use the arrows or dot indicators to change rules
@@ -73,21 +53,50 @@ export function RulesCloudDeck() {
         role="region"
         aria-roledescription="carousel"
         aria-label="Game rules"
-        className="relative w-full max-w-md"
+        className="relative w-full max-w-2xl"
       >
         <div
-          className="relative mx-auto flex min-h-[200px] w-full max-w-[22rem] cursor-grab touch-pan-y items-center justify-center px-5 py-8 active:cursor-grabbing md:max-w-[24rem]"
+          className="relative mx-auto w-full max-w-xl cursor-grab touch-pan-y active:cursor-grabbing"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          <CloudBackdrop shadowId={shadowFilterId} />
           <div
-            id="rules-cloud-text"
+            id={LIVE_REGION_ID}
             aria-live="polite"
-            className="relative z-10 max-w-[18rem] px-0.5 text-center leading-snug text-zinc-800 dark:text-zinc-100"
+            className="min-h-[220px] rounded-2xl border border-yellow-200/90 bg-white/95 p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/95 sm:min-h-[240px] sm:p-5 md:min-h-[200px]"
           >
-            <h2 className="text-sm font-semibold text-zinc-900 sm:text-base dark:text-zinc-50">{slide.title}</h2>
-            <p className="mt-1.5 text-xs font-medium sm:text-sm">{slide.body}</p>
+            <div
+              className={
+                hasImage
+                  ? 'flex flex-col gap-4 md:flex-row md:items-center md:gap-6'
+                  : 'flex flex-col items-center text-center'
+              }
+            >
+              {slide.imageSrc ? (
+                <div className="relative mx-auto flex w-full shrink-0 justify-center md:mx-0 md:w-[45%]">
+                  <Image
+                    src={slide.imageSrc}
+                    alt={slide.imageAlt ?? ''}
+                    width={400}
+                    height={280}
+                    sizes="(max-width: 768px) 85vw, 320px"
+                    className="max-h-[220px] w-auto max-w-full rounded-xl border border-zinc-200 object-contain dark:border-zinc-600"
+                  />
+                </div>
+              ) : null}
+
+              <div
+                className={`flex min-w-0 flex-1 flex-col justify-center leading-snug text-zinc-800 dark:text-zinc-100 ${
+                  hasImage ? 'text-left md:w-[55%]' : 'max-w-md px-1 text-center'
+                }`}
+              >
+                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{slide.title}</h2>
+                <p className="mt-2 text-sm font-medium">{slide.body}</p>
+                {slide.caption ? (
+                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{slide.caption}</p>
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -95,7 +104,7 @@ export function RulesCloudDeck() {
           {index > 0 ? (
             <button
               type="button"
-              aria-controls="rules-cloud-text"
+              aria-controls={LIVE_REGION_ID}
               className="rounded-full border border-sky-300/80 bg-white/90 px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-sky-50 dark:border-zinc-600 dark:bg-zinc-900/90 dark:text-zinc-100 dark:hover:bg-zinc-800"
               onClick={() => go(-1)}
             >
@@ -105,7 +114,7 @@ export function RulesCloudDeck() {
           {index < n - 1 ? (
             <button
               type="button"
-              aria-controls="rules-cloud-text"
+              aria-controls={LIVE_REGION_ID}
               className="rounded-full border border-sky-300/80 bg-white/90 px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-sky-50 dark:border-zinc-600 dark:bg-zinc-900/90 dark:text-zinc-100 dark:hover:bg-zinc-800"
               onClick={() => go(1)}
             >

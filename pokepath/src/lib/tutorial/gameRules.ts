@@ -1,32 +1,44 @@
 export type GameRuleSlide = {
   title: string
   body: string
+  caption?: string
+  imageSrc?: string
+  imageAlt?: string
 }
 
 /** One rule per swipeable slide (Quoridor-style path game). */
 export const GAME_RULE_SLIDES = [
   {
-    title: 'Win The Route Race',
-    body: 'Reach the opposite side of the board before your opponent reaches yours. Player 1 races upward; Player 2 races downward.',
+    title: 'Win the race',
+    body: 'Reach your far row before your opponent reaches theirs.',
+    caption: 'Player 1 races up; Player 2 races down.',
   },
   {
-    title: 'Move One Safe Step',
-    body: 'Most turns are a one-square move up, down, left, or right. Blue dots on the board show legal destinations when it is your turn.',
+    title: 'Move one step',
+    body: 'Each turn, step one square up, down, left, or right.',
+    caption: 'Dots show where you can step.',
+    imageSrc: '/tutorial/rules/move-orthogonal.png',
+    imageAlt:
+      'Top-down grid with a Pokémon in the middle and green dots on the four side squares only.',
   },
   {
-    title: 'Spend Fences Carefully',
-    body: 'Instead of moving, you may place one fence across two gaps. Fences slow routes, but each trainer only gets ten.',
+    title: 'Place fences',
+    body: 'Instead of moving, place one fence across two gaps—you each have ten.',
   },
   {
-    title: 'Jump Over Rivals',
-    body: 'When Pokemon stand face to face and the space behind the rival is open, jump straight over them.',
+    title: 'Jump over',
+    body: 'If you face an opponent and the square behind them is empty, jump straight over.',
   },
   {
-    title: 'Dodge Around Blocks',
-    body: 'If the rival is beside you and a fence blocks the straight jump, you may dodge diagonally around them.',
+    title: 'Dodge around',
+    body: 'If a fence blocks the straight jump, step diagonally around them instead.',
   },
   {
-    title: 'Never Seal The Board',
-    body: 'Every fence must leave at least one path to each goal. A fence that traps either player is illegal.',
+    title: 'Keep paths open',
+    body: 'Your fence cannot cut off every path to a goal.',
+    caption: 'Both players must always have a way to reach their goal row.',
+    imageSrc: '/tutorial/rules/board-paths-overview.png',
+    imageAlt:
+      'Grass board with two Pokémon and bright lines along the grid showing possible routes.',
   },
-] as const satisfies readonly GameRuleSlide[]
+] satisfies readonly GameRuleSlide[]
