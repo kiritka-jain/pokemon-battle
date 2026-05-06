@@ -14,7 +14,7 @@ describe('arena tile textures', () => {
     const unique = new Set(urls)
     expect(unique.size).toBe(1)
     for (const u of urls) {
-      expect(u).toBe('/board-tiles/grass.png')
+      expect(u).toBe('/board-tiles/grass-arena-texture.png')
     }
   })
 

@@ -3,8 +3,6 @@
 import {
   getArenaPendingMoveRingClasses,
   getArenaTileShadeLayerClasses,
-  getArenaTileTextureLayerClasses,
-  getArenaTileTextureUrl,
   getArenaValidMoveDotClass,
   getArenaValidRingClass,
 } from '@/src/lib/board/arenaTheme'
@@ -37,7 +35,6 @@ export function Tile({
   canInteract,
   onSelectMove,
 }: TileProps) {
-  const textureUrl = getArenaTileTextureUrl(arena)
   const isTileInteractive = canInteract && interactionMode === 'move'
 
   const validHint =
@@ -78,11 +75,6 @@ export function Tile({
           : 'cursor-default',
       ].join(' ')}
     >
-      <span
-        className={getArenaTileTextureLayerClasses(isLight)}
-        style={{ backgroundImage: `url(${textureUrl})` }}
-        aria-hidden
-      />
       <span className={getArenaTileShadeLayerClasses(isLight)} aria-hidden />
       {isValidMoveDestination && interactionMode === 'move' && canInteract && (
         <span

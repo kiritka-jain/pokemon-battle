@@ -5,7 +5,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { validateFencePlacement } from '@/src/lib/engine/fenceValidator'
 import { validateMove } from '@/src/lib/engine/moveValidator'
-import { getArenaBoardOuterRingClass, getArenaChromeClasses } from '@/src/lib/board/arenaTheme'
+import {
+  getArenaBoardOuterRingClass,
+  getArenaChromeClasses,
+  getArenaTileTextureUrl,
+} from '@/src/lib/board/arenaTheme'
 import { useGameStore } from '@/src/lib/store/gameStore'
 import { fenceValidationSummary } from '@/src/lib/tutorial/validationFeedback'
 import type { GameState, PlayerKey } from '@/src/types/game'
@@ -149,6 +153,7 @@ export function GameBoard({
   const previewFenceOwner: PlayerKey | null = pendingFenceVisual ? turn : null
 
   const chrome = getArenaChromeClasses(arena)
+  const arenaTextureUrl = getArenaTileTextureUrl(arena)
 
   const handleContextMenu = useCallback(
     (e: MouseEvent) => {
@@ -248,8 +253,15 @@ export function GameBoard({
         }`}
         onTouchEnd={handleBoardTouchEnd}
       >
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-sm" aria-hidden>
+          <span
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${arenaTextureUrl})` }}
+          />
+        </div>
+
         <div
-          className={`absolute inset-0 z-0 grid grid-cols-9 grid-rows-9 gap-0 overflow-hidden rounded-sm ${getArenaBoardOuterRingClass(arena)}`}
+          className={`absolute inset-0 z-[1] grid grid-cols-9 grid-rows-9 gap-0 overflow-hidden rounded-sm ${getArenaBoardOuterRingClass(arena)}`}
         >
           {tiles}
         </div>

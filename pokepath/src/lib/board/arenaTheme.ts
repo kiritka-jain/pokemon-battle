@@ -3,7 +3,7 @@ import type { BoardArenaId, PlayerKey } from '@/src/types/game'
 const GRASS_ARENA: BoardArenaId = 'grass'
 
 export function getArenaTileTextureUrl(_arena: BoardArenaId): string {
-  return `/board-tiles/${GRASS_ARENA}.png`
+  return '/board-tiles/grass-arena-texture.png'
 }
 
 /** Background image layer (caller sets `style={{ backgroundImage }}`). */
