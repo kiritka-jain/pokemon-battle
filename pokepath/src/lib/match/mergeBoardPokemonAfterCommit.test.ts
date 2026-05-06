@@ -114,4 +114,31 @@ describe('mergeBoardPokemonAfterCommit', () => {
     const merged = mergeBoardPokemonAfterCommit(appliedNext, newState, baseWithBoardPokemon, 'player1')
     expect(merged.players.player1.pawnSpeciesId).toBe('oddish')
   })
+
+  it('fills opponent board Pokemon from newState when base has none', () => {
+    const base = baseState()
+    const appliedNext: GameState = {
+      ...base,
+      turn: 'player2',
+      players: {
+        player1: { ...base.players.player1, pos: { x: 4, y: 7 } },
+        player2: { ...base.players.player2 },
+      },
+    }
+    const newState = {
+      players: {
+        player1: {
+          ...appliedNext.players.player1,
+          pawnSpeciesId: 'charmander',
+        },
+        player2: {
+          ...appliedNext.players.player2,
+          pawnSpeciesId: 'pikachu',
+        },
+      },
+    }
+    const merged = mergeBoardPokemonAfterCommit(appliedNext, newState, base, 'player1')
+    expect(merged.players.player1.pawnSpeciesId).toBe('charmander')
+    expect(merged.players.player2.pawnSpeciesId).toBe('pikachu')
+  })
 })

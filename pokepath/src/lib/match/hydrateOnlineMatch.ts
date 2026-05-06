@@ -42,21 +42,21 @@ export function hydrateOnlineMatchFromRow(args: {
   player2Id: string
   gameState: unknown | null
   display: InitMatchDisplay
-}) {
+}): boolean {
   const prior = useGameStore.getState()
   const priorMatchId = prior.matchId
 
   useGameStore.setState(initialGameState)
   useGameStore.getState().initMatch(args.matchId, args.player1Id, args.player2Id, args.display)
 
-  if (!args.gameState) return
+  if (!args.gameState) return true
 
   const parsed = parsePersistedMatchState(args.gameState, {
     id: args.matchId,
     player1_id: args.player1Id,
     player2_id: args.player2Id,
   })
-  if (!parsed) return
+  if (!parsed) return false
 
   const p1 = mergeBoardPokemonSpeciesFromPrior(
     parsed.players.player1,
@@ -97,4 +97,5 @@ export function hydrateOnlineMatchFromRow(args: {
       },
     },
   })
+  return true
 }

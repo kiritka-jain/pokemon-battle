@@ -17,8 +17,9 @@ function withBoardPokemonSpecies(p: PlayerState, speciesId: string | undefined):
 }
 
 /**
- * After a validated turn, merge board Pokemon species ids: the actor's Pokemon may be taken
- * from the client's newState (validated roster id); the opponent's always comes from `base` (DB).
+ * After a validated turn, merge board Pokemon species ids: the actor's species may come from
+ * newState (validated roster id) or base; the opponent's comes from base when present, otherwise
+ * from newState (validated) so the first persisted turn can retain honest dual-pick clients.
  */
 export function mergeBoardPokemonAfterCommit(
   appliedNext: GameState,
@@ -32,7 +33,12 @@ export function mergeBoardPokemonAfterCommit(
   const actorFinal =
     actorFromClient !== undefined ? actorFromClient : base.players[actorKey].pawnSpeciesId
 
-  const opponentFinal = base.players[opponentKey].pawnSpeciesId
+  const opponentFromBase = base.players[opponentKey].pawnSpeciesId
+  const opponentFromClient = validatedBoardPokemonSpeciesId(newState.players[opponentKey].pawnSpeciesId)
+  const opponentFinal =
+    opponentFromBase !== undefined && opponentFromBase !== ''
+      ? opponentFromBase
+      : opponentFromClient
 
   return {
     ...appliedNext,

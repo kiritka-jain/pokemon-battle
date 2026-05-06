@@ -279,6 +279,80 @@ describe('POST /api/match/state', () => {
     expect(payload?.game_state?.players?.player1?.pawnSpeciesId).toBe('charmander')
   })
 
+  it('persists both board Pokemon species on first commit when client sends both and DB game_state is null', async () => {
+    getUserFromBearerMock.mockResolvedValue({ user: { id: 'p1' } })
+
+    const matchLookup = makeBuilder({
+      data: {
+        id: 'm1',
+        status: 'in_progress',
+        player1_id: 'p1',
+        player2_id: 'p2',
+        game_state: null,
+        state_version: 0,
+      },
+      error: null,
+    })
+    const matchUpdate = makeBuilder({
+      data: { state_version: 1 },
+      error: null,
+    })
+    fromMock.mockReturnValueOnce(matchLookup).mockReturnValueOnce(matchUpdate)
+
+    const arenaId = resolveArenaForMatch('m1')
+    const { POST } = await import('./route')
+    const req = new Request('http://localhost/api/match/state', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer token',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        matchId: 'm1',
+        baseVersion: 0,
+        committedAction: { type: 'move', targetPos: { x: 4, y: 7 } },
+        newState: {
+          turn: 'player2',
+          arena: arenaId,
+          players: {
+            player1: {
+              id: 'p1',
+              pos: { x: 4, y: 7 },
+              fencesLeft: 10,
+              type: 'Normal',
+              pawnSpeciesId: 'charmander',
+            },
+            player2: {
+              id: 'p2',
+              pos: { x: 4, y: 0 },
+              fencesLeft: 10,
+              type: 'Normal',
+              pawnSpeciesId: 'pikachu',
+            },
+          },
+          fences: [],
+          winner: null,
+          status: 'active',
+          pendingAction: { type: null },
+        },
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    expect(matchUpdate.update).toHaveBeenCalled()
+    const payload = matchUpdate.update.mock.calls[0]?.[0] as {
+      game_state?: {
+        players?: {
+          player1?: { pawnSpeciesId?: string }
+          player2?: { pawnSpeciesId?: string }
+        }
+      }
+    }
+    expect(payload?.game_state?.players?.player1?.pawnSpeciesId).toBe('charmander')
+    expect(payload?.game_state?.players?.player2?.pawnSpeciesId).toBe('pikachu')
+  })
+
   it('returns state_mismatch when client forges opponent board Pokemon species id', async () => {
     getUserFromBearerMock.mockResolvedValue({ user: { id: 'p1' } })
 

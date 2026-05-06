@@ -169,20 +169,41 @@ export default function MatchPage() {
       }
       displayRef.current = display
 
-      const sv = Number(row.state_version ?? 0)
-      stateVersionRef.current = sv
-      plyCount.current = sv
-
       const created = row.created_at ? Date.parse(String(row.created_at)) : NaN
       matchStartedAt.current = Number.isFinite(created) ? created : Date.now()
 
-      hydrateOnlineMatchFromRow({
-        matchId,
-        player1Id: p1,
-        player2Id: p2,
-        gameState: row.game_state ?? null,
-        display,
-      })
+      const applyVersionAfterHydrate = (gameState: unknown | null, sv: number) => {
+        const ok = hydrateOnlineMatchFromRow({
+          matchId,
+          player1Id: p1,
+          player2Id: p2,
+          gameState: gameState ?? null,
+          display,
+        })
+        if (ok && Number.isFinite(sv)) {
+          stateVersionRef.current = sv
+          plyCount.current = sv
+        }
+        return ok
+      }
+
+      let hydrated = applyVersionAfterHydrate(row.game_state ?? null, Number(row.state_version ?? 0))
+      if (!hydrated) {
+        const { data: row2 } = await supabase
+          .from('matches')
+          .select('game_state, state_version')
+          .eq('id', matchId)
+          .maybeSingle()
+        if (!cancelled && row2) {
+          hydrated = applyVersionAfterHydrate(row2.game_state ?? null, Number(row2.state_version ?? 0))
+        }
+      }
+      if (!hydrated && !cancelled) {
+        console.warn('[match] hydrate failed after load + refetch; match board may be out of sync')
+        setLoadError('Could not load match board state')
+        setLoading(false)
+        return
+      }
 
       setLoading(false)
     })()
@@ -218,6 +239,29 @@ export default function MatchPage() {
       })
     },
     [sessionUserId],
+  )
+
+  const persistBoardPokemonPick = useCallback(
+    async (speciesId: string) => {
+      if (!matchId || !starterSpeciesById(speciesId)) return
+      const {
+        data: { session },
+      } = await getSession()
+      const token = session?.access_token
+      if (!token) return
+      const res = await fetch('/api/match/board-pokemon', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ matchId, speciesId }),
+      })
+      if (!res.ok) {
+        console.warn('[match] persist board pokemon failed', res.status)
+      }
+    },
+    [matchId],
   )
 
   const afterSuccessfulCommit = useCallback(
@@ -264,15 +308,34 @@ export default function MatchPage() {
         }
         const pr = playersRef.current
         if (pr && typeof j.stateVersion === 'number') {
-          stateVersionRef.current = j.stateVersion
-          plyCount.current = j.stateVersion
-          hydrateOnlineMatchFromRow({
-            matchId,
-            player1Id: pr.p1,
-            player2Id: pr.p2,
-            gameState: j.gameState ?? null,
-            display: displayRef.current,
-          })
+          const syncVersion = (gameState: unknown | null, sv: number) => {
+            const ok = hydrateOnlineMatchFromRow({
+              matchId,
+              player1Id: pr.p1,
+              player2Id: pr.p2,
+              gameState: gameState ?? null,
+              display: displayRef.current,
+            })
+            if (ok) {
+              stateVersionRef.current = sv
+              plyCount.current = sv
+            }
+            return ok
+          }
+          let ok = syncVersion(j.gameState ?? null, j.stateVersion)
+          if (!ok) {
+            const { data: fresh } = await supabase
+              .from('matches')
+              .select('game_state, state_version')
+              .eq('id', matchId)
+              .maybeSingle()
+            if (fresh && typeof fresh.state_version === 'number') {
+              ok = syncVersion(fresh.game_state ?? null, fresh.state_version as number)
+            }
+          }
+          if (!ok) {
+            console.warn('[match] 409 reconcile hydrate failed')
+          }
         }
         showToast({ message: 'Synced with the latest match state.', variant: 'default' })
         return
@@ -335,6 +398,21 @@ export default function MatchPage() {
     })
     channelRef.current = room
     channelSubscribedRef.current = false
+
+    const applyPostgresRowHydrate = (gameState: unknown | null, version: number): boolean => {
+      const ok = hydrateOnlineMatchFromRow({
+        matchId,
+        player1Id: pr.p1,
+        player2Id: pr.p2,
+        gameState: gameState ?? null,
+        display: displayRef.current,
+      })
+      if (ok && Number.isFinite(version)) {
+        stateVersionRef.current = version
+        plyCount.current = version
+      }
+      return ok
+    }
 
     const onBroadcastBoardPokemon = ({ payload }: { payload: Record<string, unknown> }) => {
       const p = payload as unknown as BoardPokemonPayload
@@ -408,17 +486,57 @@ export default function MatchPage() {
     room.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` }, (payload) => {
       const row = payload.new as Record<string, unknown>
       const v = Number(row.state_version ?? 0)
-      if (!Number.isFinite(v) || v <= stateVersionRef.current) return
+      if (!Number.isFinite(v) || v < stateVersionRef.current) return
 
-      stateVersionRef.current = v
-      plyCount.current = v
-      hydrateOnlineMatchFromRow({
-        matchId,
-        player1Id: pr.p1,
-        player2Id: pr.p2,
-        gameState: row.game_state ?? null,
-        display: displayRef.current,
-      })
+      if (v === stateVersionRef.current) {
+        const ok = hydrateOnlineMatchFromRow({
+          matchId,
+          player1Id: pr.p1,
+          player2Id: pr.p2,
+          gameState: row.game_state ?? null,
+          display: displayRef.current,
+        })
+        if (!ok) {
+          void (async () => {
+            const { data: fresh } = await supabase
+              .from('matches')
+              .select('game_state, state_version')
+              .eq('id', matchId)
+              .maybeSingle()
+            if (!fresh) return
+            const fv = Number(fresh.state_version ?? 0)
+            if (fv !== v) return
+            if (
+              !hydrateOnlineMatchFromRow({
+                matchId,
+                player1Id: pr.p1,
+                player2Id: pr.p2,
+                gameState: fresh.game_state ?? null,
+                display: displayRef.current,
+              })
+            ) {
+              console.warn('[match] same-version postgres hydrate failed after refetch')
+            }
+          })()
+        }
+        return
+      }
+
+      if (applyPostgresRowHydrate(row.game_state ?? null, v)) return
+
+      void (async () => {
+        const { data: fresh } = await supabase
+          .from('matches')
+          .select('game_state, state_version')
+          .eq('id', matchId)
+          .maybeSingle()
+        if (!fresh) return
+        const fv = Number(fresh.state_version ?? 0)
+        if (!Number.isFinite(fv) || fv < v) return
+        if (!applyPostgresRowHydrate(fresh.game_state ?? null, fv)) {
+          console.warn('[match] postgres_changes hydrate failed after refetch')
+        }
+      })()
     })
 
     room.on('presence', { event: 'sync' }, () => {
@@ -436,15 +554,50 @@ export default function MatchPage() {
         channelSubscribedRef.current = true
         await room.track({ online_at: Date.now() })
         refreshOpponentPresence(room, opponentId)
-        const pending = pendingBoardPokemonSpeciesRef.current
-        if (pending && starterSpeciesById(pending)) {
-          pendingBoardPokemonSpeciesRef.current = null
-          const payload: BoardPokemonPayload = { fromUserId: sessionUserId, speciesId: pending }
+
+        const { data: liveRow } = await supabase
+          .from('matches')
+          .select('game_state, state_version')
+          .eq('id', matchId)
+          .maybeSingle()
+        if (liveRow) {
+          const sv = Number(liveRow.state_version ?? 0)
+          if (Number.isFinite(sv) && sv > stateVersionRef.current) {
+            if (!applyPostgresRowHydrate(liveRow.game_state ?? null, sv)) {
+              const { data: fresh } = await supabase
+                .from('matches')
+                .select('game_state, state_version')
+                .eq('id', matchId)
+                .maybeSingle()
+              if (fresh) {
+                const fv = Number(fresh.state_version ?? 0)
+                if (Number.isFinite(fv) && fv >= sv) {
+                  void applyPostgresRowHydrate(fresh.game_state ?? null, fv)
+                }
+              }
+            }
+          }
+        }
+
+        const sendBoardPokemon = (speciesId: string) => {
+          const payload: BoardPokemonPayload = { fromUserId: sessionUserId, speciesId }
           void room.send({
             type: 'broadcast',
             event: 'board_pokemon',
             payload: payload as unknown as Record<string, unknown>,
           })
+        }
+
+        const pending = pendingBoardPokemonSpeciesRef.current
+        if (pending && starterSpeciesById(pending)) {
+          pendingBoardPokemonSpeciesRef.current = null
+          sendBoardPokemon(pending)
+        } else {
+          const seat: PlayerKey = sessionUserId === pr.p1 ? 'player1' : 'player2'
+          const species = useGameStore.getState().players[seat].pawnSpeciesId
+          if (species && starterSpeciesById(species)) {
+            sendBoardPokemon(species)
+          }
         }
       }
     })
@@ -638,6 +791,7 @@ export default function MatchPage() {
         if (decision.kind === 'applyStored') {
           useGameStore.getState().setPokemonSpecies(localPlayerKey, decision.speciesId)
           sendBoardPokemonBroadcast(decision.speciesId)
+          void persistBoardPokemonPick(decision.speciesId)
           setPokemonPickerOpen(false)
           setPokemonPickerOptions(null)
           return
@@ -663,7 +817,7 @@ export default function MatchPage() {
         setPokemonPickerOptions(null)
       }
     })
-  }, [loading, localPlayerKey, sessionUserId, matchId, router, sendBoardPokemonBroadcast])
+  }, [loading, localPlayerKey, matchId, persistBoardPokemonPick, router, sendBoardPokemonBroadcast, sessionUserId])
 
   useEffect(() => {
     if (!matchId || loading) return
@@ -808,6 +962,7 @@ export default function MatchPage() {
               }
               useGameStore.getState().setPokemonSpecies(localPlayerKey, speciesId)
               sendBoardPokemonBroadcast(speciesId)
+              void persistBoardPokemonPick(speciesId)
               setPokemonPickerOpen(false)
             }}
           />
