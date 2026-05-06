@@ -25,13 +25,14 @@ export function ArenaFieldOverlay({ arena }: ArenaFieldOverlayProps) {
 
   return (
     <svg
-      className={`pointer-events-none absolute inset-0 z-[5] h-full w-full opacity-70 mix-blend-multiply dark:opacity-55 dark:mix-blend-screen ${lineClass}`}
+      className="pointer-events-none absolute inset-0 z-[5] h-full w-full"
       viewBox="0 0 90 90"
       preserveAspectRatio="none"
       aria-hidden
       focusable={false}
     >
       <g
+        className={`${lineClass} opacity-70 mix-blend-multiply dark:opacity-55 dark:mix-blend-screen`}
         fill="none"
         stroke="currentColor"
         strokeWidth={0.6}
@@ -39,21 +40,24 @@ export function ArenaFieldOverlay({ arena }: ArenaFieldOverlayProps) {
         strokeLinejoin="round"
         vectorEffect="non-scaling-stroke"
       >
-        <rect x={1.5} y={1.5} width={87} height={87} rx={1} ry={1} />
+        <rect x={0.4} y={0.4} width={89.2} height={89.2} strokeWidth={1.4} />
 
-        <line x1={1.5} y1={45} x2={88.5} y2={45} />
+        <line x1={0.4} y1={45} x2={89.6} y2={45} />
 
         <circle cx={45} cy={45} r={10} />
+      </g>
 
-        <rect x={30} y={1.5} width={30} height={10} />
-        <rect x={30} y={78.5} width={30} height={10} />
-
-        <path d="M 36 11.5 A 9 9 0 0 1 54 11.5" />
-        <path d="M 36 78.5 A 9 9 0 0 0 54 78.5" />
-
-        <circle cx={45} cy={45} r={3} />
-        <line x1={42} y1={45} x2={48} y2={45} />
-        <circle cx={45} cy={45} r={0.6} fill="currentColor" stroke="none" />
+      <g
+        transform="translate(45 45)"
+        stroke="rgba(0,0,0,0.72)"
+        strokeWidth={0.35}
+        vectorEffect="non-scaling-stroke"
+      >
+        <path d="M -4 0 A 4 4 0 0 0 4 0 Z" fill="rgba(239,68,68,0.72)" />
+        <path d="M -4 0 A 4 4 0 0 1 4 0 Z" fill="rgba(255,255,255,0.78)" />
+        <rect x={-4} y={-0.45} width={8} height={0.9} fill="rgba(0,0,0,0.78)" stroke="none" />
+        <circle r={1.25} fill="rgba(0,0,0,0.78)" stroke="none" />
+        <circle r={0.65} fill="rgba(255,255,255,0.92)" stroke="none" />
       </g>
     </svg>
   )
