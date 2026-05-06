@@ -40,12 +40,7 @@ export function RulesCloudDeck() {
 
   const go = useCallback(
     (dir: -1 | 1) => {
-      setIndex((i) => {
-        const next = i + dir
-        if (next < 0) return n - 1
-        if (next >= n) return 0
-        return next
-      })
+      setIndex((i) => Math.max(0, Math.min(n - 1, i + dir)))
     },
     [n],
   )
@@ -81,7 +76,7 @@ export function RulesCloudDeck() {
         className="relative w-full max-w-md"
       >
         <div
-          className="relative mx-auto flex min-h-[200px] w-full max-w-[22rem] cursor-grab touch-pan-y items-center justify-center px-6 py-10 active:cursor-grabbing md:max-w-[24rem]"
+          className="relative mx-auto flex min-h-[200px] w-full max-w-[22rem] cursor-grab touch-pan-y items-center justify-center px-5 py-8 active:cursor-grabbing md:max-w-[24rem]"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
@@ -89,33 +84,34 @@ export function RulesCloudDeck() {
           <div
             id="rules-cloud-text"
             aria-live="polite"
-            className="relative z-10 max-w-[17.5rem] text-center leading-relaxed text-zinc-800 dark:text-zinc-100"
+            className="relative z-10 max-w-[18rem] px-0.5 text-center leading-snug text-zinc-800 dark:text-zinc-100"
           >
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{slide.title}</h2>
-            <p className="mt-2 text-sm font-medium sm:text-base">{slide.body}</p>
-            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
-              {slide.takeaway}
-            </p>
+            <h2 className="text-sm font-semibold text-zinc-900 sm:text-base dark:text-zinc-50">{slide.title}</h2>
+            <p className="mt-1.5 text-xs font-medium sm:text-sm">{slide.body}</p>
           </div>
         </div>
 
-        <div className="mt-2 flex items-center justify-center gap-3">
-          <button
-            type="button"
-            aria-controls="rules-cloud-text"
-            className="rounded-full border border-sky-300/80 bg-white/90 px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-sky-50 dark:border-zinc-600 dark:bg-zinc-900/90 dark:text-zinc-100 dark:hover:bg-zinc-800"
-            onClick={() => go(-1)}
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            aria-controls="rules-cloud-text"
-            className="rounded-full border border-sky-300/80 bg-white/90 px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-sky-50 dark:border-zinc-600 dark:bg-zinc-900/90 dark:text-zinc-100 dark:hover:bg-zinc-800"
-            onClick={() => go(1)}
-          >
-            Next
-          </button>
+        <div className="mt-2 flex justify-center gap-3">
+          {index > 0 ? (
+            <button
+              type="button"
+              aria-controls="rules-cloud-text"
+              className="rounded-full border border-sky-300/80 bg-white/90 px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-sky-50 dark:border-zinc-600 dark:bg-zinc-900/90 dark:text-zinc-100 dark:hover:bg-zinc-800"
+              onClick={() => go(-1)}
+            >
+              Previous
+            </button>
+          ) : null}
+          {index < n - 1 ? (
+            <button
+              type="button"
+              aria-controls="rules-cloud-text"
+              className="rounded-full border border-sky-300/80 bg-white/90 px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-sky-50 dark:border-zinc-600 dark:bg-zinc-900/90 dark:text-zinc-100 dark:hover:bg-zinc-800"
+              onClick={() => go(1)}
+            >
+              Next
+            </button>
+          ) : null}
         </div>
 
         <div className="mt-3 flex justify-center gap-1.5" role="tablist" aria-label="Rule slides">
