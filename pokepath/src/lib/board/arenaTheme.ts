@@ -116,6 +116,16 @@ const BOARD_OUTER_RING: Record<BoardArenaId, string> = {
   ground: 'ring-stone-700/25 dark:ring-stone-400/15',
 }
 
+/** Chalk-line colour for the soccer-field overlay (consumed via `currentColor`). */
+const FIELD_LINE: Record<BoardArenaId, string> = {
+  water: 'text-sky-900/70 dark:text-sky-200/55',
+  grass: 'text-emerald-900/70 dark:text-emerald-200/55',
+  fire: 'text-orange-950/70 dark:text-orange-200/55',
+  air: 'text-violet-950/70 dark:text-violet-200/55',
+  electric: 'text-amber-950/70 dark:text-amber-200/55',
+  ground: 'text-stone-800/70 dark:text-stone-200/55',
+}
+
 /** Fence bars: neutral per arena; ownership is conveyed by glow/tint helpers. */
 const FENCE_P1: Record<BoardArenaId, string> = {
   water: 'bg-slate-100/95 dark:bg-slate-200/90',
@@ -197,6 +207,10 @@ export function getArenaPendingMoveRingClasses(arena: BoardArenaId): string {
 
 export function getArenaBoardOuterRingClass(arena: BoardArenaId): string {
   return `ring-1 ${BOARD_OUTER_RING[arena]}`
+}
+
+export function getArenaFieldLineClass(arena: BoardArenaId): string {
+  return FIELD_LINE[arena]
 }
 
 export function getArenaFenceGhostBarClass(arena: BoardArenaId, placedBy: PlayerKey): string {

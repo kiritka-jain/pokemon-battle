@@ -10,6 +10,7 @@ import { useGameStore } from '@/src/lib/store/gameStore'
 import { fenceValidationSummary } from '@/src/lib/tutorial/validationFeedback'
 import type { GameState, PlayerKey } from '@/src/types/game'
 
+import { ArenaFieldOverlay } from './ArenaFieldOverlay'
 import { FenceOverlay } from './FenceOverlay'
 import { FenceSlotGrid } from './FenceSlotGrid'
 import { PlayerSprites } from './PlayerSprite'
@@ -252,6 +253,8 @@ export function GameBoard({
         >
           {tiles}
         </div>
+
+        <ArenaFieldOverlay arena={arena} />
 
         <FenceOverlay
           arena={arena}
