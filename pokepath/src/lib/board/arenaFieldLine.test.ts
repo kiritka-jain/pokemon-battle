@@ -23,6 +23,6 @@ describe('arena field-line colour', () => {
     const classes = BOARD_ARENA_IDS.map((arena) => getArenaFieldLineClass(arena))
     const unique = new Set(classes)
     expect(unique.size).toBe(1)
-    expect([...unique][0]).toBe('text-emerald-900/70 dark:text-emerald-200/55')
+    expect([...unique][0]).toBe('text-emerald-950/85 dark:text-emerald-100/75')
   })
 })
