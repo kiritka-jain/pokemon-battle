@@ -22,6 +22,7 @@ type ArenaFieldOverlayProps = {
  */
 export function ArenaFieldOverlay({ arena }: ArenaFieldOverlayProps) {
   const lineClass = getArenaFieldLineClass(arena)
+  const tileBoundaries = [10, 20, 30, 40, 50, 60, 70, 80]
 
   return (
     <svg
@@ -43,6 +44,21 @@ export function ArenaFieldOverlay({ arena }: ArenaFieldOverlayProps) {
         <rect x={0.4} y={0.4} width={89.2} height={89.2} strokeWidth={1.6} />
 
         <line x1={0.4} y1={45} x2={89.6} y2={45} />
+      </g>
+
+      <g
+        className={`${lineClass} opacity-55 dark:opacity-45`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={0.45}
+        vectorEffect="non-scaling-stroke"
+      >
+        {tileBoundaries.map((boundary) => (
+          <line key={`v-${boundary}`} x1={boundary} y1={0} x2={boundary} y2={90} />
+        ))}
+        {tileBoundaries.map((boundary) => (
+          <line key={`h-${boundary}`} x1={0} y1={boundary} x2={90} y2={boundary} />
+        ))}
       </g>
 
       <g
