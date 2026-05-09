@@ -24,9 +24,9 @@ export default function TutorialPage() {
           </Link>
         </div>
 
-        <div className="mt-8 flex flex-col items-center gap-10 md:flex-row md:items-center md:justify-between md:gap-8 lg:gap-12">
+        <div className="mt-8 flex flex-col items-center gap-8 md:flex-row md:items-start md:justify-between md:gap-10 lg:gap-12">
           <ProfessorOakFigure />
-          <div className="flex w-full min-w-0 flex-1 flex-col items-center md:max-w-[58%] md:items-start">
+          <div className="flex w-full min-w-0 flex-1 flex-col items-center md:items-start">
             <RulesCloudDeck />
             <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400 md:text-left">
               Ready to practice?{' '}

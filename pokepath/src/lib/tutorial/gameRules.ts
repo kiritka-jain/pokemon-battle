@@ -12,6 +12,9 @@ export const GAME_RULE_SLIDES = [
     title: 'Win the race',
     body: 'Reach your far row before your opponent reaches theirs.',
     caption: 'Player 1 races up; Player 2 races down.',
+    imageSrc: '/tutorial/rules/win-the-race.png',
+    imageAlt:
+      'Nine-by-nine grass board with Charizard on the goal row and Snorlax below with move dots on adjacent squares.',
   },
   {
     title: 'Move one step',
@@ -23,7 +26,10 @@ export const GAME_RULE_SLIDES = [
   },
   {
     title: 'Place fences',
-    body: 'Instead of moving, place one fence across two gaps—you each have ten.',
+    body: 'Instead of moving, place one fence horizontally or vertically across two gaps—you each have ten.',
+    imageSrc: '/tutorial/rules/place-fences.png',
+    imageAlt:
+      'Grass grid with Pikachu and two glowing fence segments forming a T along the grid lines.',
   },
   {
     title: 'Jump over',
@@ -32,13 +38,16 @@ export const GAME_RULE_SLIDES = [
   {
     title: 'Dodge around',
     body: 'If a fence blocks the straight jump, step diagonally around them instead.',
+    imageSrc: '/tutorial/rules/dodge-around.png',
+    imageAlt:
+      'Grass board with Snorlax and Ponyta near fences; green dots show possible moves around obstacles.',
   },
   {
     title: 'Keep paths open',
     body: 'Your fence cannot cut off every path to a goal.',
     caption: 'Both players must always have a way to reach their goal row.',
-    imageSrc: '/tutorial/rules/board-paths-overview.png',
+    imageSrc: '/tutorial/rules/keep-paths-open.png',
     imageAlt:
-      'Grass board with two Pokémon and bright lines along the grid showing possible routes.',
+      'Grass grid with Ponyta and a bright highlighted route along the grid lines.',
   },
 ] satisfies readonly GameRuleSlide[]

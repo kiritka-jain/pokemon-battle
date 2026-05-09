@@ -63,7 +63,7 @@ export function RulesCloudDeck() {
           <div
             id={LIVE_REGION_ID}
             aria-live="polite"
-            className="min-h-[220px] rounded-2xl border border-yellow-200/90 bg-white/95 p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/95 sm:min-h-[240px] sm:p-5 md:min-h-[200px]"
+            className="min-h-[240px] rounded-2xl border border-yellow-200/90 bg-white/95 p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/95 sm:min-h-[260px] sm:p-5 md:min-h-[220px]"
           >
             <div
               className={
@@ -80,7 +80,7 @@ export function RulesCloudDeck() {
                     width={400}
                     height={280}
                     sizes="(max-width: 768px) 85vw, 320px"
-                    className="max-h-[220px] w-auto max-w-full rounded-xl border border-zinc-200 object-contain dark:border-zinc-600"
+                    className="max-h-[240px] w-auto max-w-full rounded-xl border border-zinc-200 object-contain dark:border-zinc-600 sm:max-h-[260px]"
                   />
                 </div>
               ) : null}
@@ -90,10 +90,12 @@ export function RulesCloudDeck() {
                   hasImage ? 'text-left md:w-[55%]' : 'max-w-md px-1 text-center'
                 }`}
               >
-                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{slide.title}</h2>
-                <p className="mt-2 text-sm font-medium">{slide.body}</p>
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 sm:text-xl">
+                  {slide.title}
+                </h2>
+                <p className="mt-2 text-base font-medium leading-snug sm:text-lg">{slide.body}</p>
                 {slide.caption ? (
-                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{slide.caption}</p>
+                  <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 sm:text-base">{slide.caption}</p>
                 ) : null}
               </div>
             </div>
