@@ -16,11 +16,10 @@ function GuestHomeHeader() {
         PokéPath: Route Rush
       </p>
       <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">
-        Race the route, block the path
+        Begin your Poképath journey
       </h1>
       <p className="max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400 sm:text-base">
-        A Pokémon-themed tactical board duel—move across the 9×9 route, place fences, and reach the
-        far side first.
+        A quick route strategy game.
       </p>
     </div>
   )
