@@ -34,6 +34,9 @@ export const GAME_RULE_SLIDES = [
   {
     title: 'Jump over',
     body: 'If you face an opponent and the square behind them is empty, jump straight over.',
+    imageSrc: '/tutorial/rules/jump-over.png',
+    imageAlt:
+      'Grass grid with Bulbasaur above Diglett; green move dots include the square straight past Diglett.',
   },
   {
     title: 'Dodge around',
